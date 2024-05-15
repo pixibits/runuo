@@ -1,7 +1,6 @@
 using System;
 using Server;
 using Server.Items;
-using Server.Commands;
 
 namespace Server
 {
@@ -333,12 +332,12 @@ namespace Server
 
 		public static void Initialize()
 		{
-			CommandSystem.Register( "DoorGen", AccessLevel.Administrator, new CommandEventHandler( DoorGen_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "DoorGen", AccessLevel.Administrator, new Server.Commands.CommandEventHandler( DoorGen_OnCommand ) );
 		}
 
 		[Usage( "DoorGen" )]
 		[Description( "Generates doors by analyzing the map. Slow." )]
-		public static void DoorGen_OnCommand( CommandEventArgs e )
+		public static void DoorGen_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			Generate();
 		}
@@ -350,16 +349,13 @@ namespace Server
 		{
 			World.Broadcast( 0x35, true, "Generating doors, please wait." );
 
-			Network.NetState.FlushAll();
-			Network.NetState.Pause();
-
 			m_Map = Map.Trammel;
 			m_Count = 0;
 
-			for ( int i = 0; i < m_BritRegions.Length; ++i )
-				Generate( m_BritRegions[i] );
+			/* for ( int i = 0; i < m_BritRegions.Length; ++i )
+				Generate( m_BritRegions[i] ); */
 
-			int trammelCount = m_Count;
+			int trammelCount = m_Count; 
 
 			m_Map = Map.Felucca;
 			m_Count = 0;
@@ -372,26 +368,26 @@ namespace Server
 			m_Map = Map.Ilshenar;
 			m_Count = 0;
 
-			for ( int i = 0; i < m_IlshRegions.Length; ++i )
-				Generate( m_IlshRegions[i] );
+			/* for ( int i = 0; i < m_IlshRegions.Length; ++i )
+				Generate( m_IlshRegions[i] ); */
 
 			int ilshenarCount = m_Count;
 
 			m_Map = Map.Malas;
 			m_Count = 0;
 
-			for ( int i = 0; i < m_MalasRegions.Length; ++i )
-				Generate( m_MalasRegions[i] );
+			/*for ( int i = 0; i < m_MalasRegions.Length; ++i )
+				Generate( m_MalasRegions[i] ); */
 
 			int malasCount = m_Count;
-
-			Network.NetState.Resume();
 
 			World.Broadcast( 0x35, true, "Door generation complete. Trammel: {0}; Felucca: {1}; Ilshenar: {2}; Malas: {3};", trammelCount, feluccaCount, ilshenarCount, malasCount );
 		}
 
 		public static bool IsFrame( int id, int[] list )
 		{
+			id &= 0x3FFF;
+
 			if ( id > list[list.Length - 1] )
 				return false;
 

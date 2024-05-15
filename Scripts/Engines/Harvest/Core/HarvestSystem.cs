@@ -1,6 +1,5 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Items;
 using Server.Targeting;
@@ -9,13 +8,13 @@ namespace Server.Engines.Harvest
 {
 	public abstract class HarvestSystem
 	{
-		private List<HarvestDefinition> m_Definitions;
+		private ArrayList m_Definitions;
 
-		public List<HarvestDefinition> Definitions { get { return m_Definitions; } }
+		public ArrayList Definitions{ get{ return m_Definitions; } }
 
 		public HarvestSystem()
 		{
-			m_Definitions = new List<HarvestDefinition>();
+			m_Definitions = new ArrayList();
 		}
 
 		public virtual bool CheckTool( Mobile from, Item tool )
@@ -43,7 +42,7 @@ namespace Server.Engines.Harvest
 			bool inRange = ( from.Map == map && from.InRange( loc, def.MaxRange ) );
 
 			if ( !inRange )
-				def.SendMessageTo( from, timed ? def.TimedOutOfRangeMessage : def.OutOfRangeMessage );
+				def.SendAsciiMessageTo( from, timed ? def.TimedOutOfRangeMessage : def.OutOfRangeMessage );
 
 			return inRange;
 		}
@@ -51,10 +50,11 @@ namespace Server.Engines.Harvest
 		public virtual bool CheckResources( Mobile from, Item tool, HarvestDefinition def, Map map, Point3D loc, bool timed )
 		{
 			HarvestBank bank = def.GetBank( map, loc.X, loc.Y );
-			bool available = ( bank != null && bank.Current >= def.ConsumedPerHarvest );
+
+			bool available = ( bank != null && bank.GetCurrentFor( from ) >= def.ConsumedPerHarvest );
 
 			if ( !available )
-				def.SendMessageTo( from, timed ? def.DoubleHarvestMessage : def.NoResourcesMessage );
+				def.SendAsciiMessageTo( from, timed ? def.DoubleHarvestMessage : def.NoResourcesMessage );
 
 			return available;
 		}
@@ -122,9 +122,6 @@ namespace Server.Engines.Harvest
 			else if ( !CheckHarvest( from, tool, def, toHarvest ) )
 				return;
 
-			if ( SpecialHarvest( from, tool, def, map, loc ) )
-				return;
-
 			HarvestBank bank = def.GetBank( map, loc.X, loc.Y );
 
 			if ( bank == null )
@@ -164,29 +161,15 @@ namespace Server.Engines.Harvest
 					}
 					else
 					{
-						//The whole harvest system is kludgy and I'm sure this is just adding to it.
 						if ( item.Stackable )
 						{
-							int amount = def.ConsumedPerHarvest;
-							int feluccaAmount = def.ConsumedPerFeluccaHarvest;
-
-							int racialAmount = (int)Math.Ceiling( amount * 1.1 );
-							int feluccaRacialAmount = (int)Math.Ceiling( feluccaAmount * 1.1 );
-
-							bool eligableForRacialBonus = ( def.RaceBonus && from.Race == Race.Human );
-							bool inFelucca = (map == Map.Felucca);
-
-							if( eligableForRacialBonus && inFelucca && bank.Current >= feluccaRacialAmount && 0.1 > Utility.RandomDouble() )
-								item.Amount = feluccaRacialAmount;
-							else if( inFelucca && bank.Current >= feluccaAmount )
-								item.Amount = feluccaAmount;
-							else if( eligableForRacialBonus && bank.Current >= racialAmount && 0.1 > Utility.RandomDouble() )
-								item.Amount = racialAmount;
+							if ( map == Map.Felucca && bank.GetCurrentFor( from ) >= def.ConsumedPerFeluccaHarvest )
+								item.Amount = def.ConsumedPerFeluccaHarvest;
 							else
-								item.Amount = amount;
+								item.Amount = def.ConsumedPerHarvest;
 						}
 
-						bank.Consume( item.Amount, from );
+						bank.Consume( def, item.Amount );
 
 						if ( Give( from, item, def.PlaceAtFeetIfFull ) )
 						{
@@ -196,22 +179,6 @@ namespace Server.Engines.Harvest
 						{
 							SendPackFullTo( from, item, def, resource );
 							item.Delete();
-						}
-
-						BonusHarvestResource bonus = def.GetBonusResource();
-
-						if ( bonus != null && bonus.Type != null && skillBase >= bonus.ReqSkill )
-						{
-							Item bonusItem = Construct( bonus.Type, from );
-
-							if ( Give( from, bonusItem, true ) )	//Bonuses always allow placing at feet, even if pack is full irregrdless of def
-							{
-								bonus.SendSuccessTo( from );
-							}
-							else
-							{
-								item.Delete();
-							}
 						}
 
 						if ( tool is IUsesRemaining )
@@ -226,7 +193,7 @@ namespace Server.Engines.Harvest
 							if ( toolWithUses.UsesRemaining < 1 )
 							{
 								tool.Delete();
-								def.SendMessageTo( from, def.ToolBrokeMessage );
+								def.SendAsciiMessageTo( from, def.ToolBrokeMessage );
 							}
 						}
 					}
@@ -234,18 +201,13 @@ namespace Server.Engines.Harvest
 			}
 
 			if ( type == null )
-				def.SendMessageTo( from, def.FailMessage );
+				def.SendAsciiMessageTo( from, def.FailMessage );
 
 			OnHarvestFinished( from, tool, def, vein, bank, resource, toHarvest );
 		}
 
 		public virtual void OnHarvestFinished( Mobile from, Item tool, HarvestDefinition def, HarvestVein vein, HarvestBank bank, HarvestResource resource, object harvested )
 		{
-		}
-
-		public virtual bool SpecialHarvest( Mobile from, Item tool, HarvestDefinition def, Map map, Point3D loc )
-		{
-			return false;
 		}
 
 		public virtual Item Construct( Type type, Mobile from )
@@ -266,7 +228,7 @@ namespace Server.Engines.Harvest
 
 		public virtual void SendPackFullTo( Mobile from, Item item, HarvestDefinition def, HarvestResource resource )
 		{
-			def.SendMessageTo( from, def.PackFullMessage );
+			def.SendAsciiMessageTo( from, def.PackFullMessage );
 		}
 
 		public virtual bool Give( Mobile m, Item item, bool placeAtFeet )
@@ -282,14 +244,14 @@ namespace Server.Engines.Harvest
 			if ( map == null )
 				return false;
 
-			List<Item> atFeet = new List<Item>();
+			ArrayList atFeet = new ArrayList();
 
 			foreach ( Item obj in m.GetItemsInRange( 0 ) )
 				atFeet.Add( obj );
 
 			for ( int i = 0; i < atFeet.Count; ++i )
 			{
-				Item check = atFeet[i];
+				Item check = (Item)atFeet[i];
 
 				if ( check.StackWith( m, item, false ) )
 					return true;
@@ -314,9 +276,7 @@ namespace Server.Engines.Harvest
 
 		public virtual HarvestResource MutateResource( Mobile from, Item tool, HarvestDefinition def, Map map, Point3D loc, HarvestVein vein, HarvestResource primary, HarvestResource fallback )
 		{
-			bool racialBonus = (def.RaceBonus && from.Race == Race.Elf );
-
-			if( vein.ChanceToFallback > (Utility.RandomDouble() + (racialBonus ? .20 : 0)) )
+			if ( vein.ChanceToFallback > Utility.RandomDouble() )
 				return fallback;
 
 			double skillValue = from.Skills[def.Skill].Value;
@@ -394,7 +354,7 @@ namespace Server.Engines.Harvest
 
 			for ( int i = 0; def == null && i < m_Definitions.Count; ++i )
 			{
-				HarvestDefinition check = m_Definitions[i];
+				HarvestDefinition check = (HarvestDefinition)m_Definitions[i];
 
 				if ( check.Validate( tileID ) )
 					def = check;
@@ -467,7 +427,7 @@ namespace Server.Engines.Harvest
 			{
 				LandTarget obj = (LandTarget)toHarvest;
 
-				tileID = obj.TileID;
+				tileID = obj.TileID & 0x3FFF;
 				map = from.Map;
 				loc = obj.Location;
 			}

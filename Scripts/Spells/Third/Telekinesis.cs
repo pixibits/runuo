@@ -6,17 +6,16 @@ using Server.Items;
 
 namespace Server.Spells.Third
 {
-	public class TelekinesisSpell : MagerySpell
+	public class TelekinesisSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Telekinesis", "Ort Por Ylem",
+				SpellCircle.Third,
 				203,
 				9031,
 				Reagent.Bloodmoss,
 				Reagent.MandrakeRoot
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Third; } }
 
 		public TelekinesisSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -58,9 +57,6 @@ namespace Server.Spells.Third
 				{
 					item.OnSnoop( Caster );
 				}
-				else if ( item is Corpse && !((Corpse)item).CheckLoot( Caster, null ) )
-				{
-				}
 				else if ( Caster.Region.OnDoubleClick( Caster, item ) )
 				{
 					Effects.SendLocationParticles( EffectItem.Create( item.Location, item.Map, EffectItem.DefaultDuration ), 0x376A, 9, 32, 5022 );
@@ -78,7 +74,7 @@ namespace Server.Spells.Third
 		{
 			private TelekinesisSpell m_Owner;
 
-			public InternalTarget( TelekinesisSpell owner ) : base( Core.ML ? 10 : 12, false, TargetFlags.None )
+			public InternalTarget( TelekinesisSpell owner ) : base( 12, false, TargetFlags.None )
 			{
 				m_Owner = owner;
 			}
@@ -108,3 +104,4 @@ namespace Server
 		void OnTelekinesis( Mobile from );
 	}
 }
+

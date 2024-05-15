@@ -6,8 +6,13 @@ namespace Server.Items
 {
 	public class DaemonBlood : BaseReagent, ICommodity
 	{
-		int ICommodity.DescriptionNumber { get { return LabelNumber; } }
-		bool ICommodity.IsDeedable { get { return true; } }
+		string ICommodity.Description
+		{
+			get
+			{
+				return String.Format( "{0} daemon blood", Amount );
+			}
+		}
 
 		[Constructable]
 		public DaemonBlood() : this( 1 )
@@ -23,7 +28,10 @@ namespace Server.Items
 		{
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new DaemonBlood( amount ), amount );
+		}
 
 		public override void Serialize( GenericWriter writer )
 		{

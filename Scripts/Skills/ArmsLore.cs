@@ -1,8 +1,6 @@
 using System;
-using Server.Items;
-using Server.Mobiles;
-using Server.Network;
 using Server.Targeting;
+using Server.Items;
 
 namespace Server.SkillHandlers
 {
@@ -19,15 +17,13 @@ namespace Server.SkillHandlers
 
 			m.SendLocalizedMessage( 500349 ); // What item do you wish to get information about?
 
-			return TimeSpan.FromSeconds( 1.0 );
+			return TimeSpan.FromSeconds( 10.0 );
 		}
 
-		[PlayerVendorTarget]
 		private class InternalTarget : Target
 		{
 			public InternalTarget() : base( 2, false, TargetFlags.None )
 			{
-				AllowNonlocal = true;
 			}
 
 			protected override void OnTarget( Mobile from, object targeted )
@@ -38,9 +34,9 @@ namespace Server.SkillHandlers
 					{
 						BaseWeapon weap = (BaseWeapon)targeted;
 
-						if ( weap.MaxHitPoints != 0 )
+						if ( weap.MaxHits != 0 )
 						{
-							int hp = (int)((weap.HitPoints / (double)weap.MaxHitPoints) * 10);
+							int hp = (int)((weap.Hits / (double)weap.MaxHits) * 10);
 
 							if ( hp < 0 )
 								hp = 0;
@@ -55,9 +51,6 @@ namespace Server.SkillHandlers
 
 						if ( damage < 3 )
 							damage = 0;
-						else
-							damage = (int)Math.Ceiling( Math.Min( damage, 30 ) / 5.0 );
-							/*
 						else if ( damage < 6 )
 							damage = 1;
 						else if ( damage < 11 )
@@ -70,7 +63,6 @@ namespace Server.SkillHandlers
 							damage = 5;
 						else
 							damage = 6;
-							 * */
 
 						WeaponType type = weap.Type;
 
@@ -111,46 +103,22 @@ namespace Server.SkillHandlers
 							from.SendLocalizedMessage( 1038285 + hp );
 						}
 
-
-						from.SendLocalizedMessage( 1038295 + (int)Math.Ceiling( Math.Min( arm.ArmorRating, 35 ) / 5.0 ) );
-						/*
-						if ( arm.ArmorRating < 1 )
+						if ( arm.UnscaledArmorRating < 1 )
 							from.SendLocalizedMessage( 1038295 ); // This armor offers no defense against attackers.
-						else if ( arm.ArmorRating < 6 )
+						else if ( arm.UnscaledArmorRating < 6 )
 							from.SendLocalizedMessage( 1038296 ); // This armor provides almost no protection.
-						else if ( arm.ArmorRating < 11 )
+						else if ( arm.UnscaledArmorRating < 11 )
 							from.SendLocalizedMessage( 1038297 ); // This armor provides very little protection.
-						else if ( arm.ArmorRating < 16 )
+						else if ( arm.UnscaledArmorRating < 16 )
 							from.SendLocalizedMessage( 1038298 ); // This armor offers some protection against blows.
-						else if ( arm.ArmorRating < 21 )
+						else if ( arm.UnscaledArmorRating < 21 )
 							from.SendLocalizedMessage( 1038299 ); // This armor serves as sturdy protection.
-						else if ( arm.ArmorRating < 26 )
+						else if ( arm.UnscaledArmorRating < 26 )
 							from.SendLocalizedMessage( 1038300 ); // This armor is a superior defense against attack.
-						else if ( arm.ArmorRating < 31 )
+						else if ( arm.UnscaledArmorRating < 35 )
 							from.SendLocalizedMessage( 1038301 ); // This armor offers excellent protection.
 						else
 							from.SendLocalizedMessage( 1038302 ); // This armor is superbly crafted to provide maximum protection.
-						 * */
-					}
-					else
-					{
-						from.SendLocalizedMessage( 500353 ); // You are not certain...
-					}
-				}
-				else if ( targeted is SwampDragon && ((SwampDragon)targeted).HasBarding )
-				{
-					SwampDragon pet = (SwampDragon)targeted;
-
-					if ( from.CheckTargetSkill( SkillName.ArmsLore, targeted, 0, 100 ) )
-					{
-						int perc = (4 * pet.BardingHP) / pet.BardingMaxHP;
-
-						if ( perc < 0 )
-							perc = 0;
-						else if ( perc > 4 )
-							perc = 4;
-
-						pet.PrivateOverheadMessage( MessageType.Regular, 0x3B2, 1053021 - perc, from.NetState );
 					}
 					else
 					{

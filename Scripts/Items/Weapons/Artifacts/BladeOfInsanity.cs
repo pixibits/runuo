@@ -14,7 +14,7 @@ namespace Server.Items
 		[Constructable]
 		public BladeOfInsanity()
 		{
-			Hue = 0x76D;
+			Hue = 0x44F;
 			WeaponAttributes.HitLeechStam = 100;
 			Attributes.RegenStam = 2;
 			Attributes.WeaponSpeed = 30;
@@ -37,9 +37,6 @@ namespace Server.Items
 			base.Deserialize( reader );
 
 			int version = reader.ReadInt();
-
-			if ( Hue == 0x44F )
-				Hue = 0x76D;
 		}
 	}
 }

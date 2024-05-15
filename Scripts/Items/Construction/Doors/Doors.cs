@@ -11,12 +11,7 @@ namespace Server.Items
 		SouthCW,
 		NorthCCW,
 		SouthCCW,
-		NorthCW,
-		//Sliding Doors
-		SouthSW,
-		SouthSE,
-		WestSS,
-		WestSN
+		NorthCW
 	}
 
 	public class IronGateShort : BaseDoor

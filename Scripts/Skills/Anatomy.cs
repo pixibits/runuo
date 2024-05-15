@@ -10,7 +10,7 @@ namespace Server.SkillHandlers
 	{
 		public static void Initialize()
 		{
-			SkillInfo.Table[(int)SkillName.Anatomy].Callback = new SkillUseCallback( OnUse );
+			SkillInfo.Table[1].Callback = new SkillUseCallback( OnUse );
 		}
 
 		public static TimeSpan OnUse( Mobile m )
@@ -19,12 +19,12 @@ namespace Server.SkillHandlers
 
 			m.SendLocalizedMessage( 500321 ); // Whom shall I examine?
 
-			return TimeSpan.FromSeconds( 1.0 );
+			return TimeSpan.FromSeconds( 10.0 );
 		}
 
 		private class InternalTarget : Target
 		{
-			public InternalTarget() :  base ( 8, false, TargetFlags.None )
+			public InternalTarget() :  base ( 5, false, TargetFlags.None )
 			{
 			}
 
@@ -46,15 +46,10 @@ namespace Server.SkillHandlers
 				{
 					Mobile targ = (Mobile)targeted;
 
-					int marginOfError = Math.Max( 0, 25 - (int)(from.Skills[SkillName.Anatomy].Value / 4) );
+					int strMod = targ.Str / 10;
+					int dexMod = targ.Dex / 10;
 
-					int str = targ.Str + Utility.RandomMinMax( -marginOfError, +marginOfError );
-					int dex = targ.Dex + Utility.RandomMinMax( -marginOfError, +marginOfError );
-					int stm = ((targ.Stam * 100) / Math.Max( targ.StamMax, 1 )) + Utility.RandomMinMax( -marginOfError, +marginOfError );
-
-					int strMod = str / 10;
-					int dexMod = dex / 10;
-					int stmMod = stm / 10;
+					int stmMod = (int)((targ.Stam / (double)targ.StamMax) * 10);
 
 					if ( strMod < 0 ) strMod = 0;
 					else if ( strMod > 10 ) strMod = 10;

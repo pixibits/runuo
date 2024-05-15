@@ -9,6 +9,8 @@ namespace Server.Items
 	{
 		private BaseBoat m_Boat;
 
+		public BaseBoat Boat { get { return m_Boat; } }
+
 		public Hold( BaseBoat boat ) : base( 0x3EAE )
 		{
 			m_Boat = boat;

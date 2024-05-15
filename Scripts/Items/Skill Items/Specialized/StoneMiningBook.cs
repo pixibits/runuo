@@ -4,16 +4,12 @@ using Server.Mobiles;
 
 namespace Server.Items
 {
-	public class StoneMiningBook : Item
+	public class StoneMiningBook : BaseItem
 	{
-		public override string DefaultName
-		{
-			get { return "Mining For Quality Stone"; }
-		}
-
 		[Constructable]
 		public StoneMiningBook() : base( 0xFBE )
 		{
+			Name = "Mining For Quality Stone";
 			Weight = 1.0;
 		}
 
@@ -45,16 +41,16 @@ namespace Server.Items
 			}
 			else if ( pm == null || from.Skills[SkillName.Mining].Base < 100.0 )
 			{
-				from.SendMessage( "Only a Grandmaster Miner can learn from this book." );
+				from.SendAsciiMessage( "Only a Grandmaster Miner can learn from this book." );
 			}
 			else if ( pm.StoneMining )
 			{
-				pm.SendMessage( "You have already learned this knowledge." );
+				pm.SendAsciiMessage( "You have already learned this knowledge." );
 			}
 			else
 			{
 				pm.StoneMining = true;
-				pm.SendMessage( "You have learned to mine for stones. Target mountains when mining to find stones." );
+				pm.SendAsciiMessage( "You have learned to mine for stones. Target mountains when mining to find stones." );
 				Delete();
 			}
 		}

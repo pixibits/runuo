@@ -42,7 +42,7 @@ namespace Server.Items
 		{
 			base.OnMovement( m, oldLocation );
 
-			if ( m.Location == oldLocation )
+			if ( m.Location == oldLocation || m.Blessed || ( m.AccessLevel > AccessLevel.Player && m.Hidden ) )
 				return;
 
 			if ( CheckRange( m.Location, oldLocation, 0 ) && DateTime.Now >= m_NextActiveTrigger )

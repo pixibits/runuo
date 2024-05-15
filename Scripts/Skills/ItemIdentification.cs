@@ -1,10 +1,14 @@
 using System;
 using Server;
 using Server.Targeting;
-using Server.Mobiles;
 
 namespace Server.Items
 {
+	public interface IIdentifiable
+	{
+		void OnIdentify( Mobile from );
+	}
+
 	public class ItemIdentification
 	{
 		public static void Initialize()
@@ -17,30 +21,55 @@ namespace Server.Items
 			from.SendLocalizedMessage( 500343 ); // What do you wish to appraise and identify?
 			from.Target = new InternalTarget();
 
-			return TimeSpan.FromSeconds( 1.0 );
+			return TimeSpan.FromSeconds( 10.0 );
 		}
 
-		[PlayerVendorTarget]
-		private class InternalTarget : Target
+		public class InternalTarget : Target
 		{
-			public InternalTarget() :  base ( 8, false, TargetFlags.None )
+			private bool m_CheckSkill;
+			private TargetCallback m_OK;
+
+			public InternalTarget() : this( true, null )
+			{
+			}
+
+			public InternalTarget( bool checkSkill, TargetCallback ok  ) :  base ( 8, false, TargetFlags.None )
 			{
 				AllowNonlocal = true;
+				m_CheckSkill = checkSkill;
+				m_OK = ok;
+			}
+
+			protected override void OnNonlocalTarget(Mobile from, object targeted)
+			{
+				OnTarget (from, targeted);
+			}
+
+			protected override void OnTargetInSecureTrade(Mobile from, object targeted)
+			{
+				OnTarget (from, targeted);
+			}
+
+			protected override void OnTargetNotAccessible(Mobile from, object targeted)
+			{
+				OnTarget (from, targeted);
 			}
 
 			protected override void OnTarget( Mobile from, object o )
 			{
 				if ( o is Item )
 				{
-					if ( from.CheckTargetSkill( SkillName.ItemID, o, 0, 100 ) )
+					if ( !m_CheckSkill || from.CheckTargetSkill( SkillName.ItemID, o, 0, 100 ) )
 					{
-						if ( o is BaseWeapon )
-							((BaseWeapon)o).Identified = true;
-						else if ( o is BaseArmor )
-							((BaseArmor)o).Identified = true;
+						if ( o is IIdentifiable )
+							((IIdentifiable)o).OnIdentify( from );
+						else if ( o is Spellbook )
+							from.SendAsciiMessage( "You guess it contains about {0} spells....", Math.Max( 0, ((Spellbook)o).SpellCount + Utility.RandomMinMax( -8, 8 ) ) );
 
-						if ( !Core.AOS )
-							((Item)o).OnSingleClick( from );
+						((Item)o).OnSingleClick( from );
+
+						if ( m_OK != null )
+							m_OK( from, o );
 					}
 					else
 					{

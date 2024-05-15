@@ -1,12 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Server;
-using Server.ContextMenus;
 using Server.Network;
-using Server.Gumps;
-using Server.Multis;
 
 namespace Server.Items
 {
@@ -31,11 +27,6 @@ namespace Server.Items
 			m_Lines = new string[0];
 		}
 
-		public BookPageInfo( params string[] lines )
-		{
-			m_Lines = lines;
-		}
-
 		public BookPageInfo( GenericReader reader )
 		{
 			int length = reader.ReadInt();
@@ -43,7 +34,7 @@ namespace Server.Items
 			m_Lines = new string[length];
 
 			for ( int i = 0; i < m_Lines.Length; ++i )
-				m_Lines[i] = Utility.Intern( reader.ReadString() );
+				m_Lines[i] = reader.ReadString();
 		}
 
 		public void Serialize( GenericWriter writer )
@@ -55,13 +46,12 @@ namespace Server.Items
 		}
 	}
 
-	public class BaseBook : Item, ISecurable
+	public class BaseBook : BaseItem
 	{
 		private string m_Title;
 		private string m_Author;
 		private BookPageInfo[] m_Pages;
 		private bool m_Writable;
-		private SecureLevel m_SecureLevel;
 		
 		[CommandProperty( AccessLevel.GameMaster )]
 		public string Title
@@ -95,13 +85,15 @@ namespace Server.Items
 			get { return m_Pages; }
 		}
 
+		public virtual double BookWeight{ get{ return 1.0; } }
+
 		[Constructable]
 		public BaseBook( int itemID ) : this( itemID, 20, true )
 		{
 		}
 
 		[Constructable]
-		public BaseBook( int itemID, int pageCount, bool writable ) : this( itemID, null, null, pageCount, writable )
+		public BaseBook( int itemID, int pageCount, bool writable ) : this( itemID, "Title", "Author", pageCount, writable )
 		{
 		}
 
@@ -110,105 +102,33 @@ namespace Server.Items
 		{
 			m_Title = title;
 			m_Author = author;
+			m_Pages = new BookPageInfo[pageCount];
 			m_Writable = writable;
 
-			BookContent content = this.DefaultContent;
+			for ( int i = 0; i < m_Pages.Length; ++i )
+				m_Pages[i] = new BookPageInfo();
 
-			if ( content == null )
-			{
-				m_Pages = new BookPageInfo[pageCount];
-
-				for ( int i = 0; i < m_Pages.Length; ++i )
-					m_Pages[i] = new BookPageInfo();
-			}
-			else
-			{
-				m_Pages = content.Copy();
-			}
+			Weight = BookWeight;
 		}
-
-		// Intended for defined books only
-		public BaseBook( int itemID, bool writable ) : base( itemID )
-		{
-			m_Writable = writable;
-
-			BookContent content = this.DefaultContent;
-
-			if ( content == null )
-			{
-				m_Pages = new BookPageInfo[0];
-			}
-			else
-			{
-				m_Title = content.Title;
-				m_Author = content.Author;
-				m_Pages = content.Copy();
-			}
-		}
-
-		public virtual BookContent DefaultContent{ get{ return null; } }
 	
 		public BaseBook( Serial serial ) : base( serial )
 		{
-		}
-
-		[Flags]
-		private enum SaveFlags
-		{
-			None		= 0x00,
-			Title		= 0x01,
-			Author		= 0x02,
-			Writable	= 0x04,
-			Content		= 0x08
-		}
-
-		public override void GetContextMenuEntries( Mobile from, List<ContextMenuEntry> list )
-		{
-			base.GetContextMenuEntries( from, list );
-			SetSecureLevelEntry.AddTo( from, this, list );
 		}
 
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
 
-			BookContent content = this.DefaultContent;
+			writer.Write( (int) 0 ); // version
 
-			SaveFlags flags = SaveFlags.None;
+			writer.Write( m_Title );
+			writer.Write( m_Author );
+			writer.Write( m_Writable );
 
-			if ( m_Title != ( content == null ? null : content.Title ) )
-				flags |= SaveFlags.Title;
+			writer.Write( m_Pages.Length );
 
-			if ( m_Author != ( content == null ? null : content.Author ) )
-				flags |= SaveFlags.Author;
-
-			if ( m_Writable )
-				flags |= SaveFlags.Writable;
-
-			if ( content == null || !content.IsMatch( m_Pages ) )
-				flags |= SaveFlags.Content;
-
-
-
-			writer.Write( (int) 4 ); // version
-
-			writer.Write( (int)m_SecureLevel );
-
-			writer.Write( (byte) flags );
-
-			if ( (flags & SaveFlags.Title) != 0 )
-				writer.Write( m_Title );
-
-			if ( (flags & SaveFlags.Author) != 0 )
-				writer.Write( m_Author );
-
-			if ( (flags & SaveFlags.Content) != 0 )
-			{
-				writer.WriteEncodedInt( m_Pages.Length );
-
-				for ( int i = 0; i < m_Pages.Length; ++i )
-					m_Pages[i].Serialize( writer );
-			}
+			for ( int i = 0; i < m_Pages.Length; ++i )
+				m_Pages[i].Serialize( writer );
 		}
 
 		public override void Deserialize( GenericReader reader )
@@ -219,88 +139,25 @@ namespace Server.Items
 
 			switch ( version )
 			{
-				case 4:
-				{
-					m_SecureLevel = (SecureLevel)reader.ReadInt();
-					goto case 3;
-				}
-				case 3:
-				case 2:
-				{
-					BookContent content = this.DefaultContent;
-
-					SaveFlags flags = (SaveFlags) reader.ReadByte();
-
-					if ( (flags & SaveFlags.Title) != 0 )
-						m_Title = Utility.Intern( reader.ReadString() );
-					else if ( content != null )
-						m_Title = content.Title;
-
-					if ( (flags & SaveFlags.Author) != 0 )
-						m_Author = reader.ReadString();
-					else if ( content != null )
-						m_Author = content.Author;
-
-					m_Writable = ( flags & SaveFlags.Writable ) != 0;
-
-					if ( (flags & SaveFlags.Content) != 0 )
-					{
-						m_Pages = new BookPageInfo[reader.ReadEncodedInt()];
-
-						for ( int i = 0; i < m_Pages.Length; ++i )
-							m_Pages[i] = new BookPageInfo( reader );
-					}
-					else
-					{
-						if ( content != null )
-							m_Pages = content.Copy();
-						else
-							m_Pages = new BookPageInfo[0];
-					}
-
-					break;
-				}
-				case 1:
 				case 0:
 				{
 					m_Title = reader.ReadString();
 					m_Author = reader.ReadString();
 					m_Writable = reader.ReadBool();
 
-					if ( version == 0 || reader.ReadBool() )
-					{
-						m_Pages = new BookPageInfo[reader.ReadInt()];
+					m_Pages = new BookPageInfo[reader.ReadInt()];
 
-						for ( int i = 0; i < m_Pages.Length; ++i )
-							m_Pages[i] = new BookPageInfo( reader );
-					}
-					else
-					{
-						BookContent content = this.DefaultContent;
-
-						if ( content != null )
-							m_Pages = content.Copy();
-						else
-							m_Pages = new BookPageInfo[0];
-					}
+					for ( int i = 0; i < m_Pages.Length; ++i )
+						m_Pages[i] = new BookPageInfo( reader );
 
 					break;
 				}
 			}
 
-			if ( version < 3 && ( Weight == 1 || Weight == 2 ) )
-				Weight = -1;
+			Weight = BookWeight;
 		}
 
-		public override void AddNameProperty( ObjectPropertyList list )
-		{
-			if ( m_Title != null && m_Title.Length > 0 )
-				list.Add( m_Title );
-			else
-				base.AddNameProperty( list );
-		}
-
-		/*public override void GetProperties( ObjectPropertyList list )
+		public override void GetProperties( ObjectPropertyList list )
 		{
 			base.GetProperties( list );
 
@@ -312,22 +169,16 @@ namespace Server.Items
 
 			if ( m_Pages != null && m_Pages.Length > 0 )
 				list.Add( 1060660, "Pages\t{0}", m_Pages.Length ); // ~1_val~: ~2_val~
-		}*/
+		}
 		
 		public override void OnSingleClick ( Mobile from )
 		{
-			LabelTo( from, "{0} by {1}", m_Title, m_Author );
-			LabelTo( from, "[{0} pages]", m_Pages.Length );
+			LabelTo( from, true, "{0} by {1}", m_Title, m_Author );
+			LabelTo( from, true, "[{0} pages]", m_Pages.Length );
 		}
 		
 		public override void OnDoubleClick ( Mobile from )
 		{
-			if ( m_Title == null && m_Author == null && m_Writable == true )
-			{
-				Title = "a book";
-				Author = from.Name;
-			}
-
 			from.Send( new BookHeader( from, this ) );
 			from.Send( new BookPageDetails( this ) );
 		}
@@ -344,7 +195,7 @@ namespace Server.Items
 			Mobile from = state.Mobile;
 			BaseBook book = World.FindItem( pvSrc.ReadInt32() ) as BaseBook;
 
-			if ( book == null || !book.Writable || !from.InRange( book.GetWorldLocation(), 1 ) || !book.IsAccessibleTo( from ) )
+			if ( book == null || !book.Writable || !from.InRange( book.GetWorldLocation(), 1 ) )
 				return;
 
 			pvSrc.Seek( 4, SeekOrigin.Current ); // Skip flags and page count
@@ -352,8 +203,8 @@ namespace Server.Items
 			string title = pvSrc.ReadStringSafe( 60 );
 			string author = pvSrc.ReadStringSafe( 30 );
 
-			book.Title = Utility.FixHtml( title );
-			book.Author = Utility.FixHtml( author );
+			book.Title = title;
+			book.Author = author;
 		}
 
 		public static void HeaderChange( NetState state, PacketReader pvSrc )
@@ -361,7 +212,7 @@ namespace Server.Items
 			Mobile from = state.Mobile;
 			BaseBook book = World.FindItem( pvSrc.ReadInt32() ) as BaseBook;
 
-			if ( book == null || !book.Writable || !from.InRange( book.GetWorldLocation(), 1 ) || !book.IsAccessibleTo( from ) )
+			if ( book == null || !book.Writable || !from.InRange( book.GetWorldLocation(), 1 ) )
 				return;
 
 			pvSrc.Seek( 4, SeekOrigin.Current ); // Skip flags and page count
@@ -380,8 +231,8 @@ namespace Server.Items
 
 			string author = pvSrc.ReadUTF8StringSafe( authorLength );
 
-			book.Title = Utility.FixHtml( title );
-			book.Author = Utility.FixHtml( author );
+			book.Title = title;
+			book.Author = author;
 		}
 
 		public static void ContentChange( NetState state, PacketReader pvSrc )
@@ -389,7 +240,7 @@ namespace Server.Items
 			Mobile from = state.Mobile;
 			BaseBook book = World.FindItem( pvSrc.ReadInt32() ) as BaseBook;
 
-			if ( book == null || !book.Writable || !from.InRange( book.GetWorldLocation(), 1 ) || !book.IsAccessibleTo( from ) )
+			if ( book == null || !book.Writable || !from.InRange( book.GetWorldLocation(), 1 ) )
 				return;
 
 			int pageCount = pvSrc.ReadUInt16();
@@ -428,23 +279,6 @@ namespace Server.Items
 				}
 			}
 		}
-
-		#region ISecurable Members
-
-		[CommandProperty( AccessLevel.GameMaster )]
-		public SecureLevel Level
-		{
-			get
-			{
-				return m_SecureLevel;
-			}
-			set
-			{
-				m_SecureLevel = value;
-			}
-		}
-
-		#endregion
 	}
 
 	public sealed class BookPageDetails : Packet
@@ -465,7 +299,7 @@ namespace Server.Items
 
 				for ( int j = 0; j < page.Lines.Length; ++j )
 				{
-					byte[] buffer = Utility.UTF8.GetBytes( page.Lines[j] );
+					byte[] buffer = Encoding.UTF8.GetBytes( page.Lines[j] );
 
 					m_Stream.Write( buffer, 0, buffer.Length );
 					m_Stream.Write( (byte) 0 );
@@ -481,8 +315,8 @@ namespace Server.Items
 			string title = book.Title == null ? "" : book.Title;
 			string author = book.Author == null ? "" : book.Author;
 
-			byte[] titleBuffer = Utility.UTF8.GetBytes( title );
-			byte[] authorBuffer = Utility.UTF8.GetBytes( author );
+			byte[] titleBuffer = Encoding.UTF8.GetBytes( title );
+			byte[] authorBuffer = Encoding.UTF8.GetBytes( author );
 
 			EnsureCapacity( 15 + titleBuffer.Length + authorBuffer.Length );
 

@@ -12,7 +12,7 @@ namespace Server.Items
 		}
 
 		[Constructable]
-		public Carrot( int amount ) : base( amount, 0xc78 )
+		public Carrot( int amount ) : base( amount, 0xc77 )
 		{
 			this.Weight = 1.0;
 			this.FillFactor = 1;
@@ -21,6 +21,12 @@ namespace Server.Items
 		public Carrot( Serial serial ) : base( serial )
 		{
 		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Carrot(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -54,6 +60,12 @@ namespace Server.Items
 		public Cabbage( Serial serial ) : base( serial )
 		{
 		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Cabbage(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -87,6 +99,12 @@ namespace Server.Items
 		public Onion( Serial serial ) : base( serial )
 		{
 		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Onion(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -120,6 +138,12 @@ namespace Server.Items
 		public Lettuce( Serial serial ) : base( serial )
 		{
 		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Lettuce(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -135,7 +159,7 @@ namespace Server.Items
 		}
 	}
 
-	[FlipableAttribute( 0xC6A, 0xC6B )]
+	[FlipableAttribute( 0xc6a, 0xc6b )]
 	public class Pumpkin : Food
 	{
 		[Constructable]
@@ -144,56 +168,21 @@ namespace Server.Items
 		}
 
 		[Constructable]
-		public Pumpkin( int amount ) : base( amount, 0xC6A )
+		public Pumpkin( int amount ) : base( amount, 0xc6a )
 		{
-			this.Weight = 1.0;
-			this.FillFactor = 8;
+			this.Weight = 5.0;
+			this.FillFactor = 4;
 		}
 
 		public Pumpkin( Serial serial ) : base( serial )
 		{
 		}
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
 
-			writer.Write( (int) 1 ); // version
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Pumpkin(), amount );
 		}
 
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-
-			if ( version < 1 )
-			{
-				if ( FillFactor == 4 )
-					FillFactor = 8;
-
-				if ( Weight == 5.0 )
-					Weight = 1.0;
-			}
-		}
-	}
-
-	public class SmallPumpkin : Food
-	{
-		[Constructable]
-		public SmallPumpkin() : this( 1 )
-		{
-		}
-
-		[Constructable]
-		public SmallPumpkin( int amount ) : base( amount, 0xC6C )
-		{
-			this.Weight = 1.0;
-			this.FillFactor = 8;
-		}
-
-		public SmallPumpkin( Serial serial ) : base( serial )
-		{
-		}
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );

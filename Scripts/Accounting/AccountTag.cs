@@ -42,8 +42,8 @@ namespace Server.Accounting
 		/// <param name="node">The XmlElement instance from which to deserialize.</param>
 		public AccountTag( XmlElement node )
 		{
-			m_Name = Utility.GetAttribute( node, "name", "empty" );
-			m_Value = Utility.GetText( node, "" );
+			m_Name = Accounts.GetAttribute( node, "name", "empty" );
+			m_Value = Accounts.GetText( node, "" );
 		}
 
 		/// <summary>

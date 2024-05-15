@@ -4,32 +4,36 @@ namespace Server.Items
 {
 	public abstract class BaseShoes : BaseClothing
 	{
+		private CraftResource m_Resource;
+
+		[CommandProperty( AccessLevel.GameMaster )]
+		public CraftResource Resource
+		{
+			get{ return m_Resource; }
+			set{ m_Resource = value; Hue = CraftResources.GetHue( m_Resource ); InvalidateProperties(); }
+		}
+
+		public virtual CraftResource DefaultResource{ get{ return CraftResource.RegularLeather; } }
+
 		public BaseShoes( int itemID ) : this( itemID, 0 )
 		{
 		}
 
 		public BaseShoes( int itemID, int hue ) : base( itemID, Layer.Shoes, hue )
 		{
+			m_Resource = DefaultResource;
 		}
 
 		public BaseShoes( Serial serial ) : base( serial )
 		{
 		}
 
-		public override bool Scissor( Mobile from, Scissors scissors )
-		{
-			if( DefaultResource == CraftResource.None )
-				return base.Scissor( from, scissors );
-
-			from.SendLocalizedMessage( 502440 ); // Scissors can not be used on that to produce anything.
-			return false;
-		}
-
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
 
-			writer.Write( (int) 2 ); // version
+			writer.Write( (int) 1 ); // version
+			writer.Write( (int) m_Resource );
 		}
 
 		public override void Deserialize( GenericReader reader )
@@ -40,7 +44,6 @@ namespace Server.Items
 
 			switch ( version )
 			{
-				case 2: break; // empty, resource removed
 				case 1:
 				{
 					m_Resource = (CraftResource)reader.ReadInt();
@@ -58,6 +61,8 @@ namespace Server.Items
 	[Flipable( 0x2307, 0x2308 )]
 	public class FurBoots : BaseShoes
 	{
+		public override CraftResource DefaultResource{ get{ return CraftResource.None; } }
+
 		[Constructable]
 		public FurBoots() : this( 0 )
 		{
@@ -91,8 +96,6 @@ namespace Server.Items
 	[FlipableAttribute( 0x170b, 0x170c )]
 	public class Boots : BaseShoes
 	{
-		public override CraftResource DefaultResource{ get{ return CraftResource.RegularLeather; } }
-
 		[Constructable]
 		public Boots() : this( 0 )
 		{
@@ -185,8 +188,6 @@ namespace Server.Items
 		}
 		#endregion
 
-		public override CraftResource DefaultResource{ get{ return CraftResource.RegularLeather; } }
-
 		[Constructable]
 		public ThighBoots() : this( 0 )
 		{
@@ -248,8 +249,6 @@ namespace Server.Items
 	[FlipableAttribute( 0x170f, 0x1710 )]
 	public class Shoes : BaseShoes
 	{
-		public override CraftResource DefaultResource{ get{ return CraftResource.RegularLeather; } }
-
 		[Constructable]
 		public Shoes() : this( 0 )
 		{
@@ -283,8 +282,6 @@ namespace Server.Items
 	[FlipableAttribute( 0x170d, 0x170e )]
 	public class Sandals : BaseShoes
 	{
-		public override CraftResource DefaultResource{ get{ return CraftResource.RegularLeather; } }
-
 		[Constructable]
 		public Sandals() : this( 0 )
 		{
@@ -302,6 +299,7 @@ namespace Server.Items
 
 		public override bool Dye( Mobile from, DyeTub sender )
 		{
+			from.SendLocalizedMessage( sender.FailMessage );
 			return false;
 		}
 
@@ -317,147 +315,6 @@ namespace Server.Items
 			base.Deserialize( reader );
 
 			int version = reader.ReadInt();
-		}
-	}
-
-	[Flipable( 0x2797, 0x27E2 )]
-	public class NinjaTabi : BaseShoes
-	{
-		[Constructable]
-		public NinjaTabi() : this( 0 )
-		{
-		}
-
-		[Constructable]
-		public NinjaTabi( int hue ) : base( 0x2797, hue )
-		{
-			Weight = 2.0;
-		}
-
-		public NinjaTabi( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-	}
-
-	[Flipable( 0x2796, 0x27E1 )]
-	public class SamuraiTabi : BaseShoes
-	{
-		[Constructable]
-		public SamuraiTabi() : this( 0 )
-		{
-		}
-
-		[Constructable]
-		public SamuraiTabi( int hue ) : base( 0x2796, hue )
-		{
-			Weight = 2.0;
-		}
-
-		public SamuraiTabi( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-	}
-
-	[Flipable( 0x2796, 0x27E1 )]
-	public class Waraji : BaseShoes
-	{
-		[Constructable]
-		public Waraji() : this( 0 )
-		{
-		}
-
-		[Constructable]
-		public Waraji( int hue ) : base( 0x2796, hue )
-		{
-			Weight = 2.0;
-		}
-
-		public Waraji( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-	}
-
-	[FlipableAttribute( 0x2FC4, 0x317A )]
-	public class ElvenBoots : BaseShoes
-	{
-		public override CraftResource DefaultResource{ get{ return CraftResource.RegularLeather; } }
-
-		public override Race RequiredRace { get { return Race.Elf; } }
-
-		[Constructable]
-		public ElvenBoots() : this( 0 )
-		{
-		}
-
-		[Constructable]
-		public ElvenBoots( int hue ) : base( 0x2FC4, hue )
-		{
-			Weight = 2.0;
-		}
-
-		public ElvenBoots( Serial serial ) : base( serial )
-		{
-		}
-
-		public override bool Dye( Mobile from, DyeTub sender )
-		{
-			return false;
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.WriteEncodedInt( 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadEncodedInt();
 		}
 	}
 }

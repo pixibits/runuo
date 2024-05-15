@@ -8,8 +8,6 @@ namespace Server.Items
 	{
 		public override int LabelNumber{ get{ return 1044567; } } // skillet
 
-		public override CraftSystem CraftSystem{ get{ return DefCooking.CraftSystem; } }
-
 		[Constructable]
 		public Skillet() : base( 0x97F )
 		{

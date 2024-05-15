@@ -1,31 +1,21 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using Server;
-using Server.Accounting;
-using Server.Commands;
-using Server.Engines.Help;
 using Server.Network;
-using Server.Regions;
+using Server.Accounting;
+using Server.Engines.Help;
 
 namespace Server.Misc
 {
-	public enum PasswordProtection
-	{
-		None,
-		Crypt,
-		NewCrypt
-	}
-
 	public class AccountHandler
 	{
-		private static int MaxAccountsPerIP = 1;
+		private static int MaxAccountsPerIP = 3;
 		private static bool AutoAccountCreation = true;
-		private static bool RestrictDeletion = !TestCenter.Enabled;
+		private static bool RestrictDeletion = true;
 		private static TimeSpan DeleteDelay = TimeSpan.FromDays( 7.0 );
 
-		public static PasswordProtection ProtectPasswords = PasswordProtection.NewCrypt;
+		public static bool ProtectPasswords = true;
 
 		private static AccessLevel m_LockdownLevel;
 
@@ -53,24 +43,26 @@ namespace Server.Misc
 
 		public static void Initialize()
 		{
+//#warning This should be get rid off when the shard goes live
+			//LockdownLevel = AccessLevel.GameMaster;
+
 			EventSink.DeleteRequest += new DeleteRequestEventHandler( EventSink_DeleteRequest );
 			EventSink.AccountLogin += new AccountLoginEventHandler( EventSink_AccountLogin );
 			EventSink.GameLogin += new GameLoginEventHandler( EventSink_GameLogin );
 
 			if ( PasswordCommandEnabled )
-				CommandSystem.Register( "Password", AccessLevel.Player, new CommandEventHandler( Password_OnCommand ) );
+				Server.Commands.CommandSystem.Register( "Password", AccessLevel.Player, new Server.Commands.CommandEventHandler( Password_OnCommand ) );
 
 			if ( Core.AOS )
 			{
-				//CityInfo haven = new CityInfo( "Haven", "Uzeraan's Mansion", 3618, 2591, 0 );
-				CityInfo haven = new CityInfo( "Haven", "Uzeraan's Mansion", 3503, 2574, 14 );
+				CityInfo haven = new CityInfo( "Haven", "Uzeraan's Mansion", 3618, 2591, 0 );
 				StartingCities[StartingCities.Length - 1] = haven;
 			}
 		}
 
 		[Usage( "Password <newPassword> <repeatPassword>" )]
 		[Description( "Changes the password of the commanding players account. Requires the same C-class IP address as the account's creator." )]
-		public static void Password_OnCommand( CommandEventArgs e )
+		public static void Password_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			Mobile from = e.Mobile;
 			Account acct = from.Account as Account;
@@ -122,7 +114,7 @@ namespace Server.Misc
 
 			try
 			{
-				IPAddress ipAddress = ns.Address;
+				IPAddress ipAddress = ((IPEndPoint)ns.Socket.RemoteEndPoint).Address;
 
 				if ( Utility.IPMatchClassC( accessList[0], ipAddress ) )
 				{
@@ -193,56 +185,17 @@ namespace Server.Misc
 					state.Send( new DeleteResult( DeleteResultType.CharTooYoung ) );
 					state.Send( new CharacterListUpdate( acct ) );
 				}
-				else if ( m.AccessLevel == AccessLevel.Player && Region.Find( m.LogoutLocation, m.LogoutMap ).GetRegion( typeof( Jail ) ) != null )	//Don't need to check current location, if netstate is null, they're logged out
-				{
-					state.Send( new DeleteResult( DeleteResultType.BadRequest ) );
-					state.Send( new CharacterListUpdate( acct ) );
-				}
 				else
 				{
 					Console.WriteLine( "Client: {0}: Deleting character {1} (0x{2:X})", state, index, m.Serial.Value );
 
-					acct.Comments.Add( new AccountComment( "System", String.Format( "Character #{0} {1} deleted by {2}", index + 1, m, state ) ) );
+					acct.Comments.Add( new AccountComment( "System", String.Format( "Character #{0} {1} deleted by {2}", index+1, m, state ) ) );
 
 					m.Delete();
 					state.Send( new CharacterListUpdate( acct ) );
 				}
 			}
 		}
-
-		public static bool CanCreate( IPAddress ip )
-		{
-			if ( !IPTable.ContainsKey( ip ) )
-				return true;
-
-			return ( IPTable[ip] < MaxAccountsPerIP );
-		}
-
-		private static Dictionary<IPAddress, Int32> m_IPTable;
-
-		public static Dictionary<IPAddress, Int32> IPTable
-		{
-			get
-			{
-				if ( m_IPTable == null )
-				{
-					m_IPTable = new Dictionary<IPAddress, Int32>();
-
-					foreach ( Account a in Accounts.GetAccounts() )
-						if ( a.LoginIPs.Length > 0 )
-						{
-							IPAddress ip = a.LoginIPs[0];
-
-							if ( m_IPTable.ContainsKey( ip ) )
-								m_IPTable[ip]++;
-							else
-								m_IPTable[ip] = 1;
-						}
-				}
-
-				return m_IPTable;
-			}
-		}	
 
 		private static Account CreateAccount( NetState state, string un, string pw )
 		{
@@ -260,22 +213,31 @@ namespace Server.Misc
 			if ( !isSafe )
 				return null;
 
-			if ( !CanCreate( state.Address ) )
+			IPAddress ip = state.Address;
+
+			int count = 0;
+
+			foreach ( Account a in Accounts.Table.Values )
 			{
-				Console.WriteLine( "Login: {0}: Account '{1}' not created, ip already has {2} account{3}.", state, un, MaxAccountsPerIP, MaxAccountsPerIP == 1 ? "" : "s" );
-				return null;
+				if ( a.LoginIPs.Length > 0 && a.LoginIPs[0].Equals( ip ) )
+				{
+					++count;
+
+					if ( count >= MaxAccountsPerIP )
+					{
+						Console.WriteLine( "Login: {0}: Account '{1}' not created, ip already has {2} account{3}.", state, un, MaxAccountsPerIP, MaxAccountsPerIP == 1 ? "" : "s" );
+						return null;
+					}
+				}
 			}
 
 			Console.WriteLine( "Login: {0}: Creating new account '{1}'", state, un );
-
-			Account a = new Account( un, pw );
-
-			return a;
+			return Accounts.AddAccount( un, pw );
 		}
 
 		public static void EventSink_AccountLogin( AccountLoginEventArgs e )
 		{
-			if ( !IPLimiter.SocketBlock && !IPLimiter.Verify( e.State.Address ) )
+			if ( !IPLimiter.SocketBlock && !IPLimiter.Verify( e.State ) )
 			{
 				e.Accepted = false;
 				e.RejectReason = ALRReason.InUse;
@@ -292,11 +254,11 @@ namespace Server.Misc
 			string pw = e.Password;
 
 			e.Accepted = false;
-			Account acct = Accounts.GetAccount( un ) as Account;
+			Account acct = Accounts.GetAccount( un );
 
 			if ( acct == null )
 			{
-				if ( AutoAccountCreation && un.Trim().Length > 0 )	//To prevent someone from making an account of just '' or a bunch of meaningless spaces 
+				if ( AutoAccountCreation )
 				{
 					e.State.Account = acct = CreateAccount( e.State, un, pw );
 					e.Accepted = acct == null ? false : acct.CheckAccess( e.State );
@@ -340,7 +302,7 @@ namespace Server.Misc
 
 		public static void EventSink_GameLogin( GameLoginEventArgs e )
 		{
-			if ( !IPLimiter.SocketBlock && !IPLimiter.Verify( e.State.Address ) )
+			if ( !IPLimiter.SocketBlock && !IPLimiter.Verify( e.State ) )
 			{
 				e.Accepted = false;
 
@@ -355,7 +317,7 @@ namespace Server.Misc
 			string un = e.Username;
 			string pw = e.Password;
 
-			Account acct = Accounts.GetAccount( un ) as Account;
+			Account acct = Accounts.GetAccount( un );
 
 			if ( acct == null )
 			{

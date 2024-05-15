@@ -32,19 +32,19 @@ namespace Server.Gumps
 
 			text = text.Trim();
 
-			if ( text.Length > 3 )
-				text = text.Substring( 0, 3 );
+			if ( text.Length > 4 )
+				text = text.Substring( 0, 4 );
 
 			if ( text.Length > 0 )
 			{
 				if ( Guild.FindByAbbrev( text ) != null )
 				{
-					m_Mobile.SendMessage( "{0} conflicts with the abbreviation of an existing guild.", text );
+					m_Mobile.SendAsciiMessage( "{0} conflicts with the abbreviation of an existing guild.", text );
 				}
 				else
 				{
 					m_Guild.Abbreviation = text;
-					m_Guild.GuildMessage( 1018025, true, text ); // Your guild abbreviation has changed:
+					m_Guild.GuildMessage( 1018025, text ); // Your guild abbreviation has changed:
 				}
 			}
 

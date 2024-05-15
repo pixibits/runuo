@@ -39,12 +39,12 @@ namespace Server.Gumps
 			{
 				if ( Guild.FindByName( text ) != null )
 				{
-					m_Mobile.SendMessage( "{0} conflicts with the name of an existing guild.", text );
+					m_Mobile.SendAsciiMessage( "{0} conflicts with the name of an existing guild.", text );
 				}
 				else
 				{
 					m_Guild.Name = text;
-					m_Guild.GuildMessage( 1018024, true, text ); // The name of your guild has changed:
+					m_Guild.GuildMessage( 1018024, text ); // The name of your guild has changed:
 				}
 			}
 

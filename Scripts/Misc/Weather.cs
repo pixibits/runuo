@@ -1,6 +1,5 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Items;
 using Server.Network;
@@ -10,11 +9,11 @@ namespace Server.Misc
 	public class Weather
 	{
 		private static Map[] m_Facets;
-		private static Dictionary<Map, List<Weather>> m_WeatherByFacet = new Dictionary<Map, List<Weather>>();
+		private static Hashtable m_WeatherByFacet = new Hashtable();
 
 		public static void Initialize()
 		{
-			m_Facets = new Map[]{ Map.Felucca, Map.Trammel };
+			m_Facets = new Map[]{ Map.Felucca };
 
 			/* Static weather:
 			 * 
@@ -23,13 +22,13 @@ namespace Server.Misc
 			 */
 
 			// ice island
-			AddWeather( -15, 100, 5, new Rectangle2D( 3850, 160, 390, 320 ), new Rectangle2D( 3900, 480, 380, 180 ), new Rectangle2D( 4160, 660, 150, 110 ) );
+			AddWeather( -15, 99, 5, new Rectangle2D( 3850, 160, 390, 320 ), new Rectangle2D( 3900, 480, 380, 180 ), new Rectangle2D( 4160, 660, 150, 110 ) );
 
 			// covetous entrance, around vesper and minoc
-			AddWeather( +15,  50, 5, new Rectangle2D( 2425, 725, 250, 250 ) );
+			AddWeather( +15,  66, 5, new Rectangle2D( 2425, 725, 250, 250 ) );
 
 			// despise entrance, north of britain
-			AddWeather( +15,  50, 5, new Rectangle2D( 1245, 1045, 250, 250 ) );
+			AddWeather( +15,  33, 5, new Rectangle2D( 1245, 1045, 250, 250 ) );
 
 
 			/* Dynamic weather:
@@ -42,16 +41,15 @@ namespace Server.Misc
 				AddDynamicWeather( +15, 100, 5, 8, 400, 400, new Rectangle2D( 0, 0, 5120, 4096 ) );
 		}
 
-		public static List<Weather> GetWeatherList( Map facet )
+		public static ArrayList GetWeatherList( Map facet )
 		{
 			if ( facet == null )
 				return null;
 
-			List<Weather> list = null;
-			m_WeatherByFacet.TryGetValue( facet, out list );
+			ArrayList list = (ArrayList)m_WeatherByFacet[facet];
 
 			if ( list == null )
-				m_WeatherByFacet[facet] = list = new List<Weather>();
+				m_WeatherByFacet[facet] = list = new ArrayList();
 
 			return list;
 		}
@@ -92,14 +90,14 @@ namespace Server.Misc
 
 		public static bool CheckWeatherConflict( Map facet, Weather exclude, Rectangle2D area )
 		{
-			List<Weather> list = GetWeatherList( facet );
+			ArrayList list = GetWeatherList( facet );
 
 			if ( list == null )
 				return false;
 
 			for ( int i = 0; i < list.Count; ++i )
 			{
-				Weather w = list[i];
+				Weather w = (Weather)list[i];
 
 				if ( w != exclude && w.IntersectsWith( area ) )
 					return true;
@@ -183,7 +181,7 @@ namespace Server.Misc
 			m_ChanceOfPercipitation = chanceOfPercipitation;
 			m_ChanceOfExtremeTemperature = chanceOfExtremeTemperature;
 
-			List<Weather> list = GetWeatherList( facet );
+			ArrayList list = GetWeatherList( facet );
 
 			if ( list != null )
 				list.Add( this );
@@ -310,7 +308,7 @@ namespace Server.Misc
 
 				for ( int i = 0; i < states.Count; ++i )
 				{
-					NetState ns = states[i];
+					NetState ns = (NetState)states[i];
 					Mobile mob = ns.Mobile;
 
 					if ( mob == null || mob.Map != m_Facet )
@@ -325,12 +323,14 @@ namespace Server.Misc
 						continue;
 
 					if ( weatherPacket == null )
-						weatherPacket = Packet.Acquire( new Server.Network.Weather( type, density, temperature ) );
+					{
+						weatherPacket = new Server.Network.Weather( type, density, temperature );
+						weatherPacket.SetStatic();
+					}
 
 					ns.Send( weatherPacket );
 				}
-
-				Packet.Release( weatherPacket );
+				Packet.Release( ref weatherPacket );
 			}
 
 			m_Stage++;
@@ -340,14 +340,10 @@ namespace Server.Misc
 
 	public class WeatherMap : MapItem
 	{
-		public override string DefaultName
-		{
-			get { return "weather map"; }
-		}
-
 		[Constructable]
 		public WeatherMap()
 		{
+			Name = "weather map";
 			SetDisplay( 0, 0, 5119, 4095, 400, 400 );
 		}
 
@@ -358,13 +354,13 @@ namespace Server.Misc
 			if ( facet == null )
 				return;
 
-			List<Weather> list = Weather.GetWeatherList( facet );
+			ArrayList list = Weather.GetWeatherList( facet );
 
 			ClearPins();
 
 			for ( int i = 0; i < list.Count; ++i )
 			{
-				Weather w = list[i];
+				Weather w = (Weather)list[i];
 
 				for ( int j = 0; j < w.Area.Length; ++j )
 					AddWorldPin( w.Area[j].X + (w.Area[j].Width/2), w.Area[j].Y + (w.Area[j].Height/2) );
@@ -392,3 +388,4 @@ namespace Server.Misc
 		}
 	}
 }
+

@@ -3,13 +3,8 @@ using Server;
 
 namespace Server.Items
 {
-	public abstract class BaseReagent : Item
+	public abstract class BaseReagent : BaseItem
 	{
-		public override double DefaultWeight
-		{
-			get { return 0.1; }
-		}
-
 		public BaseReagent( int itemID ) : this( itemID, 1 )
 		{
 		}
@@ -17,6 +12,7 @@ namespace Server.Items
 		public BaseReagent( int itemID, int amount ) : base( itemID )
 		{
 			Stackable = true;
+			Weight = 0.1;
 			Amount = amount;
 		}
 

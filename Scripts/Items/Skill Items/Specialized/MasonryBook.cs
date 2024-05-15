@@ -4,16 +4,12 @@ using Server.Mobiles;
 
 namespace Server.Items
 {
-	public class MasonryBook : Item
+	public class MasonryBook : BaseItem
 	{
-		public override string DefaultName
-		{
-			get { return "Making Valuables With Stonecrafting"; }
-		}
-
 		[Constructable]
 		public MasonryBook() : base( 0xFBE )
 		{
+			Name = "Making Valuables With Stonecrafting";
 			Weight = 1.0;
 		}
 
@@ -45,16 +41,16 @@ namespace Server.Items
 			}
 			else if ( pm == null || from.Skills[SkillName.Carpentry].Base < 100.0 )
 			{
-				pm.SendMessage( "Only a Grandmaster Carpenter can learn from this book." );
+				pm.SendAsciiMessage( "Only a Grandmaster Carpenter can learn from this book." );
 			}
 			else if ( pm.Masonry )
 			{
-				pm.SendMessage( "You have already learned this information." );
+				pm.SendAsciiMessage( "You have already learned this information." );
 			}
 			else
 			{
 				pm.Masonry = true;
-				pm.SendMessage( "You have learned to make items from stone. You will need miners to gather stones for you to make these items." );
+				pm.SendAsciiMessage( "You have learned to make items from stone. You will need miners to gather stones for you to make these items." );
 				Delete();
 			}
 		}

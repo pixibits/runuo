@@ -14,6 +14,9 @@ namespace Server.Regions
 		public Point3D EntranceLocation{ get{ return m_EntranceLocation; } set{ m_EntranceLocation = value; } }
 		public Map EntranceMap{ get{ return m_EntranceMap; } set{ m_EntranceMap = value; } }
 
+        public bool CanRecall { get { return true; } }
+        public bool CanGate { get { return true; } }
+
 		public DungeonRegion( XmlElement xml, Map map, Region parent ) : base( xml, map, parent )
 		{
 			XmlElement entrEl = xml["entrance"];
@@ -25,28 +28,22 @@ namespace Server.Regions
 				m_EntranceMap = entrMap;
 		}
 
-		public override bool AllowHousing( Mobile from, Point3D p )
-		{
-			return false;
-		}
+        public override bool AllowHousing(Mobile from, Point3D p)
+        {
+            return false;
+        }
 
-		public override void OnEnter( Mobile m )
-		{
-			if ( m is PlayerMobile && ((PlayerMobile)m).Young )
-				m.SendGump( new YoungDungeonWarning() );
-		}
+        public override void OnEnter(Mobile m)
+        {
+        }
 
-		public override void AlterLightLevel( Mobile m, ref int global, ref int personal )
-		{
-			global = LightCycle.DungeonLevel;
-		}
+        public override void OnExit(Mobile m)
+        {
+        }
 
-		public override bool CanUseStuckMenu( Mobile m )
-		{
-			if ( this.Map == Map.Felucca )
-				return false;
-
-			return base.CanUseStuckMenu( m );
-		}
+        public override void AlterLightLevel(Mobile m, ref int global, ref int personal)
+        {
+            global = LightCycle.DungeonLevel;
+        }
 	}
 }

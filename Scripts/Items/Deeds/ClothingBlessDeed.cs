@@ -17,41 +17,32 @@ namespace Server.Items
 
 		protected override void OnTarget( Mobile from, object target ) // Override the protected OnTarget() for our feature
 		{
-			if ( m_Deed.Deleted || m_Deed.RootParent != from )
-				return;
-
-			if ( target is BaseClothing )
+			if ( target is BaseClothing || target is LeatherGloves )
 			{
-				BaseClothing item = (BaseClothing)target;
+				Item item = (Item)target;
 
-				if ( item is IArcaneEquip )
-				{
-					IArcaneEquip eq = (IArcaneEquip)item;
-					if ( eq.IsArcane )
-					{
-						from.SendLocalizedMessage( 1005019 ); // This bless deed is for Clothes only.
-						return;
-					}
-				}
-
-				if ( item.LootType == LootType.Blessed || item.BlessedFor == from || (Mobile.InsuranceEnabled && item.Insured) ) // Check if its already newbied (blessed)
+				if ( item.LootType == LootType.Blessed || item.BlessedFor == from ) // Check if its already newbied (blessed)
 				{
 					from.SendLocalizedMessage( 1045113 ); // That item is already blessed
 				}
 				else if ( item.LootType != LootType.Regular )
 				{
-					from.SendLocalizedMessage( 1045114 ); // You can not bless that item
-				}
-				else if ( !item.CanBeBlessed || item.RootParent != from )
-				{
-					from.SendLocalizedMessage( 500509 ); // You cannot bless that object
+					// cursed?
+					from.SendLocalizedMessage( 1045114 ); // You can not bless that item 
 				}
 				else
 				{
-					item.LootType = LootType.Blessed;
-					from.SendLocalizedMessage( 1010026 ); // You bless the item....
+					if( item.RootParent != from ) // Make sure its in their pack or they are wearing it
+					{
+						from.SendAsciiMessage( "That must be in your pack to do that." );
+					}
+					else
+					{
+						item.LootType = LootType.Blessed;
+						from.SendLocalizedMessage( 1010026 ); // You bless the item....
 
-					m_Deed.Delete(); // Delete the bless deed
+						m_Deed.Delete(); // Delete the bless deed
+					}
 				}
 			}
 			else
@@ -61,17 +52,13 @@ namespace Server.Items
 		}
 	}
 
-	public class ClothingBlessDeed : Item // Create the item class which is derived from the base item class
+	public class ClothingBlessDeed : BaseItem // Create the item class which is derived from the base item class
 	{
-		public override string DefaultName
-		{
-			get { return "a clothing bless deed"; }
-		}
-
 		[Constructable]
 		public ClothingBlessDeed() : base( 0x14F0 )
 		{
 			Weight = 1.0;
+			Name = "a clothing bless deed";
 			LootType = LootType.Blessed;
 		}
 
@@ -104,9 +91,11 @@ namespace Server.Items
 			}
 			else
 			{
-				from.SendLocalizedMessage( 1005018 ); // What would you like to bless? (Clothes Only)
+				from.SendLocalizedMessage( 1005018 ); // What item would you like to bless? (Clothes Only)
 				from.Target = new ClothingBlessTarget( this ); // Call our target
 			 }
 		}	
 	}
 }
+
+

@@ -2,7 +2,47 @@ using System;
 using System.Text;
 using Server;
 using Server.Mobiles;
-using Server.Engines.CannedEvil;
+using Server.Items;
+using Server.Guilds;
+
+namespace Server
+{
+	public enum NotoCap
+	{
+		None = 256,
+
+		DreadLordLady = -125,
+		EvilLordLady = -110,
+		DarkLordLady = -90,
+		Dastardly = -70,
+		Dishonorable = -50,
+		LowNeutral = -39,
+		Neutral = 0,
+		HighNeutral = 39,
+		Honorable = 50,
+		Noble = 70,
+		LordLady = 90,
+		NobleLordLady = 110,
+		GreatLordLady = 125,
+	}
+
+	public enum Noto
+	{
+		Dread = -120,
+		Evil = -100,
+		Dark = -80,
+		Dastardly = -60,
+		Dishonorable = -40,
+		LowNeutral = -39,
+		Neutral = 0,
+		HighNeutral = 39,
+		Honorable = 40,
+		Noble = 60,
+		LordLady = 80,
+		NobleLordLady = 100,
+		Great = 120,
+	}
+}
 
 namespace Server.Misc
 {
@@ -11,235 +51,203 @@ namespace Server.Misc
 		public const int MinFame = 0;
 		public const int MaxFame = 15000;
 
-		public static void AwardFame( Mobile m, int offset, bool message )
+		private static string[] m_NotoStrings = new string[]
+			{
+				"The Dread {1} {0}",
+				"The Evil {1} {0}", 
+				"The Dark {1} {0}", 
+				"The Dastardly {0}",
+				"The Dishonorable {0}", 
+				"{0}", 
+				"The Honorable {0}", 
+				"The Noble {0}", 
+				"The {1} {0}", 
+				"The Noble {1} {0}", 
+				"The Great {1} {0}", 
+			};
+
+		public const int MinKarma = -127;
+		public const int MaxKarma =  127;
+
+		public static void Configure()
 		{
-			if ( offset > 0 )
-			{
-				if ( m.Fame >= MaxFame )
-					return;
-
-				offset -= m.Fame / 100;
-
-				if ( offset < 0 )
-					offset = 0;
-			}
-			else if ( offset < 0 )
-			{
-				if ( m.Fame <= MinFame )
-					return;
-
-				offset -= m.Fame / 100;
-
-				if ( offset > 0 )
-					offset = 0;
-			}
-
-			if ( (m.Fame + offset) > MaxFame )
-				offset = MaxFame - m.Fame;
-			else if ( (m.Fame + offset) < MinFame )
-				offset = MinFame - m.Fame;
-
-			m.Fame += offset;
-
-			if ( message )
-			{
-				if ( offset > 40 )
-					m.SendLocalizedMessage( 1019054 ); // You have gained a lot of fame.
-				else if ( offset > 20 )
-					m.SendLocalizedMessage( 1019053 ); // You have gained a good amount of fame.
-				else if ( offset > 10 )
-					m.SendLocalizedMessage( 1019052 ); // You have gained some fame.
-				else if ( offset > 0 )
-					m.SendLocalizedMessage( 1019051 ); // You have gained a little fame.
-				else if ( offset < -40 )
-					m.SendLocalizedMessage( 1019058 ); // You have lost a lot of fame.
-				else if ( offset < -20 )
-					m.SendLocalizedMessage( 1019057 ); // You have lost a good amount of fame.
-				else if ( offset < -10 )
-					m.SendLocalizedMessage( 1019056 ); // You have lost some fame.
-				else if ( offset < 0 )
-					m.SendLocalizedMessage( 1019055 ); // You have lost a little fame.
-			}
+			SkillInfo.Table[(int)SkillName.DetectHidden].Title = "Ranger";
+			SkillInfo.Table[(int)SkillName.Snooping].Title = "Rogue";
+			SkillInfo.Table[(int)SkillName.AnimalTaming].Title = "Ranger";
+			SkillInfo.Table[(int)SkillName.Parry].Title = "Shieldsfighter";
+			SkillInfo.Table[(int)SkillName.Veterinary].Title = "Healer";
 		}
 
-		public const int MinKarma = -15000;
-		public const int MaxKarma =  15000;
-
-		public static void AwardKarma( Mobile m, int offset, bool message )
+		// old school noto system uses karma only
+		public static void AlterNotoriety( Mobile m, int amount )
 		{
-			if ( offset > 0 )
-			{
-				if ( m is PlayerMobile && ((PlayerMobile)m).KarmaLocked )
-					return;
-
-				if ( m.Karma >= MaxKarma )
-					return;
-
-				offset -= m.Karma / 100;
-
-				if ( offset < 0 )
-					offset = 0;
-			}
-			else if ( offset < 0 )
-			{
-				if ( m.Karma <= MinKarma )
-					return;
-
-				offset -= m.Karma / 100;
-
-				if ( offset > 0 )
-					offset = 0;
-			}
-
-			if ( (m.Karma + offset) > MaxKarma )
-				offset = MaxKarma - m.Karma;
-			else if ( (m.Karma + offset) < MinKarma )
-				offset = MinKarma - m.Karma;
-
-			bool wasPositiveKarma = ( m.Karma >= 0 );
-
-			m.Karma += offset;
-
-			if ( message )
-			{
-				if ( offset > 40 )
-					m.SendLocalizedMessage( 1019062 ); // You have gained a lot of karma.
-				else if ( offset > 20 )
-					m.SendLocalizedMessage( 1019061 ); // You have gained a good amount of karma.
-				else if ( offset > 10 )
-					m.SendLocalizedMessage( 1019060 ); // You have gained some karma.
-				else if ( offset > 0 )
-					m.SendLocalizedMessage( 1019059 ); // You have gained a little karma.
-				else if ( offset < -40 )
-					m.SendLocalizedMessage( 1019066 ); // You have lost a lot of karma.
-				else if ( offset < -20 )
-					m.SendLocalizedMessage( 1019065 ); // You have lost a good amount of karma.
-				else if ( offset < -10 )
-					m.SendLocalizedMessage( 1019064 ); // You have lost some karma.
-				else if ( offset < 0 )
-					m.SendLocalizedMessage( 1019063 ); // You have lost a little karma.
-			}
-
-			if ( !Core.AOS && wasPositiveKarma && m.Karma < 0 && m is PlayerMobile && !((PlayerMobile)m).KarmaLocked )
-			{
-				((PlayerMobile)m).KarmaLocked = true;
-				m.SendLocalizedMessage( 1042511, "", 0x22 ); // Karma is locked.  A mantra spoken at a shrine will unlock it again.
-			}
+			AlterNotoriety( m, amount, (int)NotoCap.None );
 		}
 
-		public static string[] HarrowerTitles = new string[] { "Spite", "Opponent", "Hunter", "Venom", "Executioner", "Annihilator", "Champion", "Assailant", "Purifier", "Nullifier" };
-
-		public static string ComputeTitle( Mobile beholder, Mobile beheld )
+		public static void AlterNotoriety( Mobile m, int amount, NotoCap cap )
 		{
-			StringBuilder title = new StringBuilder();
+			AlterNotoriety( m, amount, (int)cap );
+		}
 
-			int fame = beheld.Fame;
-			int karma = beheld.Karma;
+		public static void AlterNotoriety( Mobile m, int amount, int cap )
+		{
+			PlayerMobile pm = m as PlayerMobile;
+			if ( pm == null || amount == 0 )
+				return;
 
-			bool showSkillTitle = beheld.ShowFameTitle && ( (beholder == beheld) || (fame >= 5000) );
+			if ( amount > 1 )
+				amount = 1;
 
-			/*if ( beheld.Kills >= 5 )
+			int newKarma = m.Karma + amount;
+			if ( newKarma > MaxKarma )
+				newKarma = MaxKarma;
+			else if ( newKarma < MinKarma )
+				newKarma = MinKarma;
+			
+			if ( amount > 0 )
 			{
-				title.AppendFormat( beheld.Fame >= 10000 ? "The Murderer {1} {0}" : "The Murderer {0}", beheld.Name, beheld.Female ? "Lady" : "Lord" );
+				if ( pm.NextNotoUp > DateTime.Now )
+					return;
+				pm.NextNotoUp = DateTime.Now + TimeSpan.FromMinutes( 15 );
 			}
-			else*/if ( beheld.ShowFameTitle || (beholder == beheld) )
+
+			if ( cap != (int)NotoCap.None )
 			{
-				for ( int i = 0; i < m_FameEntries.Length; ++i )
+				if ( amount > 0 )
 				{
-					FameEntry fe = m_FameEntries[i];
-
-					if ( fame <= fe.m_Fame || i == (m_FameEntries.Length - 1) )
+					if ( newKarma > cap )
 					{
-						KarmaEntry[] karmaEntries = fe.m_Karma;
-
-						for ( int j = 0; j < karmaEntries.Length; ++j )
-						{
-							KarmaEntry ke = karmaEntries[j];
-
-							if ( karma <= ke.m_Karma || j == (karmaEntries.Length - 1) )
-							{
-								title.AppendFormat( ke.m_Title, beheld.Name, beheld.Female ? "Lady" : "Lord" );
-								break;
-							}
-						}
-
-						break;
+						if ( m.Karma >= cap )
+							return;
+						newKarma = cap;
 					}
 				}
+				else if ( amount < 0 )
+				{
+					if ( newKarma < cap )
+					{
+						if ( m.Karma <= cap )
+							return;
+						newKarma = cap;
+					}
+				}
+			}
+
+			m.Karma = newKarma;
+		}
+
+		public static Noto GetNotoLevel( int karma )
+		{
+			if ( karma <= -120 )
+				return Noto.Dread;
+			else if ( karma <= -100 )
+				return Noto.Evil;
+			else if ( karma <= -80 )
+				return Noto.Dark;
+			else if ( karma <= -60 )
+				return Noto.Dastardly;
+			else if ( karma <= -40 )
+				return Noto.Dishonorable;
+			else if ( karma <= 39 )
+				return Noto.Neutral;
+			else if ( karma <= 59 )
+				return Noto.Honorable;
+			else if ( karma <= 79 )
+				return Noto.Noble;
+			else if ( karma <= 99 )
+				return Noto.LordLady;
+			else if ( karma <= 119 )
+				return Noto.NobleLordLady;
+			else //if ( karma <= 127 )
+				return Noto.Great;
+		}
+
+		public static string GetNotoTitle( Mobile beheld )
+		{
+			if ( beheld.ShowFameTitle && beheld.Player )
+			{
+				int karma = beheld.Karma;
+				int t;
+
+				if ( karma <= (int)Noto.Dread )
+					t = 0;
+				else if ( karma <= (int)Noto.Evil )
+					t = 1;
+				else if ( karma <= (int)Noto.Dark )
+					t = 2;
+				else if ( karma <= (int)Noto.Dastardly )
+					t = 3;
+				else if ( karma <= (int)Noto.Dishonorable )
+					t = 4;
+				else if ( karma < (int)Noto.Honorable )
+					t = 5;
+				else if ( karma < (int)Noto.Noble )
+					t = 6;
+				else if ( karma < (int)Noto.LordLady )
+					t = 7;
+				else if ( karma < (int)Noto.NobleLordLady )
+					t = 8;
+				else if ( karma < (int)Noto.Great )
+					t = 9;
+				else //if ( karma >= (int)Noto.Great )
+					t = 10;
+
+				return String.Format( m_NotoStrings[t], beheld.Name, beheld.Female ? "Lady" : "Lord" );
 			}
 			else
 			{
-				title.Append( beheld.Name );
+				return beheld.Name;
 			}
+		}
 
-			if( beheld is PlayerMobile && ((PlayerMobile)beheld).DisplayChampionTitle )
-			{
-				PlayerMobile.ChampionTitleInfo info = ((PlayerMobile)beheld).ChampionTitles;
-
-				if( info.Harrower > 0 )
-					title.AppendFormat( ": {0} of Evil", HarrowerTitles[Math.Min( HarrowerTitles.Length, info.Harrower )-1] );
-				else
-				{
-					int highestValue = 0, highestType = 0;
-					for( int i = 0; i < ChampionSpawnInfo.Table.Length; i++ )
-					{
-						int v = info.GetValue( i );
-
-						if( v > highestValue )
-						{
-							highestValue = v;
-							highestType = i;
-						}
-					}
-
-					int offset = 0;
-					if( highestValue > 800 )
-						offset = 3;
-					else if( highestValue > 300 )
-						offset = (int)(highestValue/300);
-
-					if( offset > 0 )
-					{
-						ChampionSpawnInfo champInfo = ChampionSpawnInfo.GetInfo( (ChampionSpawnType)highestType );
-						title.AppendFormat( ": {0} of the {1}", champInfo.LevelNames[Math.Min( offset, champInfo.LevelNames.Length ) -1], champInfo.Name );
-					}
-				}
-			}
-
+		public static string ComputeTitle( Mobile beholder, Mobile beheld )
+		{
+			StringBuilder title = new StringBuilder( GetNotoTitle( beheld ) );
 			string customTitle = beheld.Title;
 
 			if ( customTitle != null && (customTitle = customTitle.Trim()).Length > 0 )
 			{
 				title.AppendFormat( " {0}", customTitle );
 			}
-			else if ( showSkillTitle && beheld.Player )
+			else if ( beheld.Player && beheld.ShowFameTitle && ( beholder == beheld || Math.Abs( beheld.Karma ) >= (int)Noto.NobleLordLady || ( beholder != null && beholder.AccessLevel > beheld.AccessLevel ) ) ) 
 			{
-				string skillTitle = GetSkillTitle( beheld );
+				Skill highest = GetHighestSkill( beheld );// beheld.Skills.Highest;
 
-				if ( skillTitle != null ) {
-					title.Append( ", " ).Append( skillTitle );
+				if ( highest != null )
+				{
+					string skillTitle = highest.Info.Title;
+					string skillLevel;
+					if ( highest.BaseFixedPoint >= 300 )
+						skillLevel = (string)Utility.GetArrayCap( m_Levels, (highest.BaseFixedPoint - 300) / 100 );
+					else
+						skillLevel = m_Levels[0];
+
+					if ( beheld.Female )
+					{
+						if ( skillTitle.EndsWith( "man" ) )
+							skillTitle = skillTitle.Substring( 0, skillTitle.Length - 3 ) + "woman";
+					}
+
+					title.AppendFormat( ", {0} {1}", skillLevel, skillTitle );
 				}
 			}
 
 			return title.ToString();
 		}
 
-		public static string GetSkillTitle( Mobile mob ) {
-			Skill highest = GetHighestSkill( mob );// beheld.Skills.Highest;
-
-			if ( highest != null && highest.BaseFixedPoint >= 300 )
+		private static string[] m_Levels = new string[]
 			{
-				string skillLevel = GetSkillLevel( highest );
-				string skillTitle = highest.Info.Title;
-
-				if ( mob.Female && skillTitle.EndsWith( "man" ) )
-					skillTitle = skillTitle.Substring( 0, skillTitle.Length - 3 ) + "woman";
-
-				return String.Concat( skillLevel, " ", skillTitle );
-			}
-
-			return null;
-		}
+				"Neophyte",
+				"Novice",
+				"Apprentice",
+				"Journeyman",
+				"Expert",
+				"Adept",
+				"Master",
+				"Grandmaster",
+				"Elder",
+				"Legendary"
+			};
 
 		private static Skill GetHighestSkill( Mobile m )
 		{
@@ -256,145 +264,11 @@ namespace Server.Misc
 
 				if ( highest == null || check.BaseFixedPoint > highest.BaseFixedPoint )
 					highest = check;
-				else if ( highest != null && highest.Lock != SkillLock.Up && check.Lock == SkillLock.Up && check.BaseFixedPoint == highest.BaseFixedPoint )
-					highest = check;
+				//else if ( highest != null && check.BaseFixedPoint == highest.BaseFixedPoint )
+				//	highest = check;
 			}
 
 			return highest;
-		}
-
-		private static string[,] m_Levels = new string[,]
-			{
-				{ "Neophyte",		"Neophyte",		"Neophyte"		},
-				{ "Novice",			"Novice",		"Novice"		},
-				{ "Apprentice",		"Apprentice",	"Apprentice"	},
-				{ "Journeyman",		"Journeyman",	"Journeyman"	},
-				{ "Expert",			"Expert",		"Expert"		},
-				{ "Adept",			"Adept",		"Adept"			},
-				{ "Master",			"Master",		"Master"		},
-				{ "Grandmaster",	"Grandmaster",	"Grandmaster"	},
-				{ "Elder",			"Tatsujin",		"Shinobi"		},
-				{ "Legendary",		"Kengo",		"Ka-ge"			}
-			};
-
-		private static string GetSkillLevel( Skill skill )
-		{
-			return m_Levels[GetTableIndex( skill ), GetTableType( skill )];
-		}
-
-		private static int GetTableType( Skill skill )
-		{
-			switch ( skill.SkillName )
-			{
-				default: return 0;
-				case SkillName.Bushido: return 1;
-				case SkillName.Ninjitsu: return 2;
-			}
-		}
-
-		private static int GetTableIndex( Skill skill )
-		{
-			int fp = Math.Min( skill.BaseFixedPoint, 1200 );
-
-			return (fp - 300) / 100;
-		}
-
-		private static FameEntry[] m_FameEntries = new FameEntry[]
-			{
-				new FameEntry( 1249, new KarmaEntry[]
-				{
-					new KarmaEntry( -10000, "The Outcast {0}" ),
-					new KarmaEntry( -5000, "The Despicable {0}" ),
-					new KarmaEntry( -2500, "The Scoundrel {0}" ),
-					new KarmaEntry( -1250, "The Unsavory {0}" ),
-					new KarmaEntry( -625, "The Rude {0}" ),
-					new KarmaEntry( 624, "{0}" ),
-					new KarmaEntry( 1249, "The Fair {0}" ),
-					new KarmaEntry( 2499, "The Kind {0}" ),
-					new KarmaEntry( 4999, "The Good {0}" ),
-					new KarmaEntry( 9999, "The Honest {0}" ),
-					new KarmaEntry( 10000, "The Trustworthy {0}" )
-				} ),
-				new FameEntry( 2499, new KarmaEntry[]
-				{
-					new KarmaEntry( -10000, "The Wretched {0}" ),
-					new KarmaEntry( -5000, "The Dastardly {0}" ),
-					new KarmaEntry( -2500, "The Malicious {0}" ),
-					new KarmaEntry( -1250, "The Dishonorable {0}" ),
-					new KarmaEntry( -625, "The Disreputable {0}" ),
-					new KarmaEntry( 624, "The Notable {0}" ),
-					new KarmaEntry( 1249, "The Upstanding {0}" ),
-					new KarmaEntry( 2499, "The Respectable {0}" ),
-					new KarmaEntry( 4999, "The Honorable {0}" ),
-					new KarmaEntry( 9999, "The Commendable {0}" ),
-					new KarmaEntry( 10000, "The Estimable {0}" )
-				} ),
-				new FameEntry( 4999, new KarmaEntry[]
-				{
-					new KarmaEntry( -10000, "The Nefarious {0}" ),
-					new KarmaEntry( -5000, "The Wicked {0}" ),
-					new KarmaEntry( -2500, "The Vile {0}" ),
-					new KarmaEntry( -1250, "The Ignoble {0}" ),
-					new KarmaEntry( -625, "The Notorious {0}" ),
-					new KarmaEntry( 624, "The Prominent {0}" ),
-					new KarmaEntry( 1249, "The Reputable {0}" ),
-					new KarmaEntry( 2499, "The Proper {0}" ),
-					new KarmaEntry( 4999, "The Admirable {0}" ),
-					new KarmaEntry( 9999, "The Famed {0}" ),
-					new KarmaEntry( 10000, "The Great {0}" )
-				} ),
-				new FameEntry( 9999, new KarmaEntry[]
-				{
-					new KarmaEntry( -10000, "The Dread {0}" ),
-					new KarmaEntry( -5000, "The Evil {0}" ),
-					new KarmaEntry( -2500, "The Villainous {0}" ),
-					new KarmaEntry( -1250, "The Sinister {0}" ),
-					new KarmaEntry( -625, "The Infamous {0}" ),
-					new KarmaEntry( 624, "The Renowned {0}" ),
-					new KarmaEntry( 1249, "The Distinguished {0}" ),
-					new KarmaEntry( 2499, "The Eminent {0}" ),
-					new KarmaEntry( 4999, "The Noble {0}" ),
-					new KarmaEntry( 9999, "The Illustrious {0}" ),
-					new KarmaEntry( 10000, "The Glorious {0}" )
-				} ),
-				new FameEntry( 10000, new KarmaEntry[]
-				{
-					new KarmaEntry( -10000, "The Dread {1} {0}" ),
-					new KarmaEntry( -5000, "The Evil {1} {0}" ),
-					new KarmaEntry( -2500, "The Dark {1} {0}" ),
-					new KarmaEntry( -1250, "The Sinister {1} {0}" ),
-					new KarmaEntry( -625, "The Dishonored {1} {0}" ),
-					new KarmaEntry( 624, "{1} {0}" ),
-					new KarmaEntry( 1249, "The Distinguished {1} {0}" ),
-					new KarmaEntry( 2499, "The Eminent {1} {0}" ),
-					new KarmaEntry( 4999, "The Noble {1} {0}" ),
-					new KarmaEntry( 9999, "The Illustrious {1} {0}" ),
-					new KarmaEntry( 10000, "The Glorious {1} {0}" )
-				} )
-			};
-	}
-
-	public class FameEntry
-	{
-		public int m_Fame;
-		public KarmaEntry[] m_Karma;
-
-		public FameEntry( int fame, KarmaEntry[] karma )
-		{
-			m_Fame = fame;
-			m_Karma = karma;
-		}
-	}
-
-	public class KarmaEntry
-	{
-		public int m_Karma;
-		public string m_Title;
-
-		public KarmaEntry( int karma, string title )
-		{
-			m_Karma = karma;
-			m_Title = title;
 		}
 	}
 }

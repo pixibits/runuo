@@ -2,7 +2,7 @@ using System;
 
 namespace Server.Items
 {
-	public class BlankScroll : Item, ICommodity
+	public class BlankScroll : BaseItem
 	{
 		[Constructable]
 		public BlankScroll() : this( 1 )
@@ -17,11 +17,13 @@ namespace Server.Items
 			Amount = amount;
 		}
 
-		int ICommodity.DescriptionNumber { get { return LabelNumber; } }
-		bool ICommodity.IsDeedable { get { return (Core.ML); } }
-
 		public BlankScroll( Serial serial ) : base( serial )
 		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new BlankScroll( amount ), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )

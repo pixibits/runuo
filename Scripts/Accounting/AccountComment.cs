@@ -52,9 +52,9 @@ namespace Server.Accounting
 		/// <param name="node">The XmlElement instance from which to deserialize.</param>
 		public AccountComment( XmlElement node )
 		{
-			m_AddedBy = Utility.GetAttribute( node, "addedBy", "empty" );
-			m_LastModified = Utility.GetXMLDateTime( Utility.GetAttribute( node, "lastModified" ), DateTime.Now );
-			m_Content = Utility.GetText( node, "" );
+			m_AddedBy = Accounts.GetAttribute( node, "addedBy", "empty" );
+			m_LastModified = Accounts.GetDateTime( Accounts.GetAttribute( node, "lastModified" ), DateTime.Now );
+			m_Content = Accounts.GetText( node, "" );
 		}
 
 		/// <summary>
@@ -66,8 +66,7 @@ namespace Server.Accounting
 			xml.WriteStartElement( "comment" );
 
 			xml.WriteAttributeString( "addedBy", m_AddedBy );
-
-			xml.WriteAttributeString( "lastModified", XmlConvert.ToString( m_LastModified, XmlDateTimeSerializationMode.Local ) );
+			xml.WriteAttributeString( "lastModified", XmlConvert.ToString( m_LastModified ) );
 
 			xml.WriteString( m_Content );
 

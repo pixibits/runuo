@@ -18,12 +18,9 @@ namespace Server.Items
 		public override int AosStrReq{ get{ return 75; } }
 		public override int OldStrReq{ get{ return 40; } }
 
-		public override int OldDexBonus{ get{ return -1; } }
-
 		public override int ArmorBase{ get{ return 40; } }
 
-		public override ArmorMaterialType MaterialType{ get{ return ArmorMaterialType.Dragon; } }
-		public override CraftResource DefaultResource{ get{ return CraftResource.RedScales; } }
+		public override ArmorMaterialType MaterialType{ get{ return ArmorMaterialType.Plate; } }
 
 		[Constructable]
 		public DragonHelm() : base( 0x2645 )

@@ -4,7 +4,7 @@ using Server.Network;
 
 namespace Server.Items
 {
-	public abstract class BaseGranite : Item
+	public abstract class BaseGranite : BaseItem, ICommodity
 	{
 		private CraftResource m_Resource;
 
@@ -14,12 +14,20 @@ namespace Server.Items
 			get{ return m_Resource; }
 			set{ m_Resource = value; InvalidateProperties(); }
 		}
+		
+		string ICommodity.Description
+		{
+			get
+			{
+				return String.Format( "{0} {1} high quality granite", Amount, CraftResources.GetName( m_Resource ).ToLower() );
+			}
+		}
 
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
 
-			writer.Write( (int) 1 ); // version
+			writer.Write( (int) 0 ); // version
 
 			writer.Write( (int) m_Resource );
 		}
@@ -32,27 +40,18 @@ namespace Server.Items
 
 			switch ( version )
 			{
-				case 1:
 				case 0:
 				{
 					m_Resource = (CraftResource)reader.ReadInt();
 					break;
 				}
 			}
-			
-			if ( version < 1 )
-				Stackable = Core.ML;
-		}
-
-		public override double DefaultWeight
-		{
-			get { return Core.ML ? 1.0 : 10.0; } // Pub 57
 		}
 
 		public BaseGranite( CraftResource resource ) : base( 0x1779 )
 		{
+			Weight = 10.0;
 			Hue = CraftResources.GetHue( resource );
-			Stackable = Core.ML;
 
 			m_Resource = resource;
 		}

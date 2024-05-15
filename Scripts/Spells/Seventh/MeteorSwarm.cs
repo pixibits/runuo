@@ -1,16 +1,17 @@
 using System;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server.Network;
 using Server.Items;
 using Server.Targeting;
 
 namespace Server.Spells.Seventh
 {
-	public class MeteorSwarmSpell : MagerySpell
+	public class MeteorSwarmSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Meteor Swarm", "Flam Kal Des Ylem",
-				233,
+				SpellCircle.Seventh,
+				245,
 				9042,
 				false,
 				Reagent.Bloodmoss,
@@ -18,8 +19,6 @@ namespace Server.Spells.Seventh
 				Reagent.SulfurousAsh,
 				Reagent.SpidersSilk
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Seventh; } }
 
 		public MeteorSwarmSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -44,12 +43,9 @@ namespace Server.Spells.Seventh
 
 				if ( p is Item )
 					p = ((Item)p).GetWorldLocation();
-
-				List<Mobile> targets = new List<Mobile>();
+				ArrayList targets = new ArrayList();
 
 				Map map = Caster.Map;
-
-				bool playerVsPlayer = false;
 
 				if ( map != null )
 				{
@@ -57,53 +53,40 @@ namespace Server.Spells.Seventh
 
 					foreach ( Mobile m in eable )
 					{
-						if ( Caster != m && SpellHelper.ValidIndirectTarget( Caster, m ) && Caster.CanBeHarmful( m, false ) )
-						{
-							if ( Core.AOS && !Caster.InLOS( m ) )
-								continue;
-
+						if ( SpellHelper.ValidIndirectTarget( Caster, m ) && Caster.CanBeHarmful( m, false ) )
 							targets.Add( m );
-
-							if ( m.Player )
-								playerVsPlayer = true;
-						}
 					}
 
 					eable.Free();
 				}
 
-				double damage;
-
-				if ( Core.AOS )
-					damage = GetNewAosDamage( 51, 1, 5, playerVsPlayer );
-				else
-					damage = Utility.Random( 27, 22 );
-
 				if ( targets.Count > 0 )
 				{
 					Effects.PlaySound( p, Caster.Map, 0x160 );
 
-					if ( Core.AOS && targets.Count > 2 )
-						damage = (damage * 2) / targets.Count;
-					else if ( !Core.AOS )
-						damage /= targets.Count;
+					double damage = GetPreUORDamage();
+					if ( targets.Count > 1 )
+						damage *= 2;
+					damage /= targets.Count;
 
 					for ( int i = 0; i < targets.Count; ++i )
 					{
-						Mobile m = targets[i];
+						Mobile m = (Mobile)targets[i];
+
+						SpellHelper.CheckReflect( (int)this.Circle, Caster, ref m );
 
 						double toDeal = damage;
 
-						if ( !Core.AOS && CheckResisted( m ) )
+						if ( CheckResisted( m, toDeal ) )
 						{
 							toDeal *= 0.5;
 
 							m.SendLocalizedMessage( 501783 ); // You feel yourself resisting magical energy.
 						}
 
+						int range = (int)Caster.GetDistanceToSqrt( m );
 						Caster.DoHarmful( m );
-						SpellHelper.Damage( this, m, toDeal, 0, 100, 0, 0, 0 );
-
+						SpellHelper.Damage( TimeSpan.FromSeconds( range > 6 ? 2 : 1 ), m, toDeal );
 						Caster.MovingParticles( m, 0x36D4, 7, 0, false, true, 9501, 1, 0, 0x100 );
 					}
 				}
@@ -116,7 +99,7 @@ namespace Server.Spells.Seventh
 		{
 			private MeteorSwarmSpell m_Owner;
 
-			public InternalTarget( MeteorSwarmSpell owner ) : base( Core.ML ? 10 : 12, true, TargetFlags.None )
+			public InternalTarget( MeteorSwarmSpell owner ) : base( 12, true, TargetFlags.None )
 			{
 				m_Owner = owner;
 			}

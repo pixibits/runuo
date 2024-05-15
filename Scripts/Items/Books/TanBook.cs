@@ -20,11 +20,6 @@ namespace Server.Items
 		{
 		}
 
-		// Intended for defined books only
-		public TanBook( bool writable ) : base( 0xFF0, writable )
-		{
-		}
-
 		public TanBook( Serial serial ) : base( serial )
 		{
 		}

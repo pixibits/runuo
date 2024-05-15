@@ -1,8 +1,6 @@
 using System;
 using Server.Items;
 using Server.Network;
-using Server.Spells;
-using Server.Mobiles;
 
 namespace Server.Items
 {
@@ -19,25 +17,7 @@ namespace Server.Items
 		public override WeaponType DefType{ get{ return WeaponType.Ranged; } }
 		public override WeaponAnimation DefAnimation{ get{ return WeaponAnimation.ShootXBow; } }
 
-		public override SkillName AccuracySkill{ get{ return SkillName.Archery; } }
-
-		private Timer m_RecoveryTimer; // so we don't start too many timers
-		private bool m_Balanced;
-		private int m_Velocity;
-		
-		[CommandProperty( AccessLevel.GameMaster )]
-		public bool Balanced
-		{
-			get{ return m_Balanced; }
-			set{ m_Balanced = value; InvalidateProperties(); }
-		}
-		
-		[CommandProperty( AccessLevel.GameMaster )]
-		public int Velocity
-		{
-			get{ return m_Velocity; }
-			set{ m_Velocity = value; InvalidateProperties(); }
-		}
+		protected override SkillName AccuracyMod { get{ return DefSkill; } }
 
 		public BaseRanged( int itemID ) : base( itemID )
 		{
@@ -49,124 +29,84 @@ namespace Server.Items
 
 		public override TimeSpan OnSwing( Mobile attacker, Mobile defender )
 		{
-			WeaponAbility a = WeaponAbility.GetCurrentAbility( attacker );
-
-			// Make sure we've been standing still for .25/.5/1 second depending on Era
-			if ( DateTime.Now > (attacker.LastMoveTime + TimeSpan.FromSeconds( Core.SE ? 0.25 : (Core.AOS ? 0.5 : 1.0) )) || (Core.AOS && WeaponAbility.GetCurrentAbility( attacker ) is MovingShot) )
+			// Make sure we've been standing still for one second
+			if ( attacker.HarmfulCheck( defender ) )
 			{
-				bool canSwing = true;
+				attacker.DisruptiveAction();
+				attacker.Send( new Swing( 0, attacker, defender ) );
 
-				if ( Core.AOS )
+				if ( OnFired( attacker, defender ) )
 				{
-					canSwing = ( !attacker.Paralyzed && !attacker.Frozen );
-
-					if ( canSwing )
-					{
-						Spell sp = attacker.Spell as Spell;
-
-						canSwing = ( sp == null || !sp.IsCasting || !sp.BlocksMovement );
-					}
+					if ( CheckHit( attacker, defender ) )
+						OnHit( attacker, defender );
+					else
+						OnMiss( attacker, defender );
 				}
-
-				if ( canSwing && attacker.HarmfulCheck( defender ) )
-				{
-					attacker.DisruptiveAction();
-					attacker.Send( new Swing( 0, attacker, defender ) );
-
-					if ( OnFired( attacker, defender ) )
-					{
-						if ( CheckHit( attacker, defender ) )
-							OnHit( attacker, defender );
-						else
-							OnMiss( attacker, defender );
-					}
-				}
-
-				attacker.RevealingAction();
-
-				return GetDelay( attacker );
 			}
-			else
-			{
-				attacker.RevealingAction();
 
-				return TimeSpan.FromSeconds( 0.25 );
-			}
+			return GetDelay( attacker );
 		}
 
-		public override void OnHit( Mobile attacker, Mobile defender, double damageBonus )
+		public override bool CheckHit( Mobile attacker, Mobile defender )
 		{
-			if ( attacker.Player && !defender.Player && (defender.Body.IsAnimal || defender.Body.IsMonster) && 0.4 >= Utility.RandomDouble() )
-				defender.AddToBackpack( Ammo );
+			BaseWeapon atkWeapon = attacker.Weapon as BaseWeapon;
+			BaseWeapon defWeapon = defender.Weapon as BaseWeapon;
 
-			if ( Core.ML && m_Velocity > 0 )
+			Skill atkSkill = attacker.Skills[atkWeapon.Skill];
+			Skill defSkill = defender.Skills[defWeapon.Skill];
+
+			double atkValue = atkWeapon.GetAttackSkillValue( attacker, defender );
+			double defValue = defWeapon.GetDefendSkillValue( attacker, defender );
+			if ( defValue == -50.0 )
+				defValue = -49.9;
+			
+			// chance = ( attacker_ability + 50 ) / ( ( defender_ability + 50 ) * 2 )
+			double chance = (atkValue + 50.0) / ((defValue + 50.0) * 2.0);
+			
+			chance *= 1.0 + ((double)GetHitChanceBonus() / 100.0);
+
+			WeaponAbility ability = WeaponAbility.GetCurrentAbility( attacker );
+			if ( ability != null )
+				chance *= ability.AccuracyScalar;
+
+			if ( attacker.LastMoveTime+TimeSpan.FromSeconds( 0.4 ) >= DateTime.Now )
 			{
-				int bonus = (int) attacker.GetDistanceToSqrt( defender );
-
-				if ( bonus > 0 && m_Velocity > Utility.Random( 100 ) )
-				{
-					AOS.Damage( defender, attacker, bonus * 3, 100, 0, 0, 0, 0 );
-
-					if ( attacker.Player )
-						attacker.SendLocalizedMessage( 1072794 ); // Your arrow hits its mark with velocity!
-
-					if ( defender.Player )
-						defender.SendLocalizedMessage( 1072795 ); // You have been hit by an arrow with velocity!
-				}
+				// walking -5%, running -10%
+				chance -= 0.05;
+				if ( (attacker.Direction&Direction.Running) != 0 )
+					chance -= 0.05;
 			}
 
-			base.OnHit( attacker, defender, damageBonus );
+			// moving target?
+			//if ( (defender.Direction&Direction.Running) != 0 )
+			//	chance -= 0.05;
+			
+			attacker.CheckSkill( atkSkill.SkillName, defSkill.Value-30.0, defSkill.Value+25.0 );
+			return chance >= Utility.RandomDouble();//;attacker.CheckSkill( atkSkill.SkillName, chance );
+		}
+
+		public override void OnHit( Mobile attacker, Mobile defender )
+		{
+			if ( attacker.Player && !defender.Player && defender.Backpack != null && (defender.Body.IsAnimal || defender.Body.IsMonster) && Utility.Random( 3 ) == 0 )
+				defender.AddToBackpack( Ammo );
+
+			base.OnHit( attacker, defender );
 		}
 
 		public override void OnMiss( Mobile attacker, Mobile defender )
 		{
-			if ( attacker.Player && 0.4 >= Utility.RandomDouble() )
-			{
-				if ( Core.SE )
-				{
-					PlayerMobile p = attacker as PlayerMobile;
-
-					if ( p != null )
-					{
-						Type ammo = AmmoType;
-
-						if ( p.RecoverableAmmo.ContainsKey( ammo ) )
-							p.RecoverableAmmo[ ammo ]++;
-						else
-							p.RecoverableAmmo.Add( ammo, 1 );
-
-						if ( !p.Warmode )
-						{
-							if ( m_RecoveryTimer == null )
-								m_RecoveryTimer = Timer.DelayCall( TimeSpan.FromSeconds( 10 ), new TimerCallback( p.RecoverAmmo ) );
-
-							if ( !m_RecoveryTimer.Running )
-								m_RecoveryTimer.Start();
-						}
-					}
-				} else {
-					Ammo.MoveToWorld( new Point3D( defender.X + Utility.RandomMinMax( -1, 1 ), defender.Y + Utility.RandomMinMax( -1, 1 ), defender.Z ), defender.Map );
-				}
-			}
+			if ( attacker.Player && Utility.Random( 3 ) == 0 )
+				Ammo.MoveToWorld( new Point3D( defender.X + Utility.RandomMinMax( -1, 1 ), defender.Y + Utility.RandomMinMax( -1, 1 ), defender.Z ), defender.Map );
 
 			base.OnMiss( attacker, defender );
 		}
 
 		public virtual bool OnFired( Mobile attacker, Mobile defender )
 		{
-			BaseQuiver quiver = attacker.FindItemOnLayer( Layer.Cloak ) as BaseQuiver;
 			Container pack = attacker.Backpack;
 
-			if ( attacker.Player )
-			{
-				if ( quiver == null || quiver.LowerAmmoCost == 0 || quiver.LowerAmmoCost > Utility.Random( 100 ) )
-				{
-					if ( quiver != null && quiver.ConsumeTotal( AmmoType, 1 ) )
-						quiver.InvalidateWeight();
-					else if ( pack == null || !pack.ConsumeTotal( AmmoType, 1 ) )
-						return false;
-				}
-			}
+			if ( attacker.Player && (pack == null || !pack.ConsumeTotal( AmmoType, 1 )) )
+				return false;
 
 			attacker.MovingEffect( defender, EffectID, 18, 1, false, false );
 
@@ -177,10 +117,7 @@ namespace Server.Items
 		{
 			base.Serialize( writer );
 
-			writer.Write( (int) 3 ); // version
-
-			writer.Write( (bool) m_Balanced );
-			writer.Write( (int) m_Velocity );
+			writer.Write( (int) 2 ); // version
 		}
 
 		public override void Deserialize( GenericReader reader )
@@ -191,13 +128,6 @@ namespace Server.Items
 
 			switch ( version )
 			{
-				case 3:
-				{
-					m_Balanced = reader.ReadBool();
-					m_Velocity = reader.ReadInt();
-
-					goto case 2;
-				}
 				case 2:
 				case 1:
 				{

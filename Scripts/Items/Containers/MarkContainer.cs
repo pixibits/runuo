@@ -1,6 +1,5 @@
 using System;
 using Server;
-using Server.Commands;
 
 namespace Server.Items
 {
@@ -8,12 +7,12 @@ namespace Server.Items
 	{
 		public static void Initialize()
 		{
-			CommandSystem.Register( "SecretLocGen", AccessLevel.Administrator, new CommandEventHandler( SecretLocGen_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "SecretLocGen", AccessLevel.Administrator, new Server.Commands.CommandEventHandler( SecretLocGen_OnCommand ) );
 		}
 
 		[Usage( "SecretLocGen" )]
 		[Description( "Generates mark containers to Malas secret locations." )]
-		public static void SecretLocGen_OnCommand( CommandEventArgs e )
+		public static void SecretLocGen_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			CreateMalasPassage( 951, 546, -70, 1006, 994, -70, false, false );
 			CreateMalasPassage( 914, 192, -79, 1019, 1062, -70, false, false );
@@ -25,7 +24,7 @@ namespace Server.Items
 			CreateMalasPassage( 424, 189, -1, 2333, 1501, -90, true, false );
 			CreateMalasPassage( 1313, 1115, -85, 1183, 462, -45, false, false );
 
-			e.Mobile.SendMessage( "Secret mark containers have been created." );
+			e.Mobile.SendAsciiMessage( "Secret mark containers have been created." );
 		}
 
 		private static bool FindMarkContainer( Point3D p, Map map )
@@ -101,9 +100,12 @@ namespace Server.Items
 		[CommandProperty( AccessLevel.GameMaster )]
 		public string Description { get { return m_Description; } set { m_Description = value; } }
 
-		public override bool IsDecoContainer
+		public override int DefaultGumpID { get { return Bone ? 0x9 : 0x3C; } }
+		public override int DefaultDropSound { get { return Bone ? 0x42 : 0x48; } }
+
+		public override Rectangle2D Bounds
 		{
-			get{ return false; }
+			get { return Bone ? new Rectangle2D( 20, 85, 104, 111 ) : new Rectangle2D( 44, 65, 142, 94 ); }
 		}
 
 		[Constructable]
@@ -196,7 +198,6 @@ namespace Server.Items
 				rune.TargetMap = m_TargetMap;
 				rune.Target = m_Target;
 				rune.Description = m_Description;
-				rune.House = null;
 			}
 		}
 

@@ -116,8 +116,8 @@ namespace Server.Regions
 
 			spawn.Spawner = this;
 
-			if ( spawn is BaseCreature )
-				((BaseCreature)spawn).RemoveIfUntamed = this.RemoveIfUntamed;
+			//if ( spawn is BaseCreature )
+			//	((BaseCreature)spawn).RemoveIfUntamed = this.RemoveIfUntamed;
 		}
 
 		void ISpawner.Remove( ISpawnable spawn )
@@ -179,7 +179,7 @@ namespace Server.Regions
 			{
 				spawnable.Spawner = null;
 
-				bool uncontrolled = !(spawnable is BaseCreature) || !((BaseCreature)spawnable).Controlled;
+				bool uncontrolled = !(spawnable is BaseCreature) || !((BaseCreature)spawnable).Controled;
 
 				if( uncontrolled )
 					spawnable.Delete();

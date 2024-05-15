@@ -4,7 +4,7 @@ using Server.Targeting;
 
 namespace Server.Items
 {
-	public abstract class BaseClothMaterial : Item, IDyable
+	public abstract class BaseClothMaterial : BaseItem, IDyable
 	{
 		public BaseClothMaterial( int itemID ) : this( itemID, 1 )
 		{
@@ -138,6 +138,11 @@ namespace Server.Items
 
 			int version = reader.ReadInt();
 		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new DarkYarn(), amount );
+		}
 	}
 
 	public class LightYarn : BaseClothMaterial
@@ -168,6 +173,11 @@ namespace Server.Items
 			base.Deserialize( reader );
 
 			int version = reader.ReadInt();
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new LightYarn(), amount );
 		}
 	}
 
@@ -200,6 +210,11 @@ namespace Server.Items
 
 			int version = reader.ReadInt();
 		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new LightYarnUnraveled(), amount );
+		}
 	}
 
 	public class SpoolOfThread : BaseClothMaterial
@@ -230,6 +245,11 @@ namespace Server.Items
 			base.Deserialize( reader );
 
 			int version = reader.ReadInt();
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new SpoolOfThread(), amount );
 		}
 	}
 }

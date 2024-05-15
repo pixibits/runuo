@@ -1,10 +1,10 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using System.IO;
 using Server;
 using Server.Items;
 
-namespace Server.Commands
+namespace Server.Scripts.Commands
 {
 	public class ExportCommand
 	{
@@ -12,10 +12,10 @@ namespace Server.Commands
 
 		public static void Initialize()
 		{
-			CommandSystem.Register( "ExportWSC", AccessLevel.Administrator, new CommandEventHandler( Export_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "ExportWSC", AccessLevel.Administrator, new Server.Commands.CommandEventHandler( Export_OnCommand ) );
 		}
 
-		public static void Export_OnCommand( CommandEventArgs e )
+		public static void Export_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			StreamWriter w = new StreamWriter( ExportFile );
 			ArrayList remove = new ArrayList();

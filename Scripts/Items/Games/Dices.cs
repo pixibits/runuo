@@ -4,7 +4,7 @@ using Server.Network;
 
 namespace Server.Items
 {
-	public class Dices : Item
+	public class Dices : BaseItem
 	{
 		[Constructable]
 		public Dices() : base( 0xFA7 )

@@ -3,13 +3,8 @@ using Server;
 
 namespace Server.Items
 {
-	public class Emerald : Item
+	public class Emerald : BaseItem
 	{
-		public override double DefaultWeight
-		{
-			get { return 0.1; }
-		}
-
 		[Constructable]
 		public Emerald() : this( 1 )
 		{
@@ -19,6 +14,7 @@ namespace Server.Items
 		public Emerald( int amount ) : base( 0xF10 )
 		{
 			Stackable = true;
+			Weight = 0.1;
 			Amount = amount;
 		}
 
@@ -26,7 +22,10 @@ namespace Server.Items
 		{
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Emerald( amount ), amount );
+		}
 
 		public override void Serialize( GenericWriter writer )
 		{

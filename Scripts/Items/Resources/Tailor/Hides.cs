@@ -4,7 +4,7 @@ using Server.Network;
 
 namespace Server.Items
 {
-	public abstract class BaseHides : Item, ICommodity
+	public abstract class BaseHides : BaseItem, ICommodity
 	{
 		private CraftResource m_Resource;
 
@@ -15,8 +15,13 @@ namespace Server.Items
 			set{ m_Resource = value; InvalidateProperties(); }
 		}
 		
-		int ICommodity.DescriptionNumber { get { return LabelNumber; } }
-		bool ICommodity.IsDeedable { get { return true; } }
+		string ICommodity.Description
+		{
+			get
+			{
+				return String.Format( Amount == 1 ? "{0} pile of hides" : "{0} piles of hides", Amount );
+			}
+		}
 
 		public override void Serialize( GenericWriter writer )
 		{
@@ -103,8 +108,64 @@ namespace Server.Items
 		}
 	}
 
+	[DynamicFliping]
+	[Flipable( 0x11F4, 0x11F8 )]
+	public class DarkFur : BaseItem
+	{
+		[Constructable]
+		public DarkFur() : base( 0x11F4 )
+		{
+			this.Stackable = true;
+			this.Weight = 5.0;
+		}
+
+		public DarkFur( Serial s ) : base(s)
+		{
+		}
+
+		public override void Deserialize(GenericReader reader)
+		{
+			base.Deserialize (reader);
+			int ver = reader.ReadInt();
+		}
+
+		public override void Serialize(GenericWriter writer)
+		{
+			base.Serialize (writer);
+			writer.Write( (int)0 );
+		}
+	}
+
+	[DynamicFliping]
+	[Flipable( 0x11F6, 0x11FA )]
+	public class LightFur : BaseItem
+	{
+		[Constructable]
+		public LightFur() : base( 0x11F6 )
+		{
+			this.Stackable = true;
+			this.Weight = 5.0;
+		}
+
+		public LightFur( Serial s ) : base(s)
+		{
+		}
+
+		public override void Deserialize(GenericReader reader)
+		{
+			base.Deserialize (reader);
+			int ver = reader.ReadInt();
+		}
+
+		public override void Serialize(GenericWriter writer)
+		{
+			base.Serialize (writer);
+			writer.Write( (int)0 );
+		}
+	}
+
 	[FlipableAttribute( 0x1079, 0x1078 )]
-	public class Hides : BaseHides, IScissorable
+	public class Hides : BaseHides //, IScissorable
 	{
 		[Constructable]
 		public Hides() : this( 1 )
@@ -134,21 +195,19 @@ namespace Server.Items
 			int version = reader.ReadInt();
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Hides( amount ), amount );
+		}
 
-		public bool Scissor( Mobile from, Scissors scissors )
+		/*public bool Scissor( Mobile from, Scissors scissors )
 		{
 			if ( Deleted || !from.CanSee( this ) ) return false;
 
-			if ( !IsChildOf ( from.Backpack ) )
-			{
-				from.SendLocalizedMessage ( 502437 ); // Items you wish to cut must be in your backpack
-				return false;
-			}
 			base.ScissorHelper( from, new Leather(), 1 );
 
 			return true;
-		}
+		}*/
 	}
 
 	[FlipableAttribute( 0x1079, 0x1078 )]
@@ -182,17 +241,14 @@ namespace Server.Items
 			int version = reader.ReadInt();
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new SpinedHides( amount ), amount );
+		}
 
 		public bool Scissor( Mobile from, Scissors scissors )
 		{
 			if ( Deleted || !from.CanSee( this ) ) return false;
-
-			if ( !IsChildOf ( from.Backpack ) )
-			{
-				from.SendLocalizedMessage ( 502437 ); // Items you wish to cut must be in your backpack
-				return false;
-			}
 
 			base.ScissorHelper( from, new SpinedLeather(), 1 );
 
@@ -231,18 +287,15 @@ namespace Server.Items
 			int version = reader.ReadInt();
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new HornedHides( amount ), amount );
+		}
 
 		public bool Scissor( Mobile from, Scissors scissors )
 		{
 			if ( Deleted || !from.CanSee( this ) ) return false;
 
-			if ( !IsChildOf ( from.Backpack ) )
-			{
-				from.SendLocalizedMessage ( 502437 ); // Items you wish to cut must be in your backpack
-				return false;
-			}
-			
 			base.ScissorHelper( from, new HornedLeather(), 1 );
 
 			return true;
@@ -280,17 +333,14 @@ namespace Server.Items
 			int version = reader.ReadInt();
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new BarbedHides( amount ), amount );
+		}
 
 		public bool Scissor( Mobile from, Scissors scissors )
 		{
 			if ( Deleted || !from.CanSee( this ) ) return false;
-
-			if ( !IsChildOf ( from.Backpack ) )
-			{
-				from.SendLocalizedMessage ( 502437 ); // Items you wish to cut must be in your backpack
-				return false;
-			}
 
 			base.ScissorHelper( from, new BarbedLeather(), 1 );
 

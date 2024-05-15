@@ -1,5 +1,4 @@
 using System;
-using Server.Commands;
 
 namespace Server.Items
 {
@@ -53,11 +52,6 @@ namespace Server.Items
 			}
 		}
 
-		public override string DefaultName
-		{
-			get { return "a hole"; }
-		}
-
 		[Constructable]
 		public SHTeleComponent() : this( 0x1775 )
 		{
@@ -71,6 +65,7 @@ namespace Server.Items
 		[Constructable]
 		public SHTeleComponent( int itemID, Point3D offset ) : base( itemID )
 		{
+			Name = "a hole";
 			Movable = false;
 			Hue = 1;
 
@@ -94,7 +89,8 @@ namespace Server.Items
 
 				Server.Mobiles.BaseCreature.TeleportPets( m, p, map );
 
-				m.MoveToWorld( p, map );
+				m.Map = map;
+				m.Location = p;
 			}
 			else
 			{
@@ -134,12 +130,12 @@ namespace Server.Items
 	{
 		public static void Initialize()
 		{
-			CommandSystem.Register( "SHTelGen", AccessLevel.Administrator, new CommandEventHandler( SHTelGen_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "SHTelGen", AccessLevel.Administrator, new Server.Commands.CommandEventHandler( SHTelGen_OnCommand ) );
 		}
 
 		[Usage( "SHTelGen" )]
 		[Description( "Generates solen hives teleporters." )]
-		public static void SHTelGen_OnCommand( CommandEventArgs e )
+		public static void SHTelGen_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			World.Broadcast( 0x35, true, "Solen hives teleporters are being generated, please wait." );
 

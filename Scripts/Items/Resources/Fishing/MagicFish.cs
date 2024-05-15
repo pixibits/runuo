@@ -1,20 +1,15 @@
 using System;
-using Server.Network;
 
 namespace Server.Items
 {
-	public abstract class BaseMagicFish : Item
+	public abstract class BaseMagicFish : BaseItem
 	{
 		public virtual int Bonus{ get{ return 0; } }
 		public virtual StatType Type{ get{ return StatType.Str; } }
 
-		public override double DefaultWeight
-		{
-			get { return 1.0; }
-		}
-
 		public BaseMagicFish( int hue ) : base( 0xDD6 )
 		{
+			Weight = 1.0;
 			Hue = hue;
 		}
 
@@ -42,7 +37,6 @@ namespace Server.Items
 			{
 				from.FixedEffect( 0x375A, 10, 15 );
 				from.PlaySound( 0x1E7 );
-				from.LocalOverheadMessage( MessageType.Regular, 0x3B2, 501774 ); // You swallow the fish whole!
 				Delete();
 			}
 		}

@@ -14,12 +14,13 @@ namespace Server.Items
 		public override int AosMinDamage{ get{ return 13; } }
 		public override int AosMaxDamage{ get{ return 15; } }
 		public override int AosSpeed{ get{ return 41; } }
-		public override float MlSpeed{ get{ return 2.75f; } }
 
 		public override int OldStrengthReq{ get{ return 15; } }
-		public override int OldMinDamage{ get{ return 2; } }
-		public override int OldMaxDamage{ get{ return 17; } }
-		public override int OldSpeed{ get{ return 40; } }
+		public override int OldSpeed{ get{ return 55; } }
+
+		public override int NumDice { get { return 2; } }
+		public override int NumSides { get { return 10; } }
+		public override int DiceBonus { get { return 3; } }
 
 		public override int InitMinHits{ get{ return 31; } }
 		public override int InitMaxHits{ get{ return 80; } }

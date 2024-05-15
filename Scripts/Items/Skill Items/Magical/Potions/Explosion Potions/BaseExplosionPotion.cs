@@ -1,5 +1,5 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Network;
 using Server.Targeting;
@@ -14,10 +14,8 @@ namespace Server.Items
 
 		public override bool RequireFreeHand{ get{ return false; } }
 
-		private static bool LeveledExplosion = false; // Should explosion potions explode other nearby potions?
 		private static bool InstantExplosion = false; // Should explosion potions explode on impact?
-		private static bool RelativeLocation = false; // Is the explosion target location relative for mobiles?
-		private const int ExplosionRange = 2; // How long is the blast radius?
+		private const int   ExplosionRange   = 3;     // How long is the blast radius?
 
 		public BaseExplosionPotion( PotionEffect effect ) : base( 0xF0D, effect )
 		{
@@ -65,14 +63,7 @@ namespace Server.Items
 
 		public override void Drink( Mobile from )
 		{
-			if ( Core.AOS && (from.Paralyzed || from.Frozen || (from.Spell != null && from.Spell.IsCasting)) )
-			{
-				from.SendLocalizedMessage( 1062725 ); // You can not use a purple potion while paralyzed.
-				return;
-			}
-
 			ThrowTarget targ = from.Target as ThrowTarget;
-			this.Stackable = false; // Scavenged explosion potions won't stack with those ones in backpack, and still will explode.
 
 			if ( targ != null && targ.Potion == this )
 				return;
@@ -86,15 +77,11 @@ namespace Server.Items
 				m_Users.Add( from );
 
 			from.Target = new ThrowTarget( this );
-
-			if ( m_Timer == null )
+			if ( m_Timer == null || !m_Timer.Running )
 			{
 				from.SendLocalizedMessage( 500236 ); // You should throw it now!
-
-				if( Core.ML )
-					m_Timer = Timer.DelayCall( TimeSpan.FromSeconds( 1.0 ), TimeSpan.FromSeconds( 1.25 ), 5, new TimerStateCallback( Detonate_OnTick ), new object[]{ from, 3 } ); // 3.6 seconds explosion delay
-				else
-					m_Timer = Timer.DelayCall( TimeSpan.FromSeconds( 0.75 ), TimeSpan.FromSeconds( 1.0 ), 4, new TimerStateCallback( Detonate_OnTick ), new object[]{ from, 3 } ); // 2.6 seconds explosion delay
+				int val = 3 + Utility.Random( 4 );
+				m_Timer = Timer.DelayCall( TimeSpan.FromSeconds( 0.75 ), TimeSpan.FromSeconds( 1.0 ), val+1, new TimerStateCallback( Detonate_OnTick ), new object[]{ from, val } );
 			}
 		}
 
@@ -109,12 +96,12 @@ namespace Server.Items
 
 			object parent = FindParent( from );
 
-			if ( timer == 0 )
+			if ( timer <= 0 )
 			{
-				Point3D loc;
-				Map map;
+				Point3D loc = this.GetWorldLocation();
+				Map map = this.Map;
 
-				if ( parent is Item )
+				if ( parent is Item && parent != this )
 				{
 					Item item = (Item)parent;
 
@@ -128,13 +115,8 @@ namespace Server.Items
 					loc = m.Location;
 					map = m.Map;
 				}
-				else
-				{
-					return;
-				}
 
-				Explode( from, true, loc, map );
-				m_Timer = null;
+				Explode( from, loc, map );
 			}
 			else
 			{
@@ -160,7 +142,7 @@ namespace Server.Items
 			Point3D loc = new Point3D( p );
 
 			if ( InstantExplosion )
-				Explode( from, true, loc, map );
+				Explode( from, loc, map );
 			else
 				MoveToWorld( loc, map );
 		}
@@ -199,35 +181,39 @@ namespace Server.Items
 				from.RevealingAction();
 
 				IEntity to;
+				Point3D pt = new Point3D( p );
 
-				to = new Entity( Serial.Zero, new Point3D( p ), map );
+				if ( p is Mobile )
+					to = (Mobile)p;
+				else
+					to = new Entity( Serial.Zero, pt, map );
 
-				if( p is Mobile )
-				{
-					if( !RelativeLocation ) // explosion location = current mob location. 
-						p = ((Mobile)p).Location;
-					else
-						to = (Mobile)p;
-				}
-
-				Effects.SendMovingEffect( from, to, m_Potion.ItemID, 7, 0, false, false, m_Potion.Hue, 0 );
-
-				if( m_Potion.Amount > 1 )
-				{
-					Mobile.LiftItemDupe( m_Potion, 1 );
-				}
+				Effects.SendMovingEffect( from, to, m_Potion.ItemID & 0x3FFF, 7, 0, false, false, m_Potion.Hue, 0 );
 
 				m_Potion.Internalize();
-				Timer.DelayCall( TimeSpan.FromSeconds( 1.0 ), new TimerStateCallback( m_Potion.Reposition_OnTick ), new object[]{ from, p, map } );
+				Timer.DelayCall( TimeSpan.FromSeconds( 1.0 ), new TimerStateCallback( m_Potion.Reposition_OnTick ), new object[]{ from, pt, map } );
 			}
 		}
 
-		public void Explode( Mobile from, bool direct, Point3D loc, Map map )
+		private static void AddPotions( Item pack, ArrayList list )
+		{
+			if ( pack == null )
+				return;
+
+			for(int i=0;i<pack.Items.Count;i++)
+			{
+				Item item = (Item)pack.Items[i];
+				if ( item is BaseExplosionPotion && Utility.RandomBool() )
+					list.Add( item );
+				else if ( item is Container && Utility.Random( 4 ) == 0 )
+					AddPotions( item, list );
+			}
+		}
+
+		public void Explode( Mobile from, Point3D loc, Map map )
 		{
 			if ( Deleted )
 				return;
-
-			Consume();
 
 			for ( int i = 0; m_Users != null && i < m_Users.Count; ++i )
 			{
@@ -241,29 +227,24 @@ namespace Server.Items
 			if ( map == null )
 				return;
 
-			Effects.PlaySound(loc, map, 0x307);
+			Effects.PlaySound( loc, map, 0x207 );
+			Effects.SendLocationEffect( loc, map, 0x36BD, 20 );
 
-			Effects.SendLocationEffect(loc, map, 0x36B0, 9, 10, 0, 0);
-			int alchemyBonus = 0;
-
-			if ( direct )
-				alchemyBonus = (int)(from.Skills.Alchemy.Value / (Core.AOS ? 5 : 10));
-
-			IPooledEnumerable eable = LeveledExplosion ? map.GetObjectsInRange( loc, ExplosionRange ) : map.GetMobilesInRange( loc, ExplosionRange );
+			IPooledEnumerable eable = map.GetObjectsInRange( loc, ExplosionRange );
 			ArrayList toExplode = new ArrayList();
-
-			int toDamage = 0;
-
 			foreach ( object o in eable )
 			{
-				if ( o is Mobile && (from == null || (SpellHelper.ValidIndirectTarget( from, (Mobile)o ) && from.CanBeHarmful( (Mobile)o, false ))))
+				if ( o is Mobile )
 				{
 					toExplode.Add( o );
-					++toDamage;
+					AddPotions( ((Mobile)o).Backpack, toExplode );
 				}
-				else if ( o is BaseExplosionPotion && o != this )
+				else if ( o is Item )
 				{
-					toExplode.Add( o );
+					if ( o is BaseExplosionPotion && o != this )
+						toExplode.Add( o );
+					else if ( ((Item)o).Items.Count > 0 )
+						AddPotions( (Item)o, toExplode );
 				}
 			}
 
@@ -272,35 +253,62 @@ namespace Server.Items
 			int min = Scale( from, MinDamage );
 			int max = Scale( from, MaxDamage );
 
-			for ( int i = 0; i < toExplode.Count; ++i )
+			for ( int j = 0; j < toExplode.Count; j++ )
 			{
-				object o = toExplode[i];
+				object o = toExplode[j];
 
 				if ( o is Mobile )
 				{
 					Mobile m = (Mobile)o;
 
-					if ( from != null )
-						from.DoHarmful( m );
+					int dist = (int)m.GetDistanceToSqrt( loc );
+					if ( dist > ExplosionRange )
+						continue;
 
-					int damage = Utility.RandomMinMax( min, max );
-					
-					damage += alchemyBonus;
-
-					if ( !Core.AOS && damage > 40 )
-						damage = 40;
-					else if ( Core.AOS && toDamage > 2 )
-						damage /= toDamage - 1;
-
-					AOS.Damage( m, from, damage, 0, 100, 0, 0, 0 );
+					if ( from == null || from.CanBeHarmful( m, false ) )
+					{
+						if ( from != null )
+							from.DoHarmful( m );
+						m.Damage( (int)( Utility.RandomMinMax( min, max ) * 3.0/4.0 ) );
+					}
 				}
 				else if ( o is BaseExplosionPotion )
 				{
 					BaseExplosionPotion pot = (BaseExplosionPotion)o;
 
-					pot.Explode( from, false, pot.GetWorldLocation(), pot.Map );
+					//pot.Explode( from, false, pot.GetWorldLocation(), pot.Map );
+					if ( ( pot.m_Timer == null || !pot.m_Timer.Running ) && !pot.Deleted )
+					{
+						Point3D pp = pot.GetWorldLocation();
+						int x, y, z;
+						double val;
+						x = pp.X - loc.X;
+						y = pp.Y - loc.Y;
+						z = pp.Z - loc.Z;
+
+						if ( x == 0 && y == 0 && z == 0 )
+						{
+							val = 0;
+						}
+						else
+						{
+							val = Math.Sqrt( x*x + y*y );
+							val = Math.Sqrt( val*val + z*z );
+						}
+
+						if ( (int)val <= ExplosionRange )
+						{
+							val += Utility.Random( 4 );
+							if ( val < 1 )
+								val = 0;
+					
+							pot.m_Timer = Timer.DelayCall( TimeSpan.FromSeconds( 0.75 ), TimeSpan.FromSeconds( 1.0 ), ((int)val)+1, new TimerStateCallback( pot.Detonate_OnTick ), new object[]{from, ((int)val)} );
+						}
+					}
 				}
 			}
+
+			Delete();
 		}
 	}
 }

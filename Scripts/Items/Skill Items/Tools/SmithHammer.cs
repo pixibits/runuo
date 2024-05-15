@@ -4,20 +4,23 @@ using Server.Engines.Craft;
 
 namespace Server.Items
 {
-	[FlipableAttribute( 0x13E3, 0x13E4 )]
+	[FlipableAttribute( 0x13E4, 0x13E3 )]
 	public class SmithHammer : BaseTool
 	{
-		public override CraftSystem CraftSystem{ get{ return DefBlacksmithy.CraftSystem; } }
+		public override CraftSystem GetCraftInstance()
+		{
+			return new BlacksmithSystem();
+		}
 
 		[Constructable]
-		public SmithHammer() : base( 0x13E3 )
+		public SmithHammer() : base( 0x13E4 )
 		{
 			Weight = 8.0;
 			Layer = Layer.OneHanded;
 		}
 
 		[Constructable]
-		public SmithHammer( int uses ) : base( uses, 0x13E3 )
+		public SmithHammer( int uses ) : base( uses, 0x13E4 )
 		{
 			Weight = 8.0;
 			Layer = Layer.OneHanded;

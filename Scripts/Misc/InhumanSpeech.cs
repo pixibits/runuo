@@ -1,6 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
+using System.Collections; using System.Collections.Generic;
 using Server;
 
 namespace Server.Misc
@@ -279,7 +279,7 @@ namespace Server.Misc
 		private string[] m_Keywords;
 		private string[] m_Responses;
 
-		private Dictionary<string, string> m_KeywordHash;
+		private Hashtable m_KeywordHash;
 
 		private int m_Hue;
 		private int m_Sound;
@@ -298,7 +298,8 @@ namespace Server.Misc
 			set
 			{
 				m_Keywords = value;
-				m_KeywordHash = new Dictionary<string, string>( m_Keywords.Length, StringComparer.OrdinalIgnoreCase );
+				m_KeywordHash = new Hashtable( m_Keywords.Length, CaseInsensitiveHashCodeProvider.Default, CaseInsensitiveComparer.Default );
+
 				for ( int i = 0; i < m_Keywords.Length; ++i )
 					m_KeywordHash[m_Keywords[i]] = m_Keywords[i];
 			}
@@ -371,7 +372,7 @@ namespace Server.Misc
 				}
 
 				int syllableCount;
-                                                       
+
 				if ( 30 > Utility.Random( 100 ) )
 					syllableCount = Utility.Random( 1, 5 );
 				else
@@ -398,15 +399,15 @@ namespace Server.Misc
 		public void SayRandomTranslate( Mobile mob, params string[] sentancesInEnglish )
 		{
 			SaySentance( mob, Utility.RandomMinMax( 2, 3 ) );
-			mob.Say( sentancesInEnglish[Utility.Random( sentancesInEnglish.Length )] );
+			mob.Say( true, sentancesInEnglish[Utility.Random( sentancesInEnglish.Length )] );
 		}
 
-		private string GetRandomResponseWord( List<string> keywordsFound )
+		private string GetRandomResponseWord( ArrayList keywordsFound )
 		{
 			int random = Utility.Random( keywordsFound.Count + m_Responses.Length );
 
 			if ( random < keywordsFound.Count )
-				return keywordsFound[random];
+				return (string)keywordsFound[random];
 
 			return m_Responses[random - keywordsFound.Count];
 		}
@@ -429,12 +430,11 @@ namespace Server.Misc
 				return false;
 
 			string[] split = text.Split( ' ' );
-			List<string> keywordsFound = new List<string>();
+			ArrayList keywordsFound = new ArrayList();
 
 			for ( int i = 0; i < split.Length; ++i )
 			{
-				string keyword;
-				m_KeywordHash.TryGetValue( split[i], out keyword );
+				string keyword = (string) m_KeywordHash[split[i]];
 
 				if ( keyword != null )
 					keywordsFound.Add( keyword );
@@ -447,7 +447,7 @@ namespace Server.Misc
 				if ( Utility.RandomBool() )
 					responseWord = GetRandomResponseWord( keywordsFound );
 				else
-					responseWord = keywordsFound[Utility.Random( keywordsFound.Count )];
+					responseWord = (string)keywordsFound[Utility.Random( keywordsFound.Count )];
 
 				string secondResponseWord = GetRandomResponseWord( keywordsFound );
 
@@ -503,7 +503,7 @@ namespace Server.Misc
 					maxWords = 6;
 
 				SaySentance( mob, Utility.RandomMinMax( 2, maxWords ) );
-				mob.Say( response.ToString() );
+				mob.Say( true, response.ToString() );
 
 				return true;
 			}
@@ -535,7 +535,7 @@ namespace Server.Misc
 			if ( (m_Flags & IHSFlags.OnMovement) == 0 )
 				return; // not enabled
 
-			if ( !mover.Player || (mover.Hidden && mover.AccessLevel > AccessLevel.Player) )
+			if ( !mover.Player )
 				return;
 
 			if ( !mob.InRange( mover, 5 ) || mob.InRange( oldLocation, 5 ) )
@@ -584,7 +584,7 @@ namespace Server.Misc
 
 		public void SaySentance( Mobile mob, int wordCount )
 		{
-			mob.Say( ConstructSentance( wordCount ) );
+			mob.Say( true, ConstructSentance( wordCount ) );
 			mob.PlaySound( m_Sound );
 		}
 

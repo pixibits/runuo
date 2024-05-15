@@ -1,11 +1,11 @@
 using System;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server;
+using Server.Targeting;
 using Server.Items;
 using Server.Multis;
-using Server.Targeting;
 
-namespace Server.Commands
+namespace Server.Scripts.Commands
 {
 	public class Wipe
 	{
@@ -20,36 +20,36 @@ namespace Server.Commands
 
 		public static void Initialize()
 		{
-			CommandSystem.Register( "Wipe", AccessLevel.GameMaster, new CommandEventHandler( WipeAll_OnCommand ) );
-			CommandSystem.Register( "WipeItems", AccessLevel.GameMaster, new CommandEventHandler( WipeItems_OnCommand ) );
-			CommandSystem.Register( "WipeNPCs", AccessLevel.GameMaster, new CommandEventHandler( WipeNPCs_OnCommand ) );
-			CommandSystem.Register( "WipeMultis", AccessLevel.GameMaster, new CommandEventHandler( WipeMultis_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "Wipe", AccessLevel.GameMaster, new Server.Commands.CommandEventHandler( WipeAll_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "WipeItems", AccessLevel.GameMaster, new Server.Commands.CommandEventHandler( WipeItems_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "WipeNPCs", AccessLevel.GameMaster, new Server.Commands.CommandEventHandler( WipeNPCs_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "WipeMultis", AccessLevel.GameMaster, new Server.Commands.CommandEventHandler( WipeMultis_OnCommand ) );
 		}
 
 		[Usage( "Wipe" )]
 		[Description( "Wipes all items and npcs in a targeted bounding box." )]
-		private static void WipeAll_OnCommand( CommandEventArgs e )
+		private static void WipeAll_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			BeginWipe( e.Mobile, WipeType.Items | WipeType.Mobiles );
 		}
 
 		[Usage( "WipeItems" )]
 		[Description( "Wipes all items in a targeted bounding box." )]
-		private static void WipeItems_OnCommand( CommandEventArgs e )
+		private static void WipeItems_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			BeginWipe( e.Mobile, WipeType.Items );
 		}
 
 		[Usage( "WipeNPCs" )]
 		[Description( "Wipes all npcs in a targeted bounding box." )]
-		private static void WipeNPCs_OnCommand( CommandEventArgs e )
+		private static void WipeNPCs_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			BeginWipe( e.Mobile, WipeType.Mobiles );
 		}
 
 		[Usage( "WipeMultis" )]
 		[Description( "Wipes all multis in a targeted bounding box." )]
-		private static void WipeMultis_OnCommand( CommandEventArgs e )
+		private static void WipeMultis_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			BeginWipe( e.Mobile, WipeType.Multis );
 		}
@@ -72,7 +72,7 @@ namespace Server.Commands
 			bool multis = ( (type & WipeType.Multis) != 0 );
 			bool items = ( (type & WipeType.Items) != 0 );
 
-			List<IEntity> toDelete = new List<IEntity>();
+			ArrayList toDelete = new ArrayList();
 
 			Rectangle2D rect = new Rectangle2D( start.X, start.Y, end.X - start.X + 1, end.Y - start.Y + 1 );
 
@@ -87,7 +87,7 @@ namespace Server.Commands
 			else
 				return;
 
-			foreach ( IEntity obj in eable )
+			foreach ( object obj in eable )
 			{
 				if ( items && (obj is Item) && !((obj is BaseMulti) || (obj is HouseSign)) )
 					toDelete.Add( obj );
@@ -100,7 +100,12 @@ namespace Server.Commands
 			eable.Free();
 
 			for ( int i = 0; i < toDelete.Count; ++i )
-				toDelete[i].Delete();
+			{
+				if ( toDelete[i] is Item )
+					((Item)toDelete[i]).Delete();
+				else if ( toDelete[i] is Mobile )
+					((Mobile)toDelete[i]).Delete();
+			}
 		}
 	}
 }

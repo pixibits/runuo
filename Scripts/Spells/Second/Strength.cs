@@ -4,17 +4,16 @@ using Server.Network;
 
 namespace Server.Spells.Second
 {
-	public class StrengthSpell : MagerySpell
+	public class StrengthSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Strength", "Uus Mani",
+				SpellCircle.Second,
 				212,
 				9061,
 				Reagent.MandrakeRoot,
 				Reagent.Nightshade
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Second; } }
 
 		public StrengthSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -39,11 +38,6 @@ namespace Server.Spells.Second
 
 				m.FixedParticles( 0x375A, 10, 15, 5017, EffectLayer.Waist );
 				m.PlaySound( 0x1EE );
-
-				int percentage = (int)(SpellHelper.GetOffsetScalar( Caster, m, false )*100);
-				TimeSpan length = SpellHelper.GetDuration( Caster, m );
-
-				BuffInfo.AddBuff( m, new BuffInfo( BuffIcon.Strength, 1075845, length, m, percentage.ToString() ) );
 			}
 
 			FinishSequence();
@@ -53,7 +47,7 @@ namespace Server.Spells.Second
 		{
 			private StrengthSpell m_Owner;
 
-			public InternalTarget( StrengthSpell owner ) : base( Core.ML ? 10 : 12, false, TargetFlags.Beneficial )
+			public InternalTarget( StrengthSpell owner ) : base( 12, false, TargetFlags.Beneficial )
 			{
 				m_Owner = owner;
 			} 

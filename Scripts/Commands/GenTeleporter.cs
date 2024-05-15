@@ -1,9 +1,9 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Items;
 
-namespace Server.Commands
+namespace Server
 {
 	public class GenTeleporter
 	{
@@ -13,12 +13,12 @@ namespace Server.Commands
 
 		public static void Initialize()
 		{
-			CommandSystem.Register( "TelGen", AccessLevel.Administrator, new CommandEventHandler( GenTeleporter_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "TelGen", AccessLevel.Administrator, new Server.Commands.CommandEventHandler( GenTeleporter_OnCommand ) );
 		}
 
 		[Usage( "TelGen" )]
 		[Description( "Generates world/dungeon teleporters for all facets." )]
-		public static void GenTeleporter_OnCommand( CommandEventArgs e )
+		public static void GenTeleporter_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			e.Mobile.SendMessage( "Generating teleporters, please wait." );
 
@@ -197,9 +197,9 @@ namespace Server.Commands
 				CreateTeleporter( 5594, 1841, -9, 5467, 1805, 7, map, false );
 
 				// Wrong
-				CreateTeleporter( 5824, 631, 5, 2041, 215, 14, map, true );
-				CreateTeleporter( 5825, 631, 5, 2042, 215, 14, map, true );
-				CreateTeleporter( 5825, 631, 5, 2043, 215, 14, map, true );
+				CreateTeleporter( 5824, 631, 0, 2041, 215, 14, map, true );
+				CreateTeleporter( 5825, 631, 0, 2042, 215, 14, map, true );
+				CreateTeleporter( 5826, 631, 0, 2043, 215, 14, map, true );
 				CreateTeleporter( 5698, 662, 0, 5793, 527, 10, map, false );
 
 				DestroyTeleporter( 5863, 525, 15, map );
@@ -426,68 +426,13 @@ namespace Server.Commands
 				CreateTeleporter( 5150, 4063, 38, 6005, 1380, 1, map, false );
 				CreateTeleporter( 5906, 4069, 26, 2494, 3576, 5, map, true );
 				CreateTeleporter( 2985, 2890, 35, 5974, 2697, 35, map, false );
-
-				// Mondain's Legacy dungeons
-
-				// Sanctuary
-				CreateTeleporter( 6172, 21, 0, 765, 1645, 0, map, false ); // Entrance gate
-				CreateTeleporter( 6172, 22, 0, 765, 1646, 0, map, false );
-				CreateTeleporter( 6172, 23, 0, 765, 1647, 0, map, false );
-				CreateTeleporter( 766, 1645, 0, 6174, 21, 0, map, false );
-				CreateTeleporter( 766, 1646, 0, 6174, 22, 0, map, false );
-				CreateTeleporter( 766, 1647, 0, 6174, 23, 0, map, false );
-
-				CreateTeleporter( 6173, 176, -10, 6233, 15, -10, map, false ); // Zone change
-				CreateTeleporter( 6174, 176, -10, 6234, 15, -10, map, false );
-				CreateTeleporter( 6175, 176, -10, 6235, 15, -10, map, false );
-				CreateTeleporter( 6176, 176, -10, 6236, 15, -10, map, false );
-				CreateTeleporter( 6177, 176, -10, 6237, 15, -10, map, false );
-				CreateTeleporter( 6178, 176, -10, 6238, 15, -10, map, false );
-				CreateTeleporter( 6179, 176, -10, 6239, 15, -10, map, false );
-				CreateTeleporter( 6233, 14, -10, 6172, 174, -10, map, false );
-				CreateTeleporter( 6234, 14, -10, 6173, 174, -10, map, false );
-				CreateTeleporter( 6235, 14, -10, 6174, 174, -10, map, false );
-				CreateTeleporter( 6236, 14, -10, 6175, 174, -10, map, false );
-				CreateTeleporter( 6237, 14, -10, 6176, 174, -10, map, false );
-				CreateTeleporter( 6238, 14, -10, 6177, 174, -10, map, false );
-				CreateTeleporter( 6239, 14, -10, 6177, 174, -10, map, false );
-				CreateTeleporter( 6240, 14, -10, 6178, 174, -10, map, false );
-
-				CreateTeleporter( 6256, 97, -4, 6257, 95, -10, map, false ); // Ladders
-				CreateTeleporter( 6260, 97, -4, 6260, 95, -10, map, false );
-				CreateTeleporter( 6263, 97, -4, 6262, 95, -10, map, false );
-				CreateTeleporter( 6269, 97, -4, 6269, 95, -10, map, false );
-				CreateTeleporter( 6273, 97, -4, 6272, 95, -10, map, false );
-				CreateTeleporter( 6262, 95, -10, 6262, 99, -10, map, false );
-
-				CreateTeleporter( 6159, 130, 0, 6317, 63, -20, map, false ); // Holes
-				CreateTeleporter( 6164, 73, 0, 6320, 22, -20, map, false );
-				CreateTeleporter( 6161, 163, -10, 6321, 106, -20, map, false );
-				CreateTeleporter( 6276, 40, -10, 6374, 124, -20, map, false );
-				CreateTeleporter( 6211, 106, 0, 6355, 34, -20, map, false );
-
-				CreateTeleporter( 6316, 62, -5, 6160, 131, 0, map, false ); // Cave ladders
-				CreateTeleporter( 6319, 19, -20, 6165, 74, 0, map, false ); // This actually goes to (6165, 75) inside the wall...
-				CreateTeleporter( 6356, 32, -9, 6210, 105, 0, map, false );
-				CreateTeleporter( 6374, 125, -20, 6277, 41, -10, map, false );
-
-				CreateTeleporter( 6373, 49, -20, 801, 1682, 0, map, false );
-				CreateTeleporter( 6374, 49, -20, 801, 1682, 0, map, false );
-				CreateTeleporter( 6375, 49, -20, 801, 1682, 0, map, false );
-				CreateTeleporter( 6376, 49, -20, 801, 1682, 0, map, false );
-				CreateTeleporter( 6377, 49, -20, 801, 1682, 0, map, false );
-
-				// Painted Caves
-				CreateTeleporter( 1714, 2996, 0, 6308, 892, 0, map, false ); // Entrance
-				CreateTeleporter( 1714, 2997, 0, 6308, 892, 0, map, false );
-				CreateTeleporter( 6310, 890, 0, 1716, 2997, 0, map, false );
-				CreateTeleporter( 6310, 891, 0, 1716, 2997, 0, map, false );
-				CreateTeleporter( 6310, 892, 0, 1716, 2997, 0, map, false );
-				CreateTeleporter( 6310, 893, 0, 1716, 2997, 0, map, false );
 			}
 
 			public void CreateTeleportersMap2( Map map )
 			{
+				/*
+				*/
+
 				// Dungeon of rock
 				CreateTeleporter( 2186, 294, -27, 2186, 33, -27, map, true );
 				CreateTeleporter( 2187, 294, -27, 2187, 33, -27, map, true );
@@ -987,24 +932,6 @@ namespace Server.Commands
 				CreateTeleporter( 73,  692,  6, 100, 556, -2, map, false );
 				CreateTeleporter( 73,  693,  6, 100, 556, -2, map, false );
 				CreateTeleporter( 73,  694,  6, 100, 556, -2, map, false );
-
-				//Ninja cave
-				CreateTeleporter( 384,  810, -1, 403, 1167,  0, map, false );
-
-				CreateTeleporter( 403, 1169,  0, 385,  811, -1, map, false );
-				CreateTeleporter( 404, 1169,  0, 385,  808, -1, map, false );
-				CreateTeleporter( 405, 1169,  0, 385,  808, -1, map, false );
-				
-				// Dungeon Labyrinth
-				CreateTeleporter( 328, 1972, 5, 1731, 978, -80, map, false ); // Door exit
-				CreateTeleporter( 328, 1973, 5, 1731, 978, -80, map, false );
-				CreateTeleporter( 328, 1974, 5, 1731, 978, -80, map, false );
-				CreateTeleporter( 328, 1975, 5, 1731, 978, -80, map, false );
-
-				// Dungeon Bedlam
-				CreateTeleporter(  84, 1673, -2, 156, 1613, 0, map, false );
-				CreateTeleporter( 156, 1609, 17,  87, 1673, 0, map, false );
-				CreateTeleporter( 157, 1609, 17,  87, 1673, 0, map, false );
 			}
 
 			public void CreateTeleportersMap4( Map map )

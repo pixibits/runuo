@@ -2,35 +2,14 @@ using System;
 using Server;
 using Server.Gumps;
 using Server.Network;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace Server.Items
 {
-	public class PowerScroll : SpecialScroll
+	public class PowerScroll : BaseItem
 	{
-		public override int Message { get { return 1049469; } } /* Using a scroll increases the maximum amount of a specific skill or your maximum statistics.
-																* When used, the effect is not immediately seen without a gain of points with that skill or statistics.
-																* You can view your maximum skill values in your skills window.
-																* You can view your maximum statistic value in your statistics window. */
-		public override int Title 
-		{
-			get 
-			{
-				double level = ( Value - 105.0 ) / 5.0;
-			
-				if ( level >= 0.0 && level <= 3.0 && Value % 5.0 == 0.0 )
-					return 1049635 + (int)level;	/* Wonderous Scroll (105 Skill): OR
-													* Exalted Scroll (110 Skill): OR
-													* Mythical Scroll (115 Skill): OR
-													* Legendary Scroll (120 Skill): */
-				
-				return 0;
-			}
-		}
-		
-		public override string DefaultTitle{ get{ return String.Format( "<basefont color=#FFFFFF>Power Scroll ({0} Skill):</basefont>", Value ); } }
-		
+		private SkillName m_Skill;
+		private double m_Value;
+
 		private static SkillName[] m_Skills = new SkillName[]
 			{
 				SkillName.Blacksmith,
@@ -59,6 +38,28 @@ namespace Server.Items
 
 		private static SkillName[] m_AOSSkills = new SkillName[]
 			{
+				SkillName.Blacksmith,
+				SkillName.Tailoring,
+				SkillName.Swords,
+				SkillName.Fencing,
+				SkillName.Macing,
+				SkillName.Archery,
+				SkillName.Wrestling,
+				SkillName.Parry,
+				SkillName.Tactics,
+				SkillName.Anatomy,
+				SkillName.Healing,
+				SkillName.Magery,
+				SkillName.Meditation,
+				SkillName.EvalInt,
+				SkillName.MagicResist,
+				SkillName.AnimalTaming,
+				SkillName.AnimalLore,
+				SkillName.Veterinary,
+				SkillName.Musicianship,
+				SkillName.Provocation,
+				SkillName.Discordance,
+				SkillName.Peacemaking,
 				SkillName.Chivalry,
 				SkillName.Focus,
 				SkillName.Necromancy,
@@ -67,134 +68,166 @@ namespace Server.Items
 				SkillName.SpiritSpeak
 			};
 
-		private static SkillName[] m_SESkills = new SkillName[]
-			{
-				SkillName.Ninjitsu,
-				SkillName.Bushido
-			};
-		
-		private static List<SkillName> _Skills = new List<SkillName>();
-
-		public static List<SkillName> Skills
-		{ 
-			get
-			{
-				if ( _Skills.Count == 0 )
-				{
-					switch ( Core.Expansion )
-					{
-						case Expansion.ML: _Skills.Add( SkillName.Spellweaving ); goto case Expansion.SE;
-						case Expansion.SE: _Skills.AddRange( m_SESkills ); goto case Expansion.AOS;
-						case Expansion.AOS: _Skills.AddRange( m_AOSSkills ); goto default;
-						default: _Skills.AddRange( m_Skills ); break;
-					}
-				}
-				
-				return _Skills;
-			} 
-		}
+		public static SkillName[] Skills{ get{ return ( Core.AOS ? m_AOSSkills : m_Skills ); } }
 
 		public static PowerScroll CreateRandom( int min, int max )
 		{
 			min /= 5;
 			max /= 5;
-			
-			return new PowerScroll( Skills[Utility.Random( Skills.Count )], 100 + ( Utility.RandomMinMax( min, max ) * 5 ) );
+
+			SkillName[] skills = PowerScroll.Skills;
+
+			return new PowerScroll( skills[Utility.Random( skills.Length )], 100 + (Utility.RandomMinMax( min, max ) * 5));
 		}
 
 		public static PowerScroll CreateRandomNoCraft( int min, int max )
 		{
 			min /= 5;
 			max /= 5;
-			
+
+			SkillName[] skills = PowerScroll.Skills;
 			SkillName skillName;
 
 			do
 			{
-				skillName = Skills[Utility.Random( Skills.Count )];
+				skillName = skills[Utility.Random( skills.Length )];
 			} while ( skillName == SkillName.Blacksmith || skillName == SkillName.Tailoring );
 
 			return new PowerScroll( skillName, 100 + (Utility.RandomMinMax( min, max ) * 5));
 		}
 
-		public PowerScroll() : this( SkillName.Alchemy, 0.0 )
-		{
-		}
-		
 		[Constructable]
-		public PowerScroll( SkillName skill, double value ) : base( skill, value )
+		public PowerScroll( SkillName skill, double value ) : base( 0x14F0 )
 		{
-			Hue = 0x481;
+			base.Hue = 0x481;
+			base.Weight = 1.0;
 
-            if (Value == 105.0 || skill == Server.SkillName.Blacksmith || skill == Server.SkillName.Tailoring )
-				LootType = LootType.Regular;
+			LootType = LootType.Cursed;
+
+			m_Skill = skill;
+			m_Value = value;
 		}
 
 		public PowerScroll( Serial serial ) : base( serial )
 		{
 		}
-		
-		public override void AddNameProperty( ObjectPropertyList list )
+
+		[CommandProperty( AccessLevel.GameMaster )]
+		public SkillName Skill
 		{
-			double level = ( Value - 105.0 ) / 5.0;
-			
-			if ( level >= 0.0 && level <= 3.0 && Value % 5.0 == 0.0 )
-				list.Add( 1049639 + (int)level, GetNameLocalized() );	/* a wonderous scroll of ~1_type~ (105 Skill) OR
-																		* an exalted scroll of ~1_type~ (110 Skill) OR
-																		* a mythical scroll of ~1_type~ (115 Skill) OR
-																		* a legendary scroll of ~1_type~ (120 Skill) */
+			get
+			{
+				return m_Skill;
+			}
+			set
+			{
+				m_Skill = value;
+			}
+		}
+
+		[CommandProperty( AccessLevel.GameMaster )]
+		public double Value
+		{
+			get
+			{
+				return m_Value;
+			}
+			set
+			{
+				m_Value = value;
+			}
+		}
+
+		private string GetNameLocalized()
+		{
+			return String.Concat( "#", (1044060 + (int)m_Skill).ToString() );
+		}
+
+		private string GetName()
+		{
+			int index = (int)m_Skill;
+			SkillInfo[] table = SkillInfo.Table;
+
+			if ( index >= 0 && index < table.Length )
+				return table[index].Name.ToLower();
 			else
-				list.Add( "a power scroll of {0} ({1} Skill)", GetName(), Value );
+				return "???";
+		}
+
+		public override void AddNameProperty(ObjectPropertyList list)
+		{
+			if ( m_Value == 105.0 )
+				list.Add( 1049639, GetNameLocalized() ); // a wonderous scroll of ~1_type~ (105 Skill)
+			else if ( m_Value == 110.0 )
+				list.Add( 1049640, GetNameLocalized() ); // an exalted scroll of ~1_type~ (110 Skill)
+			else if ( m_Value == 115.0 )
+				list.Add( 1049641, GetNameLocalized() ); // a mythical scroll of ~1_type~ (115 Skill)
+			else if ( m_Value == 120.0 )
+				list.Add( 1049642, GetNameLocalized() ); // a legendary scroll of ~1_type~ (120 Skill)
+			else
+				list.Add( "a power scroll of {0} ({1} Skill)", GetName(), m_Value );
 		}
 
 		public override void OnSingleClick( Mobile from )
 		{
-			double level = ( Value - 105.0 ) / 5.0;
-			
-			if ( level >= 0.0 && level <= 3.0 && Value % 5.0 == 0.0 )
-				base.LabelTo( from, 1049639 + (int)level, GetNameLocalized() );
+			if ( m_Value == 105.0 )
+				base.LabelTo( from, 1049639, GetNameLocalized() ); // a wonderous scroll of ~1_type~ (105 Skill)
+			else if ( m_Value == 110.0 )
+				base.LabelTo( from, 1049640, GetNameLocalized() ); // an exalted scroll of ~1_type~ (110 Skill)
+			else if ( m_Value == 115.0 )
+				base.LabelTo( from, 1049641, GetNameLocalized() ); // a mythical scroll of ~1_type~ (115 Skill)
+			else if ( m_Value == 120.0 )
+				base.LabelTo( from, 1049642, GetNameLocalized() ); // a legendary scroll of ~1_type~ (120 Skill)
 			else
-				base.LabelTo( from, "a power scroll of {0} ({1} Skill)", GetName(), Value );
-		}
-		
-		public override bool CanUse( Mobile from )
-		{
-			if ( !base.CanUse( from ) )
-				return false;
-			
-			Skill skill = from.Skills[Skill];
-
-			if ( skill == null )
-				return false;
-			
-			if ( skill.Cap >= Value )
-			{
-				from.SendLocalizedMessage( 1049511, GetNameLocalized() ); // Your ~1_type~ is too high for this power scroll.
-				return false;
-			}
-			
-			return true;
+				base.LabelTo( from, "a power scroll of {0} ({1} Skill)", GetName(), m_Value );
 		}
 
-		public override void Use( Mobile from )
+		public void Use( Mobile from, bool firstStage )
 		{
-			if ( !CanUse( from ) )
+			if ( Deleted )
 				return;
-			
-			from.SendLocalizedMessage( 1049513, GetNameLocalized() ); // You feel a surge of magic as the scroll enhances your ~1_type~!
 
-			from.Skills[Skill].Cap = Value;
+			if ( IsChildOf( from.Backpack ) )
+			{
+				Skill skill = from.Skills[m_Skill];
 
-			Effects.SendLocationParticles( EffectItem.Create( from.Location, from.Map, EffectItem.DefaultDuration ), 0, 0, 0, 0, 0, 5060, 0 );
-			Effects.PlaySound( from.Location, from.Map, 0x243 );
+				if ( skill != null )
+				{
+					if ( skill.Cap >= m_Value )
+					{
+						from.SendLocalizedMessage( 1049511, GetNameLocalized() ); // Your ~1_type~ is too high for this power scroll.
+					}
+					else
+					{
+						if ( firstStage )
+						{
+							from.CloseGump( typeof( StatCapScroll.InternalGump ) );
+							from.CloseGump( typeof( PowerScroll.InternalGump ) );
+							from.SendGump( new InternalGump( from, this ) );
+						}
+						else
+						{
+							from.SendLocalizedMessage( 1049513, GetNameLocalized() ); // You feel a surge of magic as the scroll enhances your ~1_type~!
 
-			Effects.SendMovingParticles( new Entity( Serial.Zero, new Point3D( from.X - 6, from.Y - 6, from.Z + 15 ), from.Map ), from, 0x36D4, 7, 0, false, true, 0x497, 0, 9502, 1, 0, (EffectLayer)255, 0x100 );
-			Effects.SendMovingParticles( new Entity( Serial.Zero, new Point3D( from.X - 4, from.Y - 6, from.Z + 15 ), from.Map ), from, 0x36D4, 7, 0, false, true, 0x497, 0, 9502, 1, 0, (EffectLayer)255, 0x100 );
-			Effects.SendMovingParticles( new Entity( Serial.Zero, new Point3D( from.X - 6, from.Y - 4, from.Z + 15 ), from.Map ), from, 0x36D4, 7, 0, false, true, 0x497, 0, 9502, 1, 0, (EffectLayer)255, 0x100 );
+							skill.Cap = m_Value;
 
-			Effects.SendTargetParticles( from, 0x375A, 35, 90, 0x00, 0x00, 9502, (EffectLayer)255, 0x100 );
+							from.PlaySound( 0x1EA );
+							from.FixedEffect( 0x373A, 10, 15 );
 
-			Delete();
+							Delete();
+						}
+					}
+				}
+			}
+			else
+			{
+				from.SendLocalizedMessage( 1042001 ); // That must be in your pack for you to use it.
+			}
+		}
+
+		public override void OnDoubleClick( Mobile from )
+		{
+			Use( from, true );
 		}
 
 		public override void Serialize( GenericWriter writer )
@@ -202,22 +235,86 @@ namespace Server.Items
 			base.Serialize( writer );
 
 			writer.Write( (int) 0 ); // version
+
+			writer.Write( (int) m_Skill );
+			writer.Write( (double) m_Value );
 		}
 
 		public override void Deserialize( GenericReader reader )
 		{
 			base.Deserialize( reader );
 
-			int version = ( InheritsItem ? 0 : reader.ReadInt() ); //Required for SpecialScroll insertion
+			int version = reader.ReadInt();
 
-            if (Value == 105.0 || Skill == SkillName.Blacksmith || Skill == SkillName.Tailoring)
+			switch ( version )
 			{
-				LootType = LootType.Regular;
+				case 0:
+				{
+					m_Skill = (SkillName)reader.ReadInt();
+					m_Value = reader.ReadDouble();
+
+					break;
+				}
 			}
-			else
-			{
+
+			if ( LootType != LootType.Cursed )
 				LootType = LootType.Cursed;
+
+			if ( Insured )
 				Insured = false;
+		}
+
+		public class InternalGump : Gump
+		{
+			private Mobile m_Mobile;
+			private PowerScroll m_Scroll;
+
+			public InternalGump( Mobile mobile, PowerScroll scroll ) : base( 25, 50 )
+			{
+				m_Mobile = mobile;
+				m_Scroll = scroll;
+
+				AddPage( 0 );
+
+				AddBackground( 25, 10, 420, 200, 5054 );
+
+				AddImageTiled( 33, 20, 401, 181, 2624 );
+				AddAlphaRegion( 33, 20, 401, 181 );
+
+				AddHtmlLocalized( 40, 48, 387, 100, 1049469, true, true ); /* Using a scroll increases the maximum amount of a specific skill or your maximum statistics.
+																			* When used, the effect is not immediately seen without a gain of points with that skill or statistics.
+																			* You can view your maximum skill values in your skills window.
+																			* You can view your maximum statistic value in your statistics window.
+																			*/
+
+				AddHtmlLocalized( 125, 148, 200, 20, 1049478, 0xFFFFFF, false, false ); // Do you wish to use this scroll?
+
+				AddButton( 100, 172, 4005, 4007, 1, GumpButtonType.Reply, 0 );
+				AddHtmlLocalized( 135, 172, 120, 20, 1046362, 0xFFFFFF, false, false ); // Yes
+
+				AddButton( 275, 172, 4005, 4007, 0, GumpButtonType.Reply, 0 );
+				AddHtmlLocalized( 310, 172, 120, 20, 1046363, 0xFFFFFF, false, false ); // No
+
+				double value = scroll.m_Value;
+
+				if ( value == 105.0 )
+					AddHtmlLocalized( 40, 20, 260, 20, 1049635, 0xFFFFFF, false, false ); // Wonderous Scroll (105 Skill):
+				else if ( value == 110.0 )
+					AddHtmlLocalized( 40, 20, 260, 20, 1049636, 0xFFFFFF, false, false ); // Exalted Scroll (110 Skill):
+				else if ( value == 115.0 )
+					AddHtmlLocalized( 40, 20, 260, 20, 1049637, 0xFFFFFF, false, false ); // Mythical Scroll (115 Skill):
+				else if ( value == 120.0 )
+					AddHtmlLocalized( 40, 20, 260, 20, 1049638, 0xFFFFFF, false, false ); // Legendary Scroll (120 Skill):
+				else
+					AddHtml( 40, 20, 260, 20, String.Format( "<basefont color=#FFFFFF>Power Scroll ({0} Skill):</basefont>", value ), false, false );
+
+				AddHtmlLocalized( 310, 20, 120, 20, 1044060 + (int)scroll.m_Skill, 0xFFFFFF, false, false );
+			}
+
+			public override void OnResponse( NetState state, RelayInfo info )
+			{
+				if ( info.ButtonID == 1 )
+					m_Scroll.Use( m_Mobile, false );
 			}
 		}
 	}

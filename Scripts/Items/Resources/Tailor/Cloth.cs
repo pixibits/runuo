@@ -5,14 +5,14 @@ using Server.Network;
 namespace Server.Items
 {
 	[FlipableAttribute( 0x1766, 0x1768 )]
-	public class Cloth : Item, IScissorable, IDyable, ICommodity
+	public class Cloth : BaseItem, IScissorable, IDyable, ICommodity
 	{
-		int ICommodity.DescriptionNumber { get { return LabelNumber; } }
-		bool ICommodity.IsDeedable { get { return true; } }
-
-		public override double DefaultWeight
+		string ICommodity.Description
 		{
-			get { return 0.1; }
+			get
+			{
+				return String.Format( Amount == 1 ? "{0} piece of cloth" : "{0} pieces of cloth", Amount );
+			}
 		}
 
 		[Constructable]
@@ -24,6 +24,7 @@ namespace Server.Items
 		public Cloth( int amount ) : base( 0x1766 )
 		{
 			Stackable = true;
+			Weight = 0.1;
 			Amount = amount;
 		}
 
@@ -61,12 +62,21 @@ namespace Server.Items
 
 			from.Send( new MessageLocalized( Serial, ItemID, MessageType.Regular, 0x3B2, 3, number, "", Amount.ToString() ) );
 		}
-		
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Cloth(), amount );
+		}
+
 		public bool Scissor( Mobile from, Scissors scissors )
 		{
 			if ( Deleted || !from.CanSee( this ) ) return false;
 
-			base.ScissorHelper( from, new Bandage(), 1 );
+			//base.ScissorHelper( from, new Bandage(), 1 );
+			this.Consume( 1 );
+			Bandage give = new Bandage();
+			give.Hue = this.Hue;
+			from.AddToBackpack( give );
 
 			return true;
 		}

@@ -2,7 +2,7 @@ using System;
 
 namespace Server.Items
 {
-	public class SmallEmptyPot : Item
+	public class SmallEmptyPot : BaseItem
 	{
 		[Constructable]
 		public SmallEmptyPot() : base(0x11C6)
@@ -29,7 +29,7 @@ namespace Server.Items
 		}
 	}
 
-	public class LargeEmptyPot : Item
+	public class LargeEmptyPot : BaseItem
 	{
 		[Constructable]
 		public LargeEmptyPot() : base(0x11C7)

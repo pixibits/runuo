@@ -2687,16 +2687,21 @@ namespace Server
 			return 18;
 		}
 
-		public void SendInfoTo( NetState state ) {
+		public virtual void SendInfoTo( NetState state ) { // Zippy made virtual (for 1.0.1 compat) 11 June 2011
 			SendInfoTo( state, ObjectPropertyList.Enabled );
 		}
 
 		public virtual void SendInfoTo( NetState state, bool sendOplPacket ) {
-			state.Send( GetWorldPacketFor( state ) );
+            Packet p = GetWorldPacketFor(state);
+            if (p != null)
+            {
+                state.Send( p );
 
-			if ( sendOplPacket ) {
-				state.Send( OPLPacket );
-			}
+                if (sendOplPacket)
+                {
+                    state.Send(OPLPacket);
+                }
+            }
 		}
 
 		protected virtual Packet GetWorldPacketFor( NetState state ) {
@@ -3423,6 +3428,38 @@ namespace Server
 				OnItemRemoved( item );
 			}
 		}
+        // BEGIN 1.0.1 code -- Zippy 11 June 2011
+        public virtual Item Dupe(int amount)
+        {
+            return this.Dupe(new Item(), amount);
+        }
+
+        public virtual Item Dupe(Item item, int amount)
+        {
+            item.Visible = this.Visible;
+            item.Movable = this.Movable;
+            item.LootType = this.LootType;
+            item.Direction = this.Direction;
+            item.Hue = this.Hue;
+            item.ItemID = this.ItemID;
+            item.Location = this.Location;
+            item.Layer = this.Layer;
+            item.Name = this.Name;
+            item.Weight = this.Weight;
+            item.Amount = amount;
+            item.Map = this.Map;
+            if (this.Parent is Mobile)
+            {
+                ((Mobile)this.Parent).AddItem(item);
+            }
+            else if (this.Parent is Item)
+            {
+                ((Item)this.Parent).AddItem(item);
+            }
+            item.Delta(ItemDelta.Update);
+            return item;
+        }
+        // END 1.0.1 code -- Zippy 11 June 2011
 
 		public virtual void OnAfterDuped( Item newItem )
 		{
@@ -3635,7 +3672,7 @@ namespace Server
 		}
 
 		[CommandProperty( AccessLevel.GameMaster )]
-		public string Name
+		public virtual string Name // Zippy made virtual (for 1.0.1 compat) 11 June 2011
 		{
 			get
 			{

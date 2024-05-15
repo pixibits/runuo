@@ -38,21 +38,26 @@ namespace Server.Items
 
 		public override void OnDoubleClick( Mobile from )
 		{
-			from.SendLocalizedMessage( 1010018 ); // What do you want to use this item on?
-
-			from.Target = new BladedItemTarget( this );
+			if ( from.InRange( this.GetWorldLocation(), 3 )	)
+			{
+				from.SendLocalizedMessage( 1010018 ); // What do you want to use this item on?
+				from.Target = new BladedItemTarget( this );
+			}
 		}
 
-		public override void OnHit( Mobile attacker, Mobile defender, double damageBonus )
+		public override void OnHit( Mobile attacker, Mobile defender )
 		{
-			base.OnHit( attacker, defender, damageBonus );
+			base.OnHit( attacker, defender );
 
 			if ( !Core.AOS && Poison != null && PoisonCharges > 0 )
 			{
 				--PoisonCharges;
 
-				if ( Utility.RandomDouble() >= 0.5 ) // 50% chance to poison
+				if ( Utility.RandomDouble() < PoisonChance && !defender.Poisoned )
+				{
 					defender.ApplyPoison( attacker, Poison );
+					defender.SayTo( defender,  true, "{0} has just poisoned you!", attacker.Name );
+				}
 			}
 		}
 	}

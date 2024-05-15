@@ -19,12 +19,12 @@ namespace Server.SkillHandlers
 
 			m.SendLocalizedMessage( 500906 ); // What do you wish to evaluate?
 
-			return TimeSpan.FromSeconds( 1.0 );
+			return TimeSpan.FromSeconds( 10.0 );
 		}
 
 		private class InternalTarget : Target
 		{
-			public InternalTarget() :  base ( 8, false, TargetFlags.None )
+			public InternalTarget() :  base ( 5, false, TargetFlags.None )
 			{
 			}
 
@@ -45,14 +45,8 @@ namespace Server.SkillHandlers
 				else if ( targeted is Mobile )
 				{
 					Mobile targ = (Mobile)targeted;
-
-					int marginOfError = Math.Max( 0, 20 - (int)(from.Skills[SkillName.EvalInt].Value / 5) );
-
-					int intel = targ.Int + Utility.RandomMinMax( -marginOfError, +marginOfError );
-					int mana = ((targ.Mana * 100) / Math.Max( targ.ManaMax, 1 )) + Utility.RandomMinMax( -marginOfError, +marginOfError );
-
-					int intMod = intel / 10;
-					int mnMod = mana / 10;
+					int intMod = targ.Int / 10;
+					int mnMod = (int)((targ.Mana / (double)targ.ManaMax) * 10);
 
 					if ( intMod > 10 ) intMod = 10;
 					else if ( intMod < 0 ) intMod = 0;

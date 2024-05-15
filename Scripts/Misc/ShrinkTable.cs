@@ -5,7 +5,7 @@ namespace Server
 {
 	public class ShrinkTable
 	{
-		public const int DefaultItemID = 0x1870; // Yellow virtue stone
+		private const int DefaultItemID = 0x1; // No Draw //0x1870; // Yellow virtue stone
 
 		private static int[] m_Table;
 

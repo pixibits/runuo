@@ -5,114 +5,38 @@ using Server.Items;
 using Server.Targeting;
 using Server.Misc;
 using Server.Regions;
-using Server.Mobiles;
 
 namespace Server.Spells.Seventh
 {
-	public class GateTravelSpell : MagerySpell
+	public class GateTravelSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Gate Travel", "Vas Rel Por",
-				263,
+				SpellCircle.Seventh,
+				245,
 				9032,
 				Reagent.BlackPearl,
 				Reagent.MandrakeRoot,
 				Reagent.SulfurousAsh
 			);
 
-		public override SpellCircle Circle { get { return SpellCircle.Seventh; } }
 
-		private RunebookEntry m_Entry;
-
-		public GateTravelSpell( Mobile caster, Item scroll ) : this( caster, scroll, null )
+		public GateTravelSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
-		}
-
-		public GateTravelSpell( Mobile caster, Item scroll, RunebookEntry entry ) : base( caster, scroll, m_Info )
-		{
-			m_Entry = entry;
 		}
 
 		public override void OnCast()
 		{
-			if ( m_Entry == null )
-				Caster.Target = new InternalTarget( this );
-			else
-				Effect( m_Entry.Location, m_Entry.Map, true );
-		}
-
-		public override bool CheckCast()
-		{
-			if ( Factions.Sigil.ExistsOn( Caster ) )
-			{
-				Caster.SendLocalizedMessage( 1061632 ); // You can't do that while carrying the sigil.
-				return false;
-			}
-			else if ( Caster.Criminal )
-			{
-				Caster.SendLocalizedMessage( 1005561, "", 0x22 ); // Thou'rt a criminal and cannot escape so easily.
-				return false;
-			}
-			else if ( SpellHelper.CheckCombat( Caster ) )
-			{
-				Caster.SendLocalizedMessage( 1005564, "", 0x22 ); // Wouldst thou flee during the heat of battle??
-				return false;
-			}
-
-			return SpellHelper.CheckTravel( Caster, TravelCheckType.GateFrom );
-		}
-
-		private bool GateExistsAt(Map map, Point3D loc )
-		{
-			bool _gateFound = false;
-
-			IPooledEnumerable eable = map.GetItemsInRange( loc, 0 );
-			foreach ( Item item in eable )
-			{
-				if ( item is Moongate || item is PublicMoongate )
-				{
-					_gateFound = true;
-					break;
-				}
-			}
-			eable.Free();
-
-			return _gateFound;
+			Caster.Target = new InternalTarget( this );
 		}
 
 		public void Effect( Point3D loc, Map map, bool checkMulti )
 		{
-			if ( Factions.Sigil.ExistsOn( Caster ) )
-			{
-				Caster.SendLocalizedMessage( 1061632 ); // You can't do that while carrying the sigil.
-			}
-			else if ( map == null || (!Core.AOS && Caster.Map != map) )
+			if ( map == null || (!Core.AOS && Caster.Map != map) )
 			{
 				Caster.SendLocalizedMessage( 1005570 ); // You can not gate to another facet.
 			}
-			else if ( !SpellHelper.CheckTravel( Caster, TravelCheckType.GateFrom ) )
-			{
-			}
-			else if ( !SpellHelper.CheckTravel( Caster,  map, loc, TravelCheckType.GateTo ) )
-			{
-			}
-			else if ( map == Map.Felucca && Caster is PlayerMobile && ((PlayerMobile)Caster).Young )
-			{
-				Caster.SendLocalizedMessage( 1049543 ); // You decide against traveling to Felucca while you are still young.
-			}
-			else if ( Caster.Kills >= 5 && map != Map.Felucca )
-			{
-				Caster.SendLocalizedMessage( 1019004 ); // You are not allowed to travel there.
-			}
-			else if ( Caster.Criminal )
-			{
-				Caster.SendLocalizedMessage( 1005561, "", 0x22 ); // Thou'rt a criminal and cannot escape so easily.
-			}
-			else if ( SpellHelper.CheckCombat( Caster ) )
-			{
-				Caster.SendLocalizedMessage( 1005564, "", 0x22 ); // Wouldst thou flee during the heat of battle??
-			}
-			else if ( !map.CanSpawnMobile( loc.X, loc.Y, loc.Z ) )
+			else if ( !map.CanFit( loc.X, loc.Y, loc.Z, 16 ) )
 			{
 				Caster.SendLocalizedMessage( 501942 ); // That location is blocked.
 			}
@@ -120,9 +44,9 @@ namespace Server.Spells.Seventh
 			{
 				Caster.SendLocalizedMessage( 501942 ); // That location is blocked.
 			}
-			else if ( Core.SE && ( GateExistsAt( map, loc ) || GateExistsAt( Caster.Map, Caster.Location ) ) ) // SE restricted stacking gates
+			else if ( !SpellHelper.CheckTravel( Caster, loc, map, TravelType.Gate ) && Caster.AccessLevel == AccessLevel.Player )
 			{
-				Caster.SendLocalizedMessage( 1071242 ); // There is already a gate there.
+				Caster.PlaySound( 0x5C );
 			}
 			else if ( CheckSequence() )
 			{
@@ -215,32 +139,10 @@ namespace Server.Spells.Seventh
 					else
 						from.SendLocalizedMessage( 501803 ); // That rune is not yet marked.
 				}
-				else if ( o is Runebook )
-				{
-					RunebookEntry e = ((Runebook)o).Default;
-
-					if ( e != null )
-						m_Owner.Effect( e.Location, e.Map, true );
-					else
-						from.SendLocalizedMessage( 502354 ); // Target is not marked.
-				}
-				/*else if ( o is Key && ((Key)o).KeyValue != 0 && ((Key)o).Link is BaseBoat )
-				{
-					BaseBoat boat = ((Key)o).Link as BaseBoat;
-
-					if ( !boat.Deleted && boat.CheckKey( ((Key)o).KeyValue ) )
-						m_Owner.Effect( boat.GetMarkedLocation(), boat.Map, false );
-					else
-						from.Send( new MessageLocalized( from.Serial, from.Body, MessageType.Regular, 0x3B2, 3, 501030, from.Name, "" ) ); // I can not gate travel from that object.
-				}*/
 				else
 				{
 					from.Send( new MessageLocalized( from.Serial, from.Body, MessageType.Regular, 0x3B2, 3, 501030, from.Name, "" ) ); // I can not gate travel from that object.
 				}
-			}
-			
-			protected override void OnNonlocalTarget( Mobile from, object o )
-			{
 			}
 
 			protected override void OnTargetFinish( Mobile from )

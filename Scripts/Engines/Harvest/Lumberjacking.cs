@@ -35,16 +35,14 @@ namespace Server.Engines.Harvest
 			HarvestDefinition lumber = new HarvestDefinition();
 
 			// Resource banks are every 4x3 tiles
-			lumber.BankWidth = 4;
-			lumber.BankHeight = 3;
+			lumber.BankWidth = 8;
+			lumber.BankHeight = 8;
 
-			// Every bank holds from 20 to 45 logs
-			lumber.MinTotal = 20;
-			lumber.MaxTotal = 45;
+			lumber.MinTotal = 10;
+			lumber.MaxTotal = 50;
 
-			// A resource bank will respawn its content every 20 to 30 minutes
-			lumber.MinRespawn = TimeSpan.FromMinutes( 20.0 );
-			lumber.MaxRespawn = TimeSpan.FromMinutes( 30.0 );
+			lumber.MinRespawn = TimeSpan.FromMinutes( 10.0 );
+			lumber.MaxRespawn = TimeSpan.FromMinutes( 20.0 );
 
 			// Skill checking is done on the Lumberjacking skill
 			lumber.Skill = SkillName.Lumberjacking;
@@ -57,12 +55,12 @@ namespace Server.Engines.Harvest
 
 			// Ten logs per harvest action
 			lumber.ConsumedPerHarvest = 10;
-			lumber.ConsumedPerFeluccaHarvest = 20;
+			lumber.ConsumedPerFeluccaHarvest = 10;
 
 			// The chopping effect
 			lumber.EffectActions = new int[]{ 13 };
 			lumber.EffectSounds = new int[]{ 0x13E };
-			lumber.EffectCounts = (Core.AOS ? new int[]{ 1 } : new int[]{ 1, 2, 2, 2, 3 });
+			lumber.EffectCounts = new int[]{ 1, 2, 2, 2, 3 };
 			lumber.EffectDelay = TimeSpan.FromSeconds( 1.6 );
 			lumber.EffectSoundDelay = TimeSpan.FromSeconds( 0.9 );
 
@@ -72,59 +70,18 @@ namespace Server.Engines.Harvest
 			lumber.PackFullMessage = 500497; // You can't place any wood into your backpack!
 			lumber.ToolBrokeMessage = 500499; // You broke your axe.
 
-			if ( Core.ML )
-			{
-				res = new HarvestResource[]
-				{
-					new HarvestResource(  00.0, 00.0, 100.0, 1072540, typeof( Log ) ),
-					new HarvestResource(  65.0, 25.0, 105.0, 1072541, typeof( OakLog ) ),
-					new HarvestResource(  80.0, 40.0, 120.0, 1072542, typeof( AshLog ) ),
-					new HarvestResource(  95.0, 55.0, 135.0, 1072543, typeof( YewLog ) ),
-					new HarvestResource( 100.0, 60.0, 140.0, 1072544, typeof( HeartwoodLog ) ),
-					new HarvestResource( 100.0, 60.0, 140.0, 1072545, typeof( BloodwoodLog ) ),
-					new HarvestResource( 100.0, 60.0, 140.0, 1072546, typeof( FrostwoodLog ) ),
-				};
-
-
-				veins = new HarvestVein[]
-				{
-					new HarvestVein( 49.0, 0.0, res[0], null ),	// Ordinary Logs
-					new HarvestVein( 30.0, 0.5, res[1], res[0] ), // Oak
-					new HarvestVein( 10.0, 0.5, res[2], res[0] ), // Ash
-					new HarvestVein( 05.0, 0.5, res[3], res[0] ), // Yew
-					new HarvestVein( 03.0, 0.5, res[4], res[0] ), // Heartwood
-					new HarvestVein( 02.0, 0.5, res[5], res[0] ), // Bloodwood
-					new HarvestVein( 01.0, 0.5, res[6], res[0] ), // Frostwood
-				};
-
-				lumber.BonusResources = new BonusHarvestResource[]
-				{
-					new BonusHarvestResource( 0, 83.9, null, null ),	//Nothing
-					new BonusHarvestResource( 100, 10.0, 1072548, typeof( BarkFragment ) ),
-					new BonusHarvestResource( 100, 03.0, 1072550, typeof( LuminescentFungi ) ),
-					new BonusHarvestResource( 100, 02.0, 1072547, typeof( SwitchItem ) ),
-					new BonusHarvestResource( 100, 01.0, 1072549, typeof( ParasiticPlant ) ),
-					new BonusHarvestResource( 100, 00.1, 1072551, typeof( BrilliantAmber ) )
-				};
-			}
-			else
-			{
-				res = new HarvestResource[]
+			res = new HarvestResource[]
 				{
 					new HarvestResource( 00.0, 00.0, 100.0, 500498, typeof( Log ) )
 				};
 
-				veins = new HarvestVein[]
+			veins = new HarvestVein[]
 				{
 					new HarvestVein( 100.0, 0.0, res[0], null )
 				};
-			}
 
 			lumber.Resources = res;
 			lumber.Veins = veins;
-
-			lumber.RaceBonus = Core.ML;
-			lumber.RandomizeVeins = Core.ML;
 
 			m_Definition = lumber;
 			Definitions.Add( lumber );
@@ -134,7 +91,13 @@ namespace Server.Engines.Harvest
 		public override bool CheckHarvest( Mobile from, Item tool )
 		{
 			if ( !base.CheckHarvest( from, tool ) )
-				return false;		
+				return false;
+
+			if ( tool.Parent != from )
+			{
+				from.SendLocalizedMessage( 500487 ); // The axe must be equipped for any serious wood chopping.
+				return false;
+			}
 
 			return true;
 		}
@@ -155,28 +118,7 @@ namespace Server.Engines.Harvest
 
 		public override void OnBadHarvestTarget( Mobile from, Item tool, object toHarvest )
 		{
-			if ( toHarvest is Mobile )
-			{
-				Mobile obj = (Mobile)toHarvest;
-				obj.PublicOverheadMessage( Server.Network.MessageType.Regular, 0x3E9, 500450 ); // You can only skin dead creatures.
-			}
-			else if ( toHarvest is Item )
-			{
-				Item obj = (Item)toHarvest;
-				obj.PublicOverheadMessage( Server.Network.MessageType.Regular, 0x3E9, 500464 ); // Use this on corpses to carve away meat and hide
-			}
-			else if ( toHarvest is Targeting.StaticTarget || toHarvest is Targeting.LandTarget )
-				from.SendLocalizedMessage( 500489 ); // You can't use an axe on that.
-			else
-				from.SendLocalizedMessage( 1005213 ); // You can't do that
-		}
-
-		public override void OnHarvestStarted( Mobile from, Item tool, HarvestDefinition def, object toHarvest )
-		{
-			base.OnHarvestStarted( from, tool, def, toHarvest );
-			
-			if( Core.ML )
-				from.RevealingAction();
+			from.SendLocalizedMessage( 500489 ); // You can't use an axe on that.
 		}
 
 		public static void Initialize()

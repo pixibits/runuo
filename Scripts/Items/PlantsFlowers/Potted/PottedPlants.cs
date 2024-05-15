@@ -2,7 +2,7 @@ using System;
 
 namespace Server.Items
 {
-	public class PottedPlant : Item
+	public class PottedPlant : BaseItem
 	{
 		[Constructable]
 		public PottedPlant() : base(0x11CA)
@@ -29,7 +29,7 @@ namespace Server.Items
 		}
 	}
 
-	public class PottedPlant1 : Item
+	public class PottedPlant1 : BaseItem
 	{
 		[Constructable]
 		public PottedPlant1() : base(0x11CB)
@@ -56,7 +56,7 @@ namespace Server.Items
 		}
 	}
 
-	public class PottedPlant2 : Item
+	public class PottedPlant2 : BaseItem
 	{
 		[Constructable]
 		public PottedPlant2() : base(0x11CC)

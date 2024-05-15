@@ -3,26 +3,21 @@ using Server.Items;
 
 namespace Server.Items
 {
-	public class RegStone : Item
+	public class RegStone : BaseItem
 	{
-		public override string DefaultName
-		{
-			get { return "a reagent stone"; }
-		}
-
 		[Constructable]
 		public RegStone() : base( 0xED4 )
 		{
 			Movable = false;
 			Hue = 0x2D1;
+			Name = "a reagent stone";
 		}
 
 		public override void OnDoubleClick( Mobile from )
 		{
 			BagOfReagents regBag = new BagOfReagents( 50 );
 
-			if ( !from.AddToBackpack( regBag ) )
-				regBag.Delete();
+			from.AddToBackpack( regBag );
 		}
 
 		public RegStone( Serial serial ) : base( serial )

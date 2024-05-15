@@ -4,7 +4,7 @@ using Server.Network;
 
 namespace Server.Items
 {
-	public class Beads : Item
+	public class Beads : BaseItem
 	{
 		[Constructable]
 		public Beads() : base( 0x108B )

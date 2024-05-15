@@ -1,22 +1,20 @@
 using System;
 using System.Net;
 using System.Text;
-using System.Collections;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using System.Diagnostics;
 using Server;
 using Server.Items;
 using Server.Prompts;
 using Server.Network;
 using Server.Accounting;
-using Server.Commands;
+using Server.Scripts.Commands;
 
 namespace Server.Gumps
 {
 	public enum AdminGumpPage
 	{
-		Information_General,
-		Information_Perf,
+		Information,
 		Administer,
 		Clients,
 		Accounts,
@@ -125,12 +123,12 @@ namespace Server.Gumps
 
 		public static void Initialize()
 		{
-			CommandSystem.Register( "Admin", AccessLevel.Administrator, new CommandEventHandler( Admin_OnCommand ) );
+			Commands.CommandSystem.Register( "Admin", AccessLevel.Administrator, new Server.Commands.CommandEventHandler( Admin_OnCommand ) );
 		}
 
 		[Usage( "Admin" )]
 		[Description( "Opens an interface providing server information and administration features including client, account, and firewall management." )]
-		public static void Admin_OnCommand( CommandEventArgs e )
+		public static void Admin_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			e.Mobile.SendGump( new AdminGump( e.Mobile, AdminGumpPage.Clients, 0, null, null, null ) );
 		}
@@ -142,8 +140,6 @@ namespace Server.Gumps
 
 			switch ( m.AccessLevel )
 			{
-				case AccessLevel.Owner:
-				case AccessLevel.Developer:
 				case AccessLevel.Administrator: return 0x516;
 				case AccessLevel.Seer: return 0x144;
 				case AccessLevel.GameMaster: return 0x21;
@@ -166,9 +162,7 @@ namespace Server.Gumps
 				"Counselor",
 				"Game Master",
 				"Seer",
-				"Administrator",
-				"Developer",
-				"Owner"
+				"Administrator"
 			};
 
 		public static string FormatAccessLevel( AccessLevel level )
@@ -200,7 +194,7 @@ namespace Server.Gumps
 			AddBlackAlpha( 10, 120, 400, 260 );
 			AddBlackAlpha( 10, 390, 400, 40 );
 
-			AddPageButton( 10, 10, GetButtonID( 0, 0 ), "INFORMATION", AdminGumpPage.Information_General, AdminGumpPage.Information_Perf );
+			AddPageButton( 10, 10, GetButtonID( 0, 0 ), "INFORMATION", AdminGumpPage.Information );
 			AddPageButton( 10, 30, GetButtonID( 0, 1 ), "ADMINISTER", AdminGumpPage.Administer, AdminGumpPage.Administer_Access, AdminGumpPage.Administer_Commands, AdminGumpPage.Administer_Server, AdminGumpPage.Administer_WorldBuilding, AdminGumpPage.Administer_Access_Lockdown );
 			AddPageButton( 10, 50, GetButtonID( 0, 2 ), "CLIENT LIST", AdminGumpPage.Clients, AdminGumpPage.ClientInfo );
 			AddPageButton( 10, 70, GetButtonID( 0, 3 ), "ACCOUNT LIST", AdminGumpPage.Accounts, AdminGumpPage.Accounts_Shared, AdminGumpPage.AccountDetails, AdminGumpPage.AccountDetails_Information, AdminGumpPage.AccountDetails_Characters, AdminGumpPage.AccountDetails_Access, AdminGumpPage.AccountDetails_Access_ClientIPs, AdminGumpPage.AccountDetails_Access_Restrictions, AdminGumpPage.AccountDetails_Comments, AdminGumpPage.AccountDetails_Tags, AdminGumpPage.AccountDetails_ChangeAccess, AdminGumpPage.AccountDetails_ChangePassword );
@@ -211,12 +205,12 @@ namespace Server.Gumps
 
 			switch ( pageType )
 			{
-				case AdminGumpPage.Information_General:
+				case AdminGumpPage.Information:
 				{
 					int banned = 0;
 					int active = 0;
 
-					foreach ( Account acct in Accounts.GetAccounts() )
+					foreach ( Account acct in Accounts.Table.Values )
 					{
 						if ( acct.Banned )
 							++banned;
@@ -258,12 +252,7 @@ namespace Server.Gumps
 					AddLabel( 150, 330, LabelHue, Environment.Version.ToString() );
 
 					AddLabel( 20, 350, LabelHue, "Operating System: " );
-					string os = Environment.OSVersion.ToString();
-
-					os = os.Replace( "Microsoft", "MSFT" );
-					os = os.Replace( "Service Pack", "SP" );
-
-					AddLabel( 150, 350, LabelHue, os );
+					AddLabel( 150, 350, LabelHue, Environment.OSVersion.ToString() );
 
 					/*string str;
 
@@ -278,83 +267,6 @@ namespace Server.Gumps
 
 					AddLabel( 20, 350, LabelHue, "Process Priority:" );
 					AddLabel( 250, 350, LabelHue, str );*/
-
-					AddPageButton( 200, 20, GetButtonID( 0, 0 ), "General", AdminGumpPage.Information_General );
-					AddPageButton( 200, 40, GetButtonID( 0, 5 ), "Performance", AdminGumpPage.Information_Perf );
-
-					break;
-				}
-				case AdminGumpPage.Information_Perf:
-				{
-					AddLabel( 20, 130, LabelHue, "Cycles Per Second:" );
-					AddLabel( 40, 150, LabelHue, "Current: " + Core.CyclesPerSecond.ToString( "N2" ) );
-					AddLabel( 40, 170, LabelHue, "Average: " + Core.AverageCPS.ToString( "N2" ) );
-
-					StringBuilder sb = new StringBuilder();
-
-					int curUser, maxUser;
-					int curIOCP, maxIOCP;
-
-					System.Threading.ThreadPool.GetAvailableThreads( out curUser, out curIOCP );
-					System.Threading.ThreadPool.GetMaxThreads( out maxUser, out maxIOCP );
-
-					sb.Append( "Worker Threads:<br>Capacity: " );
-					sb.Append( maxUser );
-					sb.Append( "<br>Available: " );
-					sb.Append( curUser );
-					sb.Append( "<br>Usage: " );
-					sb.Append( ((maxUser - curUser) * 100) / maxUser );
-					sb.Append( "%<br><br>IOCP Threads:<br>Capacity: " );
-					sb.Append( maxIOCP );
-					sb.Append( "<br>Available: " );
-					sb.Append( curIOCP );
-					sb.Append( "<br>Usage: " );
-					sb.Append( ((maxIOCP - curIOCP) * 100) / maxIOCP );
-					sb.Append( "%" );
-
-					List<BufferPool> pools = BufferPool.Pools;
-
-					lock ( pools )
-					{
-						for ( int i = 0; i < pools.Count; ++i )
-						{
-							BufferPool pool = pools[i];
-							string name;
-							int freeCount;
-							int initialCapacity;
-							int currentCapacity;
-							int bufferSize;
-							int misses;
-
-							pool.GetInfo( out name, out freeCount, out initialCapacity, out currentCapacity, out bufferSize, out misses );
-
-							if ( sb.Length > 0 )
-								sb.Append( "<br><br>" );
-
-							sb.Append( name );
-							sb.Append( "<br>Size: " );
-							sb.Append( FormatByteAmount( bufferSize ) );
-							sb.Append( "<br>Capacity: " );
-							sb.Append( currentCapacity );
-							sb.Append( " (" );
-							sb.Append( misses );
-							sb.Append( " misses)<br>Available: " );
-							sb.Append( freeCount );
-							sb.Append( "<br>Usage: " );
-							sb.Append( ((currentCapacity - freeCount) * 100) / currentCapacity );
-							sb.Append( "% : " );
-							sb.Append( FormatByteAmount( (currentCapacity - freeCount) * bufferSize ) );
-							sb.Append( " of " );
-							sb.Append( FormatByteAmount( currentCapacity * bufferSize ) );
-						}
-					}
-
-					
-					AddLabel( 20, 200, LabelHue, "Pooling:" );
-					AddHtml( 20, 220, 380, 150, sb.ToString(), true, true );
-
-					AddPageButton( 200, 20, GetButtonID( 0, 0 ), "General", AdminGumpPage.Information_General );
-					AddPageButton( 200, 40, GetButtonID( 0, 5 ), "Performance", AdminGumpPage.Information_Perf );
 
 					break;
 				}
@@ -392,18 +304,18 @@ namespace Server.Gumps
 
 					AddButtonLabeled( 20, 150, GetButtonID( 3, 200 ), "Save" );
 
-					/*if ( !Core.Service )
-					{*/
+					if ( !Core.Service )
+					{
 						AddButtonLabeled( 20, 180, GetButtonID( 3, 201 ), "Shutdown (With Save)" );
 						AddButtonLabeled( 20, 200, GetButtonID( 3, 202 ), "Shutdown (Without Save)" );
 
 						AddButtonLabeled( 20, 230, GetButtonID( 3, 203 ), "Shutdown & Restart (With Save)" );
 						AddButtonLabeled( 20, 250, GetButtonID( 3, 204 ), "Shutdown & Restart (Without Save)" );
-					/*}
+					}
 					else
 					{
 						AddLabel( 20, 215, LabelHue, "Shutdown/Restart not available." );
-					}*/
+					}
 
 					AddHtml( 10, 295, 400, 20, Color( Center( "Broadcast" ), LabelColor32 ), false, false );
 
@@ -450,19 +362,7 @@ namespace Server.Gumps
 					AddButtonLabeled( 20, 290, GetButtonID( 3, 311 ), "Make Counselor" );
 					AddButtonLabeled( 20, 310, GetButtonID( 3, 312 ), "Make Game Master" );
 					AddButtonLabeled( 20, 330, GetButtonID( 3, 313 ), "Make Seer" );
-
-					if ( from.AccessLevel > AccessLevel.Administrator )
-					{
-						AddButtonLabeled( 220, 270, GetButtonID( 3, 314 ), "Make Administrator" );
-
-						if ( from.AccessLevel > AccessLevel.Developer )
-						{
-							AddButtonLabeled( 220, 290, GetButtonID( 3, 315 ), "Make Developer" );
-
-							if ( from.AccessLevel >= AccessLevel.Owner )
-								AddButtonLabeled( 220, 310, GetButtonID( 3, 316 ), "Make Owner" );
-						}
-					}
+					AddButtonLabeled( 20, 350, GetButtonID( 3, 314 ), "Make Administrator" );
 
 					goto case AdminGumpPage.Administer;
 				}
@@ -552,10 +452,7 @@ namespace Server.Gumps
 
 						if ( m == null )
 						{
-							if ( RemoteAdmin.AdminNetwork.IsAuth( ns ) )
-								AddLabelCropped( 12, offset, 81, 20, LabelHue, "(remote admin)" );
-							else
-								AddLabelCropped( 12, offset, 81, 20, LabelHue, "(logging in)" );
+                            AddLabelCropped( 12, offset, 81, 20, LabelHue, "(logging in)" );
 						}
 						else
 						{
@@ -722,8 +619,8 @@ namespace Server.Gumps
 				{
 					if ( m_List == null )
 					{
-						m_List = new ArrayList(); // new ArrayList( (ICollection)Accounts.GetAccounts() );
-						// m_List.Sort( AccountComparer.Instance );
+						m_List = new ArrayList( Accounts.Table.Values );
+						m_List.Sort( AccountComparer.Instance );
 					}
 
 					ArrayList rads = ( state as ArrayList );
@@ -847,19 +744,7 @@ namespace Server.Gumps
 					AddButtonLabeled( 20, 220, GetButtonID( 5, 21 ), "Counselor" );
 					AddButtonLabeled( 20, 240, GetButtonID( 5, 22 ), "Game Master" );
 					AddButtonLabeled( 20, 260, GetButtonID( 5, 23 ), "Seer" );
-
-					if ( from.AccessLevel > AccessLevel.Administrator )
-					{
-						AddButtonLabeled( 20, 280, GetButtonID( 5, 24 ), "Administrator" );
-
-						if ( from.AccessLevel > AccessLevel.Developer )
-						{
-							AddButtonLabeled( 20, 300, GetButtonID( 5, 33 ), "Developer" );
-
-							if ( from.AccessLevel >= AccessLevel.Owner )
-								AddButtonLabeled( 20, 320, GetButtonID( 5, 34 ), "Owner" );
-						}
-					}
+					AddButtonLabeled( 20, 280, GetButtonID( 5, 24 ), "Administrator" );
 
 					goto case AdminGumpPage.AccountDetails;
 				}
@@ -1117,9 +1002,9 @@ namespace Server.Gumps
 						if ( i > 0 )
 							sb.Append( "<BR><BR>" );
 
-						AccountComment c = a.Comments[i];
+						AccountComment c = (AccountComment)a.Comments[i];
 
-						sb.AppendFormat( "[{0} on {1}]<BR>{2}", c.AddedBy, c.LastModified, c.Content );
+						sb.AppendFormat( "[{0}]<BR>{1}", c.AddedBy, c.Content );
 					}
 
 					AddHtml( 20, 180, 380, 190, sb.ToString(), true, true );
@@ -1147,7 +1032,7 @@ namespace Server.Gumps
 						if ( i > 0 )
 							sb.Append( "<BR>" );
 
-						AccountTag tag = a.Tags[i];
+						AccountTag tag = (AccountTag)a.Tags[i];
 
 						sb.AppendFormat( "{0} = {1}", tag.Name, tag.Value );
 					}
@@ -1182,7 +1067,7 @@ namespace Server.Gumps
 					{
 						object obj = m_List[index];
 
-						if ( !(obj is Firewall.IFirewallEntry ) )
+						if ( !(obj is IPAddress) && !(obj is String) )
 							break;
 
 						int offset = 140 + (i * 20);
@@ -1197,7 +1082,7 @@ namespace Server.Gumps
 				{
 					AddFirewallHeader();
 
-					if ( !(state is Firewall.IFirewallEntry) )
+					if ( !(state is IPAddress) && !(state is String) )
 						break;
 
 					AddHtml( 10, 125, 400, 20, Color( Center( state.ToString() ), LabelColor32 ), false, false );
@@ -1210,20 +1095,20 @@ namespace Server.Gumps
 					{
 						m_List = new ArrayList();
 
-						foreach ( Account acct in Accounts.GetAccounts() )
+						string pattern = state as String;
+						IPAddress addr = ( state is IPAddress ? (IPAddress)state : IPAddress.Any );
+
+						foreach ( Account acct in Accounts.Table.Values )
 						{
 							IPAddress[] loginList = acct.LoginIPs;
 
 							bool contains = false;
 
-							for( int i = 0; !contains && i < loginList.Length; ++i )
-							{
-								if( ((Firewall.IFirewallEntry)state).IsBlocked( loginList[i] ) )
-								{
-									m_List.Add( acct );
-									break;
-								}
-							}
+							for ( int i = 0; !contains && i < loginList.Length; ++i )
+								contains = ( pattern == null ? loginList[i].Equals( addr ) : Utility.IPMatch( pattern, loginList[i] ) );
+
+							if ( contains )
+								m_List.Add( acct );
 						}
 
 						m_List.Sort( AccountComparer.Instance );
@@ -1261,8 +1146,6 @@ namespace Server.Gumps
 
 						if ( online )
 							AddLabelCropped( 252, offset, 120, 20, GreenHue, "Online" );
-						else if( a.Banned )
-							AddLabelCropped( 252, offset, 120, 20, RedHue, "Banned" );
 						else
 							AddLabelCropped( 252, offset, 120, 20, RedHue, "Offline" );
 
@@ -1327,7 +1210,7 @@ namespace Server.Gumps
 			Hashtable table = new Hashtable();
 			ArrayList list;
 
-			foreach ( Account acct in Accounts.GetAccounts() )
+			foreach ( Account acct in Accounts.Table.Values )
 			{
 				IPAddress[] theirAddresses = acct.LoginIPs;
 
@@ -1385,7 +1268,7 @@ namespace Server.Gumps
 		{
 			ArrayList list = new ArrayList();
 
-			foreach ( Account acct in Accounts.GetAccounts() )
+			foreach ( Account acct in Accounts.Table.Values )
 			{
 				IPAddress[] theirAddresses = acct.LoginIPs;
 				bool contains = false;
@@ -1405,7 +1288,7 @@ namespace Server.Gumps
 		{
 			ArrayList list = new ArrayList();
 
-			foreach ( Account acct in Accounts.GetAccounts() )
+			foreach ( Account acct in Accounts.Table.Values )
 			{
 				IPAddress[] theirAddresses = acct.LoginIPs;
 				bool contains = false;
@@ -1504,9 +1387,6 @@ namespace Server.Gumps
 
 			if ( okay )
 			{
-				if ( !ban )
-					NetState.Pause();
-
 				for ( int i = 0; i < rads.Count; ++i )
 				{
 					Account acct = (Account)rads[i];
@@ -1526,13 +1406,10 @@ namespace Server.Gumps
 					}
 				}
 
-				if ( !ban )
-					NetState.Resume();
-
 				from.SendGump( new NoticeGump( 1060637, 30720, String.Format( "You have {0} the account{1}.", ban ? "banned" : "deleted", rads.Count == 1 ? "" : "s" ), 0xFFC000, 420, 280, new NoticeGumpCallback( ResendGump_Callback ), new object[]{ list, rads, ban ? page : 0 } ) );
 
 				if ( ban )
-					from.SendGump( new BanDurationGump( rads ) );
+					from.SendGump( new BanDurationGump( list ) );
 			}
 			else
 			{
@@ -1637,12 +1514,11 @@ namespace Server.Gumps
 
 					switch ( index )
 					{
-						case 0: page = AdminGumpPage.Information_General; break;
+						case 0: page = AdminGumpPage.Information; break;
 						case 1: page = AdminGumpPage.Administer; break;
 						case 2: page = AdminGumpPage.Clients; break;
 						case 3: page = AdminGumpPage.Accounts; break;
 						case 4: page = AdminGumpPage.Firewall; break;
-						case 5: page = AdminGumpPage.Information_Perf; break;
 						default: return;
 					}
 
@@ -1740,39 +1616,7 @@ namespace Server.Gumps
 						case 311: InvokeCommand( "Set AccessLevel Counselor" ); notice = "Target the player to change their access level. (Counselor)"; break;
 						case 312: InvokeCommand( "Set AccessLevel GameMaster" ); notice = "Target the player to change their access level. (Game Master)"; break;
 						case 313: InvokeCommand( "Set AccessLevel Seer" ); notice = "Target the player to change their access level. (Seer)"; break;
-
-						case 314:
-						{
-							if ( from.AccessLevel > AccessLevel.Administrator )
-							{
-								InvokeCommand( "Set AccessLevel Administrator" );
-								notice = "Target the player to change their access level. (Administrator)";
-							}
-
-							break;
-						}
-
-						case 315:
-						{
-							if ( from.AccessLevel > AccessLevel.Developer )
-							{
-								InvokeCommand( "Set AccessLevel Developer" );
-								notice = "Target the player to change their access level. (Developer)";
-							}
-
-							break;
-						}
-
-						case 316:
-						{
-							if ( from.AccessLevel >= AccessLevel.Owner )
-							{
-								InvokeCommand( "Set AccessLevel Owner" );
-								notice = "Target the player to change their access level. (Owner)";
-							}
-
-							break;
-						}
+						case 314: InvokeCommand( "Set AccessLevel Administrator" ); notice = "Target the player to change their access level. (Administrator)"; break;
 
 						case 400: notice = "Enter search terms to add objects."; break;
 						case 401: InvokeCommand( "Remove" ); notice = "Target the item or mobile to remove."; break;
@@ -1822,8 +1666,8 @@ namespace Server.Gumps
 
 								for ( int i = 0; i < clients.Count; ++i )
 								{
-									NetState ns = clients[i];
-									IAccount a = ns.Account;
+									NetState ns = (NetState)clients[i];
+									Account a = ns.Account as Account;
 
 									if ( a == null )
 										continue;
@@ -1838,7 +1682,7 @@ namespace Server.Gumps
 									{
 										for ( int j = 0; !hasAccess && j < a.Length; ++j )
 										{
-											Mobile m = a[j];
+											Mobile m = (Mobile)a[j];
 
 											if ( m != null && m.AccessLevel >= level )
 												hasAccess = true;
@@ -1904,14 +1748,14 @@ namespace Server.Gumps
 
 								for ( int i = 0; i < instances.Count; ++i )
 								{
-									NetState ns = instances[i];
+									NetState ns = (NetState)instances[i];
 
 									bool isMatch;
 
 									if ( forName )
 									{
 										Mobile m = ns.Mobile;
-										IAccount a = ns.Account;
+										Account a = ns.Account as Account;
 
 										isMatch = ( m != null && m.Name.ToLower().IndexOf( match ) >= 0 )
 											|| ( a != null && a.Username.ToLower().IndexOf( match ) >= 0 );
@@ -2010,7 +1854,7 @@ namespace Server.Gumps
 							}
 							else
 							{
-								IAccount account = Accounts.GetAccount( un );
+								Account account = Accounts.GetAccount( un );
 
 								if ( account != null )
 								{
@@ -2018,7 +1862,7 @@ namespace Server.Gumps
 								}
 								else
 								{
-									dispAccount = new Account( un, pw );
+									dispAccount = Accounts.AddAccount( un, pw );
 									notice = String.Format( "{0} : Account added.", un );
 									CommandLogging.WriteLine( from, "{0} {1} adding new account: {2}", from.AccessLevel, CommandLogging.Format( from ), un );
 								}
@@ -2029,7 +1873,7 @@ namespace Server.Gumps
 						}
 						case 7:
 						{
-							ArrayList results;
+							ArrayList results = new ArrayList();
 
 							TextRelay matchEntry = info.GetTextEntry( 0 );
 							string match = ( matchEntry == null ? null : matchEntry.Text.Trim().ToLower() );
@@ -2037,14 +1881,11 @@ namespace Server.Gumps
 
 							if ( match == null || match.Length == 0 )
 							{
-								results = new ArrayList( (ICollection)Accounts.GetAccounts() );
-								results.Sort( AccountComparer.Instance );
-								//notice = "You must enter a username to search.";
+								notice = "You must enter a username to search.";
 							}
 							else
 							{
-								results = new ArrayList();
-								foreach ( Account check in Accounts.GetAccounts() )
+								foreach ( Account check in Accounts.Table.Values )
 								{
 									if ( check.Username.ToLower().IndexOf( match ) >= 0 )
 										results.Add( check );
@@ -2256,17 +2097,12 @@ namespace Server.Gumps
 								case 22: newLevel = AccessLevel.GameMaster; break;
 								case 23: newLevel = AccessLevel.Seer; break;
 								case 24: newLevel = AccessLevel.Administrator; break;
-								case 33: newLevel = AccessLevel.Developer; break;
-								case 34: newLevel = AccessLevel.Owner; break;
 							}
 
-							if ( newLevel < from.AccessLevel )
-							{
-								a.AccessLevel = newLevel;
+							a.AccessLevel = newLevel;
 
-								CommandLogging.WriteLine( from, "{0} {1} changing access level of account {2} to {3}", from.AccessLevel, CommandLogging.Format( from ), a.Username, a.AccessLevel );
-								from.SendGump( new AdminGump( from, AdminGumpPage.AccountDetails_Information, 0, null, "The access level has been changed.", m_State ) );
-							}
+							CommandLogging.WriteLine( from, "{0} {1} changing access level of account {2} to {3}", from.AccessLevel, CommandLogging.Format( from ), a.Username, a.AccessLevel );
+							from.SendGump( new AdminGump( from, AdminGumpPage.AccountDetails_Information, 0, null, "The access level has been changed.", m_State ) );
 
 							break;
 						}
@@ -2331,7 +2167,7 @@ namespace Server.Gumps
 						{
 							ArrayList results = new ArrayList();
 
-							foreach ( Account acct in Accounts.GetAccounts() )
+							foreach ( Account acct in Accounts.Table.Values )
 							{
 								bool empty = true;
 
@@ -2353,9 +2189,11 @@ namespace Server.Gumps
 						{
 							ArrayList results = new ArrayList();
 
-							foreach ( Account acct in Accounts.GetAccounts() )
+							DateTime minTime = DateTime.Now - TimeSpan.FromDays( 30.0 );
+
+							foreach ( Account acct in Accounts.Table.Values )
 							{
-								if ( acct.Inactive )
+								if ( acct.LastLogin <= minTime )
 									results.Add( acct );
 							}
 
@@ -2370,7 +2208,7 @@ namespace Server.Gumps
 						{
 							ArrayList results = new ArrayList();
 
-							foreach ( Account acct in Accounts.GetAccounts() )
+							foreach ( Account acct in Accounts.Table.Values )
 							{
 								if ( acct.Banned )
 									results.Add( acct );
@@ -2466,7 +2304,10 @@ namespace Server.Gumps
 							}
 							else
 							{
-								object toAdd = Firewall.ToFirewallEntry( text );
+								object toAdd;
+
+								try{ toAdd = IPAddress.Parse( text ); }
+								catch{ toAdd = text; }
 
 								CommandLogging.WriteLine( from, "{0} {1} firewalling {2}", from.AccessLevel, CommandLogging.Format( from ), toAdd );
 
@@ -2484,11 +2325,12 @@ namespace Server.Gumps
 						}
 						case 3:
 						{
-							if ( m_State is Firewall.IFirewallEntry )
+							if ( m_State is IPAddress || m_State is String )
 							{
 								CommandLogging.WriteLine( from, "{0} {1} removing {2} from firewall list", from.AccessLevel, CommandLogging.Format( from ), m_State );
 
-								Firewall.Remove( m_State );
+								Firewall.List.Remove( m_State );
+								Firewall.Save();
 								from.SendGump( new AdminGump( from, AdminGumpPage.Firewall, 0, null, String.Format( "{0} : Removed from firewall.", m_State ), null ) );
 							}
 
@@ -2659,7 +2501,7 @@ namespace Server.Gumps
 						}
 						case 5:
 						{
-							from.SendGump( new SkillsGump( from, m ) );
+							from.SendGump( new Server.Scripts.Gumps.SkillsGump( from, m ) );
 							break;
 						}
 					}
@@ -2725,17 +2567,20 @@ namespace Server.Gumps
 
 		private void Shutdown( bool restart, bool save )
 		{
-			CommandLogging.WriteLine( m_From, "{0} {1} shutting down server (Restart: {2}) (Save: {3})", m_From.AccessLevel, CommandLogging.Format( m_From ), restart, save );
+			CommandLogging.WriteLine( m_From, "{0} {1} shuting down server (Restart: {2}) (Save: {3})", m_From.AccessLevel, CommandLogging.Format( m_From ), restart, save );
 
 			if ( save )
 				InvokeCommand( "Save" );
 
-			Core.Kill( restart );
+			if ( restart )
+				Process.Start( Core.ExePath );
+
+			Core.Process.Kill();
 		}
 
-		private void InvokeCommand( string c )
+		private void InvokeCommand( string ip )
 		{
-			CommandSystem.Handle( m_From, String.Format( "{0}{1}", CommandSystem.Prefix, c ) );
+			Commands.CommandSystem.Handle( m_From, String.Format( "{0}{1}", Server.Commands.CommandSystem.Prefix, ip ) );
 		}
 
 		public static void GetAccountInfo( Account a, out AccessLevel accessLevel, out bool online )
@@ -2776,7 +2621,7 @@ namespace Server.Gumps
 			{
 				if ( m_Account != null )
 				{
-					m_Account.Comments.Add( new AccountComment( from.RawName, text ) );
+					m_Account.Comments.Add( new AccountComment( from.Name, text ) );
 					from.SendGump( new AdminGump( from, AdminGumpPage.AccountDetails_Comments, 0, null, "Comment added.", m_Account ) );
 				}
 			}

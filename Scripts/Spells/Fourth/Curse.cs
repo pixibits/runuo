@@ -1,22 +1,21 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server.Targeting;
 using Server.Network;
 
 namespace Server.Spells.Fourth
 {
-	public class CurseSpell : MagerySpell
+	public class CurseSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Curse", "Des Sanct",
+				SpellCircle.Fourth,
 				227,
 				9031,
 				Reagent.Nightshade,
 				Reagent.Garlic,
 				Reagent.SulfurousAsh
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Fourth; } }
 
 		public CurseSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -27,20 +26,20 @@ namespace Server.Spells.Fourth
 			Caster.Target = new InternalTarget( this );
 		}
 
-		private static Hashtable m_UnderEffect = new Hashtable();
+		public static readonly Hashtable UnderEffect = new Hashtable();
 
 		public static void RemoveEffect( object state )
 		{
 			Mobile m = (Mobile)state;
 
-			m_UnderEffect.Remove( m );
+			UnderEffect.Remove( m );
 
 			m.UpdateResistances();
 		}
 
-		public static bool UnderEffect( Mobile m )
+		public static bool IsUnderEffect( Mobile m )
 		{
-			return m_UnderEffect.Contains( m );
+			return UnderEffect.Contains( m );
 		}
 
 		public void Target( Mobile m )
@@ -59,39 +58,29 @@ namespace Server.Spells.Fourth
 				SpellHelper.AddStatCurse( Caster, m, StatType.Dex );
 				SpellHelper.AddStatCurse( Caster, m, StatType.Int ); SpellHelper.DisableSkillCheck = false;
 
-				Timer t = (Timer)m_UnderEffect[m];
+				Timer t = (Timer)UnderEffect[m];
 
-				if ( Caster.Player && m.Player /*&& Caster != m */ && t == null )	//On OSI you CAN curse yourself and get this effect.
+				if ( Caster.Player && m.Player && t == null )
 				{
 					TimeSpan duration = SpellHelper.GetDuration( Caster, m );
-					m_UnderEffect[m] = t = Timer.DelayCall( duration, new TimerStateCallback( RemoveEffect ), m );
+					UnderEffect[m] = t = Timer.DelayCall( duration, new TimerStateCallback( RemoveEffect ), m );
 					m.UpdateResistances();
 				}
-
-				if ( m.Spell != null )
-					m.Spell.OnCasterHurt();
 
 				m.Paralyzed = false;
 
 				m.FixedParticles( 0x374A, 10, 15, 5028, EffectLayer.Waist );
-				m.PlaySound( 0x1E1 );
-
-				int percentage = (int)(SpellHelper.GetOffsetScalar(Caster, m, true) * 100);
-				TimeSpan length = SpellHelper.GetDuration(Caster, m);
-
-				string args = String.Format("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}", percentage, percentage, percentage, 10, 10, 10, 10);
-
-				BuffInfo.AddBuff(m, new BuffInfo(BuffIcon.Curse, 1075835, 1075836, length, m, args.ToString()));
+				m.PlaySound( 0x1EA );
 			}
 
 			FinishSequence();
 		}
 
-		private class InternalTarget : Target
+		public class InternalTarget : Target
 		{
 			private CurseSpell m_Owner;
 
-			public InternalTarget( CurseSpell owner ) : base( Core.ML? 10 : 12, false, TargetFlags.Harmful )
+			public InternalTarget( CurseSpell owner ) : base( 12, false, TargetFlags.Harmful )
 			{
 				m_Owner = owner;
 			}

@@ -206,7 +206,7 @@ namespace Server
 			m_Map = map;
 			m_Parent = parent;
 			m_Area = area;
-			m_Dynamic = true;
+			m_Dynamic = area != null; // Zippy 11 June 2011
 			m_Music = this.DefaultMusic;
 
 			if ( m_Parent == null )
@@ -220,6 +220,18 @@ namespace Server
 				m_Priority = m_Parent.Priority;
 			}
 		}
+
+        // Zippy 11 June 2011
+        public Region(string name, Map map)
+        {
+            m_Name = name;
+            m_Map = map;
+            m_Dynamic = false;
+            m_Music = this.DefaultMusic;
+
+            m_ChildLevel = 0;
+            m_Priority = DefaultPriority;
+        }
 
 		public void Register()
 		{
@@ -268,6 +280,11 @@ namespace Server
 
 			m_Sectors = sectors.ToArray();
 		}
+
+        public static void AddRegion(Region r)
+        {
+            r.Register();
+        }
 
 		public void Unregister()
 		{

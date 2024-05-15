@@ -2,8 +2,6 @@ using System;
 using Server;
 using Server.Items;
 using Server.Guilds;
-using Server.Mobiles;
-using Server.Gumps;
 
 namespace Server.Misc
 {
@@ -26,34 +24,28 @@ namespace Server.Misc
 				{
 					case 0x002A: // *i resign from my guild*
 					{
-						if ( from.Guild != null )
+						if ( from.Guild is Guild && from.Guild != null )
 							((Guild)from.Guild).RemoveMember( from );
 
 						break;
 					}
-					case 0x0032: // *i must consider my sins*
+					/*case 0x0032: // "*i must consider my sins*
 					{
-						if( !Core.SE )
-						{
-							from.SendMessage( "Short Term Murders : {0}", from.ShortTermMurders );
-							from.SendMessage( "Long Term Murders : {0}",  from.Kills );
-						}
-						else
-						{
-							from.SendMessage( 0x3B2, "Short Term Murders: {0} Long Term Murders: {1}", from.ShortTermMurders, from.Kills );
-						}
+						if ( from.Kills == 0 )
+							from.SendLocalizedMessage( 502122 );
+						else if ( from.Kills <= 4 )
+							from.SendLocalizedMessage( 502125 );
+						else if ( from.Kills >= 5 )
+							from.SendLocalizedMessage( 502123 );
 						break;
-					}
-					case 0x0035: // i renounce my young player status*
-					{
-						if ( from is PlayerMobile && ((PlayerMobile)from).Young && !from.HasGump( typeof( RenounceYoungGump ) ) )
-						{
-							from.SendGump( new RenounceYoungGump() );
-						}
-
-						break;
-					}
+					}*/
 				}
+			}
+			
+			string lower = args.Speech.ToLower();
+			if ( lower.IndexOf( "view updates" ) != -1 )
+			{
+				Server.Gumps.UpdatesGump.ShowUpdates( from );
 			}
 		}
 	}

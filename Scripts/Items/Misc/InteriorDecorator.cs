@@ -16,7 +16,7 @@ namespace Server.Items
 		Down
 	}
 
-	public class InteriorDecorator : Item
+	public class InteriorDecorator : BaseItem
 	{
 		private DecorateCommand m_Command;
 
@@ -62,26 +62,20 @@ namespace Server.Items
 		{
 			if ( !CheckUse( this, from ) )
 				return;
-			
-			if ( from.FindGump( typeof( InteriorDecorator.InternalGump ) ) == null )
-				from.SendGump( new InternalGump( this ) );
 
-			if ( m_Command != DecorateCommand.None )
+			if ( m_Command == DecorateCommand.None )
+				from.SendGump( new InternalGump( this ) );
+			else
 				from.Target = new InternalTarget( this );
 		}
 
 		public static bool InHouse( Mobile from )
 		{
-			BaseHouse house = BaseHouse.FindHouseAt( from );
-
-			return ( house != null && house.IsCoOwner( from ) );
+			return ( BaseHouse.FindHouseAt( from ) != null );
 		}
 
 		public static bool CheckUse( InteriorDecorator tool, Mobile from )
 		{
-			/*if ( tool.Deleted || !tool.IsChildOf( from.Backpack ) )
-				from.SendLocalizedMessage( 1042001 ); // That must be in your pack for you to use it.
-			else*/
 			if ( !InHouse( from ) )
 				from.SendLocalizedMessage( 502092 ); // You must be in your house to do this.
 			else
@@ -100,13 +94,13 @@ namespace Server.Items
 
 				AddBackground( 0, 0, 200, 200, 2600 );
 
-				AddButton( 50, 45, ( decorator.Command == DecorateCommand.Turn ? 2154 : 2152 ), 2154, 1, GumpButtonType.Reply, 0 );
+				AddButton( 50, 45, 2152, 2154, 1, GumpButtonType.Reply, 0 );
 				AddHtmlLocalized( 90, 50, 70, 40, 1018323, false, false ); // Turn
 
-				AddButton( 50, 95, ( decorator.Command == DecorateCommand.Up ? 2154 : 2152 ), 2154, 2, GumpButtonType.Reply, 0 );
+				AddButton( 50, 95, 2152, 2154, 2, GumpButtonType.Reply, 0 );
 				AddHtmlLocalized( 90, 100, 70, 40, 1018324, false, false ); // Up
 
-				AddButton( 50, 145, ( decorator.Command == DecorateCommand.Down ? 2154 : 2152 ), 2154, 3, GumpButtonType.Reply, 0 );
+				AddButton( 50, 145, 2152, 2154, 3, GumpButtonType.Reply, 0 );
 				AddHtmlLocalized( 90, 150, 70, 40, 1018325, false, false ); // Down
 			}
 
@@ -124,11 +118,8 @@ namespace Server.Items
 				if ( command != DecorateCommand.None )
 				{
 					m_Decorator.Command = command;
-					sender.Mobile.SendGump( new InternalGump( m_Decorator ) );
 					sender.Mobile.Target = new InternalTarget( m_Decorator );
 				}
-				else
-					Target.Cancel( sender.Mobile );
 			}
 		}
 
@@ -150,37 +141,23 @@ namespace Server.Items
 
 			protected override void OnTarget( Mobile from, object targeted )
 			{
-				if ( targeted is Item && InteriorDecorator.CheckUse( m_Decorator, from ) )
+				if ( targeted == m_Decorator )
+				{
+					m_Decorator.Command = DecorateCommand.None;
+					from.SendGump( new InternalGump( m_Decorator ) );
+				}
+				else if ( targeted is Item && InteriorDecorator.CheckUse( m_Decorator, from ) )
 				{
 					BaseHouse house = BaseHouse.FindHouseAt( from );
 					Item item = (Item)targeted;
-					
-					bool isDecorableComponent = false;
 
-					if ( item is AddonComponent )
-						if ( ((AddonComponent)item).Addon.Components.Count == 1 && Core.SE )
-							isDecorableComponent = true;
-
-					if ( house == null || !house.IsCoOwner( from ) )
+					if ( house == null || !house.IsOwner( from ) )
 					{
 						from.SendLocalizedMessage( 502092 ); // You must be in your house to do this.
 					}
 					else if ( item.Parent != null || !house.IsInside( item ) )
 					{
 						from.SendLocalizedMessage( 1042270 ); // That is not in your house.
-					}
-					else if ( !house.IsLockedDown( item ) && !house.IsSecure( item ) && !isDecorableComponent )
-					{
-						if ( item is AddonComponent && m_Decorator.Command == DecorateCommand.Up )
-							from.SendLocalizedMessage( 1042274 ); // You cannot raise it up any higher.
-						else if ( item is AddonComponent && m_Decorator.Command == DecorateCommand.Down )
-							from.SendLocalizedMessage( 1042275 ); // You cannot lower it down any further.
-						else
-							from.SendLocalizedMessage( 1042271 ); // That is not locked down.
-					}
-					else if ( item is VendorRentalContract )
-					{
-						from.SendLocalizedMessage( 1062491 ); // You cannot use the house decorator on that object.
 					}
 					else if ( item.TotalWeight + item.PileWeight > 100 )
 					{
@@ -196,14 +173,6 @@ namespace Server.Items
 						}
 					}
 				}
-				
-				from.Target = new InternalTarget( m_Decorator );
-			}
-			
-			protected override void OnTargetCancel( Mobile from, TargetCancelType cancelType )
-			{
-				if ( cancelType == TargetCancelType.Canceled )
-					from.CloseGump( typeof( InteriorDecorator.InternalGump ) );
 			}
 
 			private static void Turn( Item item, Mobile from )
@@ -250,7 +219,7 @@ namespace Server.Items
 				for ( int i = 0; i < tiles.Length; ++i )
 				{
 					StaticTile tile = tiles[i];
-					ItemData id = TileData.ItemTable[tile.ID & TileData.MaxItemValue];
+					ItemData id = TileData.ItemTable[tile.ID & 0x3FFF];
 
 					int top = tile.Z; // Confirmed : no height checks here
 

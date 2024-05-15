@@ -5,13 +5,124 @@ using Server.Network;
 
 namespace Server.Items
 {
-	public class HairDye : Item
+	public class HairDye : BaseItem
 	{
 		public override int LabelNumber{ get{ return 1041060; } } // Hair Dye
+
+		public static void Initialize()
+		{
+			Commands.CommandSystem.Register( "TileHairDye", AccessLevel.GameMaster, new Server.Commands.CommandEventHandler( TileHairDye ) );
+		}
+
+		public static void TileHairDye( Server.Commands.CommandEventArgs args )
+		{
+			for (int i=0;i<7;i++)
+			{
+				int min, max;
+				switch ( i )
+				{
+					default:
+					case 0:
+						min = 1102; max = 1148;
+						break;
+					case 1:
+						min = 1201; max = 1247 ;
+						break;
+					case 2:
+						min = 1301; max = 1354 ;
+						break;
+					case 3:
+						min = 1401; max = 1447 ;
+						break;
+					case 4:
+						min = 1501; max = 1547 ;
+						break;
+					case 5:
+						min = 1601; max = 1654 ;
+						break;
+					case 6:
+						min = 2201; max = 2224 ;
+						break;
+					case 7:
+						min = 2401; max = 2430 ;
+						break;
+				}
+
+				for(int h=min;h<=max;h++)
+				{
+					Item item = new Static( 0xeff );
+					item.Hue = h;
+					item.Location = new Point3D( args.Mobile.Location.X + (h-min), args.Mobile.Location.Y + i, args.Mobile.Location.Z );
+					item.Map = args.Mobile.Map;
+				}
+			}
+
+			args.Mobile.SendMessage( "Done tiling hair dye." );
+		}
 
 		[Constructable]
 		public HairDye() : base( 0xEFF )
 		{
+			/*if ( Utility.Random( 50 ) == 0 ) // 2% chance to be special dye
+			{
+				switch ( Utility.Random( 7 ) )
+				{
+					case 0:
+						this.Hue = 12 + Utility.Random( 10 );
+						break;
+					case 1:
+						this.Hue = 32 + Utility.Random( 13 );
+						break;
+					case 2:
+						this.Hue = 54 + Utility.Random( 3 );
+						break;
+					case 3:
+						this.Hue = 62 + Utility.Random( 10 );
+						break;
+					case 4:
+						this.Hue = 81 + Utility.Random( 2 );
+						break;
+					case 5:
+						this.Hue = 89 + Utility.Random( 2 );
+						break;
+					case 6:
+						this.Hue = 1153 + Utility.Random( 2 );
+						break;
+				}
+			}
+			else
+			{
+				this.Hue = Utility.RandomHairHue(); // 1102 to 1149
+			}*/
+
+			switch ( Utility.Random( 8 ) )
+			{
+				default:
+				case 0:
+					this.Hue = Utility.RandomMinMax( 1102, 1148 );
+					break;
+				case 1:
+					this.Hue = Utility.RandomMinMax( 1201, 1247 );
+					break;
+				case 2:
+					this.Hue = Utility.RandomMinMax( 1301, 1354 );
+					break;
+				case 3:
+					this.Hue = Utility.RandomMinMax( 1401, 1447 );
+					break;
+				case 4:
+					this.Hue = Utility.RandomMinMax( 1501, 1547 );
+					break;
+				case 5:
+					this.Hue = Utility.RandomMinMax( 1601, 1654 );
+					break;
+				case 6:
+					this.Hue = Utility.RandomMinMax( 2201, 2224 );
+					break;
+				case 7:
+					this.Hue = Utility.RandomMinMax( 2401, 2430 );
+					break;
+			}
 			Weight = 1.0;
 		}
 
@@ -35,159 +146,10 @@ namespace Server.Items
 
 		public override void OnDoubleClick( Mobile from )
 		{
-			if ( from.InRange( this.GetWorldLocation(), 1 ) )
-			{
-				from.CloseGump( typeof( HairDyeGump ) );
-				from.SendGump( new HairDyeGump( this ) );
-			}
-			else
-			{
-				from.LocalOverheadMessage( MessageType.Regular, 906, 1019045 ); // I can't reach that.
-			}	
-		}
-	}
-
-	public class HairDyeGump : Gump
-	{
-		private HairDye m_HairDye;
-
-		private class HairDyeEntry
-		{
-			private string m_Name;
-			private int m_HueStart;
-			private int m_HueCount;
-
-			public string Name
-			{
-				get
-				{
-					return m_Name;
-				}
-			}
-
-			public int HueStart
-			{
-				get
-				{
-					return m_HueStart;
-				}
-			}
-
-			public int HueCount
-			{
-				get
-				{
-					return m_HueCount;
-				}
-			}
-
-			public HairDyeEntry( string name, int hueStart, int hueCount )
-			{
-				m_Name = name;
-				m_HueStart = hueStart;
-				m_HueCount = hueCount;
-			}
-		}
-
-		private static HairDyeEntry[] m_Entries = new HairDyeEntry[]
-			{
-				new HairDyeEntry( "*****", 1602, 26 ),
-				new HairDyeEntry( "*****", 1628, 27 ),
-				new HairDyeEntry( "*****", 1502, 32 ),
-				new HairDyeEntry( "*****", 1302, 32 ),
-				new HairDyeEntry( "*****", 1402, 32 ),
-				new HairDyeEntry( "*****", 1202, 24 ),
-				new HairDyeEntry( "*****", 2402, 29 ),
-				new HairDyeEntry( "*****", 2213, 6 ),
-				new HairDyeEntry( "*****", 1102, 8 ),
-				new HairDyeEntry( "*****", 1110, 8 ),
-				new HairDyeEntry( "*****", 1118, 16 ),
-				new HairDyeEntry( "*****", 1134, 16 )
-			};
-
-		public HairDyeGump( HairDye dye ) : base( 50, 50 )
-		{
-			m_HairDye = dye;
-
-			AddPage( 0 );
-
-			AddBackground( 100, 10, 350, 355, 2600 );
-			AddBackground( 120, 54, 110, 270, 5100 );
-
-			AddHtmlLocalized( 70, 25, 400, 35, 1011013, false, false ); // <center>Hair Color Selection Menu</center>
-
-			AddButton( 149, 328, 4005, 4007, 1, GumpButtonType.Reply, 0 );
-			AddHtmlLocalized( 185, 329, 250, 35, 1011014, false, false ); // Dye my hair this color!
-
-			for ( int i = 0; i < m_Entries.Length; ++i )
-			{
-				AddLabel( 130, 59 + (i * 22), m_Entries[i].HueStart - 1, m_Entries[i].Name );
-				AddButton( 207, 60 + (i * 22), 5224, 5224, 0, GumpButtonType.Page, i + 1 );
-			}
-
-			for ( int i = 0; i < m_Entries.Length; ++i )
-			{
-				HairDyeEntry e = m_Entries[i];
-
-				AddPage( i + 1 );
-
-				for ( int j = 0; j < e.HueCount; ++j )
-				{
-					AddLabel( 278 + ((j / 16) * 80), 52 + ((j % 16) * 17), e.HueStart + j - 1, "*****" );
-					AddRadio( 260 + ((j / 16) * 80), 52 + ((j % 16) * 17), 210, 211, false, (i * 100) + j );
-				}
-			}
-		}
-
-		public override void OnResponse( NetState from, RelayInfo info )
-		{
-			if ( m_HairDye.Deleted )
-				return;
-
-			Mobile m = from.Mobile;
-			int[] switches = info.Switches;
-
-			if ( !m_HairDye.IsChildOf( m.Backpack ) ) 
-			{
-				m.SendLocalizedMessage( 1042010 ); //You must have the objectin your backpack to use it.
-				return;
-			}
-
-			if ( info.ButtonID != 0 && switches.Length > 0 )
-			{
-				if( m.HairItemID == 0 && m.FacialHairItemID == 0 )
-				{
-					m.SendLocalizedMessage( 502623 );	// You have no hair to dye and cannot use this
-				}
-				else
-				{
-					// To prevent this from being exploited, the hue is abstracted into an internal list
-
-					int entryIndex = switches[0] / 100;
-					int hueOffset = switches[0] % 100;
-
-					if ( entryIndex >= 0 && entryIndex < m_Entries.Length )
-					{
-						HairDyeEntry e = m_Entries[entryIndex];
-
-						if ( hueOffset >= 0 && hueOffset < e.HueCount )
-						{
-							int hue = e.HueStart + hueOffset;
-
-							m.HairHue = hue;
-							m.FacialHairHue = hue;
-
-							m.SendLocalizedMessage( 501199 );  // You dye your hair
-							m_HairDye.Delete();
-							m.PlaySound( 0x4E );
-						}
-					}
-				}
-			}
-			else
-			{
-				m.SendLocalizedMessage( 501200 ); // You decide not to dye your hair
-			}
+			from.HairHue = this.Hue;
+		    from.FacialHairHue = this.Hue;
+			
+            this.Delete();
 		}
 	}
 }

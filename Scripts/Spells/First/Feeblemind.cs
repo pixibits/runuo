@@ -4,17 +4,16 @@ using Server.Network;
 
 namespace Server.Spells.First
 {
-	public class FeeblemindSpell : MagerySpell
+	public class FeeblemindSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Feeblemind", "Rel Wis",
+				SpellCircle.First,
 				212,
 				9031,
 				Reagent.Ginseng,
 				Reagent.Nightshade
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.First; } }
 
 		public FeeblemindSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -39,18 +38,10 @@ namespace Server.Spells.First
 
 				SpellHelper.AddStatCurse( Caster, m, StatType.Int );
 
-				if ( m.Spell != null )
-					m.Spell.OnCasterHurt();
-
 				m.Paralyzed = false;
 
 				m.FixedParticles( 0x3779, 10, 15, 5004, EffectLayer.Head );
 				m.PlaySound( 0x1E4 );
-
-				int percentage = (int)(SpellHelper.GetOffsetScalar( Caster, m, true )*100);
-				TimeSpan length = SpellHelper.GetDuration( Caster, m );
-
-				BuffInfo.AddBuff( m, new BuffInfo( BuffIcon.FeebleMind, 1075833, length, m, percentage.ToString() ) );
 			}
 
 			FinishSequence();
@@ -60,7 +51,7 @@ namespace Server.Spells.First
 		{
 			private FeeblemindSpell m_Owner;
 
-			public InternalTarget( FeeblemindSpell owner ) : base( Core.ML ? 10 : 12, false, TargetFlags.Harmful )
+			public InternalTarget( FeeblemindSpell owner ) : base( 12, false, TargetFlags.Harmful )
 			{
 				m_Owner = owner;
 			}

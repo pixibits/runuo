@@ -1,32 +1,26 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Net;
 using System.Security;
 using System.Security.Cryptography;
-using System.Text;
+using System.Net;
+using System.Collections; using System.Collections.Generic;
 using System.Xml;
+using System.Text;
 using Server;
 using Server.Misc;
-using Server.Mobiles;
-using Server.Multis;
 using Server.Network;
+using Server.Mobiles;
 
 namespace Server.Accounting
 {
-	public class Account : IAccount, IComparable, IComparable<Account>
+	public class Account : IAccount
 	{
-		public static readonly TimeSpan YoungDuration = TimeSpan.FromHours( 40.0 );
-
-		public static readonly TimeSpan InactiveDuration = TimeSpan.FromDays( 180.0 );
-
-		private string m_Username, m_PlainPassword, m_CryptPassword, m_NewCryptPassword;
+		private string m_Username, m_PlainPassword, m_CryptPassword;
 		private AccessLevel m_AccessLevel;
 		private int m_Flags;
 		private DateTime m_Created, m_LastLogin;
 		private TimeSpan m_TotalGameTime;
-		private List<AccountComment> m_Comments;
-		private List<AccountTag> m_Tags;
+		private ArrayList m_Comments;
+		private ArrayList m_Tags;
 		private Mobile[] m_Mobiles;
 		private string[] m_IPRestrictions;
 		private IPAddress[] m_LoginIPs;
@@ -44,10 +38,10 @@ namespace Server.Accounting
 				if ( m == null )
 					continue;
 
-				List<BaseHouse> list = BaseHouse.GetHouses( m );
+				/*ArrayList list = Multis.BaseHouse.GetHouses( m );
 
 				for ( int j = 0; j < list.Count; ++j )
-					list[j].Delete();
+					((Item)list[j]).Delete();*/
 
 				m.Delete();
 
@@ -55,7 +49,7 @@ namespace Server.Accounting
 				m_Mobiles[i] = null;
 			}
 
-			Accounts.Remove( m_Username );
+			Accounts.Table.Remove( m_Username );
 		}
 
 		/// <summary>
@@ -63,8 +57,8 @@ namespace Server.Accounting
 		/// </summary>
 		public HardwareInfo HardwareInfo
 		{
-			get { return m_HardwareInfo; }
-			set { m_HardwareInfo = value; }
+			get{ return m_HardwareInfo; }
+			set{ m_HardwareInfo = value; }
 		}
 
 		/// <summary>
@@ -72,8 +66,8 @@ namespace Server.Accounting
 		/// </summary>
 		public string[] IPRestrictions
 		{
-			get { return m_IPRestrictions; }
-			set { m_IPRestrictions = value; }
+			get{ return m_IPRestrictions; }
+			set{ m_IPRestrictions = value; }
 		}
 
 		/// <summary>
@@ -81,24 +75,24 @@ namespace Server.Accounting
 		/// </summary>
 		public IPAddress[] LoginIPs
 		{
-			get { return m_LoginIPs; }
-			set { m_LoginIPs = value; }
+			get{ return m_LoginIPs; }
+			set{ m_LoginIPs = value; }
 		}
 
 		/// <summary>
 		/// List of account comments. Type of contained objects is AccountComment.
 		/// </summary>
-		public List<AccountComment> Comments
+		public ArrayList Comments
 		{
-			get { if ( m_Comments == null ) m_Comments = new List<AccountComment>(); return m_Comments; }
+			get{ return m_Comments; }
 		}
 
 		/// <summary>
 		/// List of account tags. Type of contained objects is AccountTag.
 		/// </summary>
-		public List<AccountTag> Tags
+		public ArrayList Tags
 		{
-			get { if ( m_Tags == null ) m_Tags = new List<AccountTag>(); return m_Tags; }
+			get{ return m_Tags; }
 		}
 
 		/// <summary>
@@ -106,8 +100,8 @@ namespace Server.Accounting
 		/// </summary>
 		public string Username
 		{
-			get { return m_Username; }
-			set { m_Username = value; }
+			get{ return m_Username; }
+			set{ m_Username = value; }
 		}
 
 		/// <summary>
@@ -115,8 +109,8 @@ namespace Server.Accounting
 		/// </summary>
 		public string PlainPassword
 		{
-			get { return m_PlainPassword; }
-			set { m_PlainPassword = value; }
+			get{ return m_PlainPassword; }
+			set{ m_PlainPassword = value; }
 		}
 
 		/// <summary>
@@ -124,17 +118,8 @@ namespace Server.Accounting
 		/// </summary>
 		public string CryptPassword
 		{
-			get { return m_CryptPassword; }
-			set { m_CryptPassword = value; }
-		}
-
-		/// <summary>
-		/// Account username and password hashed with SHA1. May be null.
-		/// </summary>
-		public string NewCryptPassword
-		{
-			get { return m_NewCryptPassword; }
-			set { m_NewCryptPassword = value; }
+			get{ return m_CryptPassword; }
+			set{ m_CryptPassword = value; }
 		}
 
 		/// <summary>
@@ -142,17 +127,17 @@ namespace Server.Accounting
 		/// </summary>
 		public AccessLevel AccessLevel
 		{
-			get { return m_AccessLevel; }
-			set { m_AccessLevel = value; }
+			get{ return m_AccessLevel; }
+			set{ m_AccessLevel = value; }
 		}
 
 		/// <summary>
-		/// Internal bitfield of account flags. Consider using direct access properties (Banned, Young), or GetFlag/SetFlag methods
+		/// Internal bitfield of account flags. Consider using direct access properties (Banned), or GetFlag/SetFlag methods
 		/// </summary>
 		public int Flags
 		{
-			get { return m_Flags; }
-			set { m_Flags = value; }
+			get{ return m_Flags; }
+			set{ m_Flags = value; }
 		}
 
 		/// <summary>
@@ -172,7 +157,7 @@ namespace Server.Accounting
 
 				if ( GetBanTags( out banTime, out banDuration ) )
 				{
-					if ( banDuration != TimeSpan.MaxValue && DateTime.Now >= ( banTime + banDuration ) )
+					if ( banDuration != TimeSpan.MaxValue && DateTime.Now >= (banTime + banDuration) )
 					{
 						SetUnspecifiedBan( null ); // clear
 						Banned = false;
@@ -182,25 +167,7 @@ namespace Server.Accounting
 
 				return true;
 			}
-			set { SetFlag( 0, value ); }
-		}
-
-		/// <summary>
-		/// Gets or sets a flag indicating if the characters created on this account will have the young status.
-		/// </summary>
-		public bool Young
-		{
-			get { return !GetFlag( 1 ); }
-			set
-			{
-				SetFlag( 1, !value );
-
-				if ( m_YoungTimer != null )
-				{
-					m_YoungTimer.Stop();
-					m_YoungTimer = null;
-				}
-			}
+			set{ SetFlag( 0, value ); }
 		}
 
 		/// <summary>
@@ -208,7 +175,7 @@ namespace Server.Accounting
 		/// </summary>
 		public DateTime Created
 		{
-			get { return m_Created; }
+			get{ return m_Created; }
 		}
 
 		/// <summary>
@@ -216,16 +183,8 @@ namespace Server.Accounting
 		/// </summary>
 		public DateTime LastLogin
 		{
-			get { return m_LastLogin; }
-			set { m_LastLogin = value; }
-		}
-
-		/// <summary>
-		/// An account is considered inactive based upon LastLogin and InactiveDuration
-		/// </summary>
-		public bool Inactive
-		{
-			get { return ( ( m_LastLogin + InactiveDuration ) <= DateTime.Now && AccessLevel == AccessLevel.Player ); }
+			get{ return m_LastLogin; }
+			set{ m_LastLogin = value; }
 		}
 
 		/// <summary>
@@ -236,13 +195,13 @@ namespace Server.Accounting
 		{
 			get
 			{
-				for ( int i = 0; i < m_Mobiles.Length; i++ )
+				/*for ( int i = 0; i < m_Mobiles.Length; i++ )
 				{
 					PlayerMobile m = m_Mobiles[i] as PlayerMobile;
 
 					if ( m != null && m.NetState != null )
-						return m_TotalGameTime + ( DateTime.Now - m.SessionStart );
-				}
+						return m_TotalGameTime + (DateTime.Now - m.SessionStart);
+				}*/
 
 				return m_TotalGameTime;
 			}
@@ -254,7 +213,7 @@ namespace Server.Accounting
 		/// <param name="index">The zero-based flag index.</param>
 		public bool GetFlag( int index )
 		{
-			return ( m_Flags & ( 1 << index ) ) != 0;
+			return ( m_Flags & (1 << index) ) != 0;
 		}
 
 		/// <summary>
@@ -265,9 +224,9 @@ namespace Server.Accounting
 		public void SetFlag( int index, bool value )
 		{
 			if ( value )
-				m_Flags |= ( 1 << index );
+				m_Flags |= (1 << index);
 			else
-				m_Flags &= ~( 1 << index );
+				m_Flags &= ~(1 << index);
 		}
 
 		/// <summary>
@@ -277,7 +236,7 @@ namespace Server.Accounting
 		/// <param name="value">New tag value.</param>
 		public void AddTag( string name, string value )
 		{
-			Tags.Add( new AccountTag( name, value ) );
+			m_Tags.Add( new AccountTag( name, value ) );
 		}
 
 		/// <summary>
@@ -286,15 +245,15 @@ namespace Server.Accounting
 		/// <param name="name">Tag name to remove.</param>
 		public void RemoveTag( string name )
 		{
-			for ( int i = Tags.Count - 1; i >= 0; --i )
+			for ( int i = m_Tags.Count - 1; i >= 0; --i )
 			{
-				if ( i >= Tags.Count )
+				if ( i >= m_Tags.Count )
 					continue;
 
-				AccountTag tag = Tags[i];
+				AccountTag tag = (AccountTag)m_Tags[i];
 
 				if ( tag.Name == name )
-					Tags.RemoveAt( i );
+					m_Tags.RemoveAt( i );
 			}
 		}
 
@@ -305,9 +264,9 @@ namespace Server.Accounting
 		/// <param name="value">Tag value.</param>
 		public void SetTag( string name, string value )
 		{
-			for ( int i = 0; i < Tags.Count; ++i )
+			for ( int i = 0; i < m_Tags.Count; ++i )
 			{
-				AccountTag tag = Tags[i];
+				AccountTag tag = (AccountTag)m_Tags[i];
 
 				if ( tag.Name == name )
 				{
@@ -325,9 +284,9 @@ namespace Server.Accounting
 		/// <param name="name">Name of the desired tag value.</param>
 		public string GetTag( string name )
 		{
-			for ( int i = 0; i < Tags.Count; ++i )
+			for ( int i = 0; i < m_Tags.Count; ++i )
 			{
-				AccountTag tag = Tags[i];
+				AccountTag tag = (AccountTag)m_Tags[i];
 
 				if ( tag.Name == name )
 					return tag.Value;
@@ -351,7 +310,7 @@ namespace Server.Accounting
 			if ( banTime == DateTime.MinValue )
 				RemoveTag( "BanTime" );
 			else
-				SetTag( "BanTime", XmlConvert.ToString( banTime, XmlDateTimeSerializationMode.Local ) );
+				SetTag( "BanTime", XmlConvert.ToString( banTime ) );
 
 			if ( banDuration == TimeSpan.Zero )
 				RemoveTag( "BanDuration" );
@@ -365,7 +324,7 @@ namespace Server.Accounting
 			string tagDuration = GetTag( "BanDuration" );
 
 			if ( tagTime != null )
-				banTime = Utility.GetXMLDateTime( tagTime, DateTime.MinValue );
+				banTime = Accounts.GetDateTime( tagTime, DateTime.MinValue );
 			else
 				banTime = DateTime.MinValue;
 
@@ -375,7 +334,8 @@ namespace Server.Accounting
 			}
 			else if ( tagDuration != null )
 			{
-				banDuration = Utility.ToTimeSpan( tagDuration );
+				try{ banDuration = TimeSpan.Parse( tagDuration ); }
+				catch{ banDuration = TimeSpan.Zero; }
 			}
 			else
 			{
@@ -385,103 +345,50 @@ namespace Server.Accounting
 			return ( banTime != DateTime.MinValue && banDuration != TimeSpan.Zero );
 		}
 
-		private static MD5CryptoServiceProvider m_MD5HashProvider;
-		private static SHA1CryptoServiceProvider m_SHA1HashProvider;
+		private static MD5CryptoServiceProvider m_HashProvider;
 		private static byte[] m_HashBuffer;
 
-		public static string HashMD5( string phrase )
+		public static string HashPassword( string plainPassword )
 		{
-			if ( m_MD5HashProvider == null )
-				m_MD5HashProvider = new MD5CryptoServiceProvider();
+			if ( m_HashProvider == null )
+				m_HashProvider = new MD5CryptoServiceProvider();
 
 			if ( m_HashBuffer == null )
 				m_HashBuffer = new byte[256];
 
-			int length = Encoding.ASCII.GetBytes( phrase, 0, phrase.Length > 256 ? 256 : phrase.Length, m_HashBuffer, 0 );
-			byte[] hashed = m_MD5HashProvider.ComputeHash( m_HashBuffer, 0, length );
-
-			return BitConverter.ToString( hashed );
-		}
-
-		public static string HashSHA1( string phrase )
-		{
-			if ( m_SHA1HashProvider == null )
-				m_SHA1HashProvider = new SHA1CryptoServiceProvider();
-
-			if ( m_HashBuffer == null )
-				m_HashBuffer = new byte[256];
-
-			int length = Encoding.ASCII.GetBytes( phrase, 0, phrase.Length > 256 ? 256 : phrase.Length, m_HashBuffer, 0 );
-			byte[] hashed = m_SHA1HashProvider.ComputeHash( m_HashBuffer, 0, length );
+			int length = Encoding.ASCII.GetBytes( plainPassword, 0, plainPassword.Length > 256 ? 256 : plainPassword.Length, m_HashBuffer, 0 );
+			byte[] hashed = m_HashProvider.ComputeHash( m_HashBuffer, 0, length );
 
 			return BitConverter.ToString( hashed );
 		}
 
 		public void SetPassword( string plainPassword )
 		{
-			switch ( AccountHandler.ProtectPasswords )
+			if ( AccountHandler.ProtectPasswords )
 			{
-				case PasswordProtection.None:
-					{
-						m_PlainPassword = plainPassword;
-						m_CryptPassword = null;
-						m_NewCryptPassword = null;
-
-						break;
-					}
-				case PasswordProtection.Crypt:
-					{
-						m_PlainPassword = null;
-						m_CryptPassword = HashMD5( plainPassword );
-						m_NewCryptPassword = null;
-
-						break;
-					}
-				default: // PasswordProtection.NewCrypt
-					{
-						m_PlainPassword = null;
-						m_CryptPassword = null;
-						m_NewCryptPassword = HashSHA1( m_Username + plainPassword );
-
-						break;
-					}
+				m_CryptPassword = HashPassword( plainPassword );
+				m_PlainPassword = null;
+			}
+			else
+			{
+				m_CryptPassword = null;
+				m_PlainPassword = plainPassword;
 			}
 		}
 
 		public bool CheckPassword( string plainPassword )
 		{
-			bool ok;
-			PasswordProtection curProt;
-
 			if ( m_PlainPassword != null )
-			{
-				ok = ( m_PlainPassword == plainPassword );
-				curProt = PasswordProtection.None;
-			}
-			else if ( m_CryptPassword != null )
-			{
-				ok = ( m_CryptPassword == HashMD5( plainPassword ) );
-				curProt = PasswordProtection.Crypt;
-			}
-			else
-			{
-				ok = ( m_NewCryptPassword == HashSHA1( m_Username + plainPassword ) );
-				curProt = PasswordProtection.NewCrypt;
-			}
+				return ( m_PlainPassword == plainPassword );
 
-			if ( ok && curProt != AccountHandler.ProtectPasswords )
-				SetPassword( plainPassword );
-
-			return ok;
+			return ( m_CryptPassword == HashPassword( plainPassword ) );
 		}
-
-		private Timer m_YoungTimer;
 
 		public static void Initialize()
 		{
 			EventSink.Connected += new ConnectedEventHandler( EventSink_Connected );
 			EventSink.Disconnected += new DisconnectedEventHandler( EventSink_Disconnected );
-			EventSink.Login += new LoginEventHandler( EventSink_Login );
+			EventSink.Login += new LoginEventHandler( EventSing_Login );
 		}
 
 		private static void EventSink_Connected( ConnectedEventArgs e )
@@ -490,12 +397,6 @@ namespace Server.Accounting
 
 			if ( acc == null )
 				return;
-
-			if ( acc.Young && acc.m_YoungTimer == null )
-			{
-				acc.m_YoungTimer = new YoungTimer( acc );
-				acc.m_YoungTimer.Start();
-			}
 		}
 
 		private static void EventSink_Disconnected( DisconnectedEventArgs e )
@@ -505,20 +406,14 @@ namespace Server.Accounting
 			if ( acc == null )
 				return;
 
-			if ( acc.m_YoungTimer != null )
-			{
-				acc.m_YoungTimer.Stop();
-				acc.m_YoungTimer = null;
-			}
-
 			PlayerMobile m = e.Mobile as PlayerMobile;
 			if ( m == null )
 				return;
 
-			acc.m_TotalGameTime += DateTime.Now - m.SessionStart;
+			//acc.m_TotalGameTime += DateTime.Now - m.SessionStart;
 		}
 
-		private static void EventSink_Login( LoginEventArgs e )
+		private static void EventSing_Login( LoginEventArgs e )
 		{
 			PlayerMobile m = e.Mobile as PlayerMobile;
 
@@ -529,67 +424,16 @@ namespace Server.Accounting
 
 			if ( acc == null )
 				return;
-
-			if ( m.Young && acc.Young )
-			{
-				TimeSpan ts = YoungDuration - acc.TotalGameTime;
-				int hours = Math.Max( (int) ts.TotalHours, 0 );
-
-				m.SendAsciiMessage( "You will enjoy the benefits and relatively safe status of a young player for {0} more hour{1}.", hours, hours != 1 ? "s" : "" );
-			}
 		}
 
-		public void RemoveYoungStatus( int message )
-		{
-			this.Young = false;
-
-			for ( int i = 0; i < m_Mobiles.Length; i++ )
-			{
-				PlayerMobile m = m_Mobiles[i] as PlayerMobile;
-
-				if ( m != null && m.Young )
-				{
-					m.Young = false;
-
-					if ( m.NetState != null )
-					{
-						if ( message > 0 )
-							m.SendLocalizedMessage( message );
-
-						m.SendLocalizedMessage( 1019039 ); // You are no longer considered a young player of Ultima Online, and are no longer subject to the limitations and benefits of being in that caste.
-					}
-				}
-			}
-		}
-
-		public void CheckYoung()
-		{
-			if ( TotalGameTime >= YoungDuration )
-				RemoveYoungStatus( 1019038 ); // You are old enough to be considered an adult, and have outgrown your status as a young player!
-		}
-
-		private class YoungTimer : Timer
-		{
-			private Account m_Account;
-
-			public YoungTimer( Account account )
-				: base( TimeSpan.FromMinutes( 1.0 ), TimeSpan.FromMinutes( 1.0 ) )
-			{
-				m_Account = account;
-
-				Priority = TimerPriority.FiveSeconds;
-			}
-
-			protected override void OnTick()
-			{
-				m_Account.CheckYoung();
-			}
-		}
-
+		/// <summary>
+		/// Constructs a new Account instance with a specific username and password. Intended to be only called from Accounts.AddAccount.
+		/// </summary>
+		/// <param name="username">Initial username for this account.</param>
+		/// <param name="password">Initial password for this account.</param>
 		public Account( string username, string password )
 		{
 			m_Username = username;
-			
 			SetPassword( password );
 
 			m_AccessLevel = AccessLevel.Player;
@@ -597,69 +441,47 @@ namespace Server.Accounting
 			m_Created = m_LastLogin = DateTime.Now;
 			m_TotalGameTime = TimeSpan.Zero;
 
-			m_Mobiles = new Mobile[7];
+			m_Comments = new ArrayList();
+			m_Tags = new ArrayList();
+
+			m_Mobiles = new Mobile[6];
 
 			m_IPRestrictions = new string[0];
 			m_LoginIPs = new IPAddress[0];
-
-			Accounts.Add( this );
 		}
 
+		/// <summary>
+		/// Deserializes an Account instance from an xml element. Intended only to be called from Accounts.Load.
+		/// </summary>
+		/// <param name="node">The XmlElement instance from which to deserialize.</param>
 		public Account( XmlElement node )
 		{
-			m_Username = Utility.GetText( node["username"], "empty" );
+			m_Username = Accounts.GetText( node["username"], "empty" );
 
-			string plainPassword = Utility.GetText( node["password"], null );
-			string cryptPassword = Utility.GetText( node["cryptPassword"], null );
-			string newCryptPassword = Utility.GetText( node["newCryptPassword"], null );
+			string plainPassword = Accounts.GetText( node["password"], null );
+			string cryptPassword = Accounts.GetText( node["cryptPassword"], null );
 
-			switch ( AccountHandler.ProtectPasswords )
+			if ( AccountHandler.ProtectPasswords )
 			{
-				case PasswordProtection.None:
-					{
-						if ( plainPassword != null )
-							SetPassword( plainPassword );
-						else if ( newCryptPassword != null )
-							m_NewCryptPassword = newCryptPassword;
-						else if ( cryptPassword != null )
-							m_CryptPassword = cryptPassword;
-						else
-							SetPassword( "empty" );
+				if ( cryptPassword != null )
+					m_CryptPassword = cryptPassword;
+				else if ( plainPassword != null )
+					SetPassword( plainPassword );
+				else
+					SetPassword( "empty" );
+			}
+			else
+			{
+				if ( plainPassword == null )
+					plainPassword = "empty";
 
-						break;
-					}
-				case PasswordProtection.Crypt:
-					{
-						if ( cryptPassword != null )
-							m_CryptPassword = cryptPassword;
-						else if ( plainPassword != null )
-							SetPassword( plainPassword );
-						else if ( newCryptPassword != null )
-							m_NewCryptPassword = newCryptPassword;
-						else
-							SetPassword( "empty" );
-
-						break;
-					}
-				default: // PasswordProtection.NewCrypt
-					{
-						if ( newCryptPassword != null )
-							m_NewCryptPassword = newCryptPassword;
-						else if ( plainPassword != null )
-							SetPassword( plainPassword );
-						else if ( cryptPassword != null )
-							m_CryptPassword = cryptPassword;
-						else
-							SetPassword( "empty" );
-
-						break;
-					}
+				SetPassword( plainPassword );
 			}
 
-			m_AccessLevel = (AccessLevel)Enum.Parse( typeof( AccessLevel ), Utility.GetText( node["accessLevel"], "Player" ), true );
-			m_Flags = Utility.GetXMLInt32( Utility.GetText( node["flags"], "0" ), 0 );
-			m_Created = Utility.GetXMLDateTime( Utility.GetText( node["created"], null ), DateTime.Now );
-			m_LastLogin = Utility.GetXMLDateTime( Utility.GetText( node["lastLogin"], null ), DateTime.Now );
+			m_AccessLevel = (AccessLevel)Enum.Parse( typeof( AccessLevel ), Accounts.GetText( node["accessLevel"], "Player" ), true );
+			m_Flags = Accounts.GetInt32( Accounts.GetText( node["flags"], "0" ), 0 );
+			m_Created = Accounts.GetDateTime( Accounts.GetText( node["created"], null ), DateTime.Now );
+			m_LastLogin = Accounts.GetDateTime( Accounts.GetText( node["lastLogin"], null ), DateTime.Now );
 
 			m_Mobiles = LoadMobiles( node );
 			m_Comments = LoadComments( node );
@@ -673,7 +495,7 @@ namespace Server.Accounting
 					m_Mobiles[i].Account = this;
 			}
 
-			TimeSpan totalGameTime = Utility.GetXMLTimeSpan( Utility.GetText( node["totalGameTime"], null ), TimeSpan.Zero );
+			TimeSpan totalGameTime = Accounts.GetTimeSpan( Accounts.GetText( node["totalGameTime"], null ), TimeSpan.Zero );
 			if ( totalGameTime == TimeSpan.Zero )
 			{
 				for ( int i = 0; i < m_Mobiles.Length; i++ )
@@ -685,11 +507,6 @@ namespace Server.Accounting
 				}
 			}
 			m_TotalGameTime = totalGameTime;
-
-			if ( this.Young )
-				CheckYoung();
-
-			Accounts.Add( this );
 		}
 
 		/// <summary>
@@ -704,17 +521,17 @@ namespace Server.Accounting
 
 			if ( accessCheck != null )
 			{
-				List<string> list = new List<string>();
+				ArrayList list = new ArrayList();
 
 				foreach ( XmlElement ip in accessCheck.GetElementsByTagName( "ip" ) )
 				{
-					string text = Utility.GetText( ip, null );
+					string text = Accounts.GetText( ip, null );
 
 					if ( text != null )
 						list.Add( text );
 				}
 
-				stringList = list.ToArray();
+				stringList = (string[])list.ToArray( typeof( string ) );
 			}
 			else
 			{
@@ -736,7 +553,7 @@ namespace Server.Accounting
 
 			if ( addressList != null )
 			{
-				int count = Utility.GetXMLInt32( Utility.GetAttribute( addressList, "count", "0" ), 0 );
+				int count = Accounts.GetInt32( Accounts.GetAttribute( addressList, "count", "0" ), 0 );
 
 				list = new IPAddress[count];
 
@@ -744,15 +561,16 @@ namespace Server.Accounting
 
 				foreach ( XmlElement ip in addressList.GetElementsByTagName( "ip" ) )
 				{
-					if ( count < list.Length )
+					try
 					{
-						IPAddress address;
-
-						if( IPAddress.TryParse( Utility.GetText( ip, null ), out address ) )
+						if ( count < list.Length )
 						{
-							list[count] = Utility.Intern( address );
+							list[count] = IPAddress.Parse( Accounts.GetText( ip, null ) );
 							count++;
 						}
+					}
+					catch
+					{
 					}
 				}
 
@@ -774,13 +592,57 @@ namespace Server.Accounting
 		}
 
 		/// <summary>
+		/// Deserializes a list of AccountTag instances from an xml element.
+		/// </summary>
+		/// <param name="node">The XmlElement from which to deserialize.</param>
+		/// <returns>Tag list. Value will never be null.</returns>
+		public static ArrayList LoadTags( XmlElement node )
+		{
+			ArrayList list = new ArrayList();
+			XmlElement tags = node["tags"];
+
+			if ( tags != null )
+			{
+				foreach ( XmlElement tag in tags.GetElementsByTagName( "tag" ) )
+				{
+					try { list.Add( new AccountTag( tag ) ); }
+					catch {}
+				}
+			}
+
+			return list;
+		}
+
+		/// <summary>
+		/// Deserializes a list of AccountComment instances from an xml element.
+		/// </summary>
+		/// <param name="node">The XmlElement from which to deserialize.</param>
+		/// <returns>Comment list. Value will never be null.</returns>
+		public static ArrayList LoadComments( XmlElement node )
+		{
+			ArrayList list = new ArrayList();
+			XmlElement comments = node["comments"];
+
+			if ( comments != null )
+			{
+				foreach ( XmlElement comment in comments.GetElementsByTagName( "comment" ) )
+				{
+					try { list.Add( new AccountComment( comment ) ); }
+					catch {}
+				}
+			}
+
+			return list;
+		}
+
+		/// <summary>
 		/// Deserializes a list of Mobile instances from an xml element.
 		/// </summary>
 		/// <param name="node">The XmlElement instance from which to deserialize.</param>
 		/// <returns>Mobile list. Value will never be null.</returns>
 		public static Mobile[] LoadMobiles( XmlElement node )
 		{
-			Mobile[] list = new Mobile[7];
+			Mobile[] list = new Mobile[6];
 			XmlElement chars = node["chars"];
 
 			//int length = Accounts.GetInt32( Accounts.GetAttribute( chars, "length", "6" ), 6 );
@@ -793,8 +655,8 @@ namespace Server.Accounting
 				{
 					try
 					{
-						int index = Utility.GetXMLInt32( Utility.GetAttribute( ele, "index", "0" ), 0 );
-						int serial = Utility.GetXMLInt32( Utility.GetText( ele, "0" ), 0 );
+						int index = Accounts.GetInt32( Accounts.GetAttribute( ele, "index", "0" ), 0 );
+						int serial = Accounts.GetInt32( Accounts.GetText( ele, "0" ), 0 );
 
 						if ( index >= 0 && index < list.Length )
 							list[index] = World.FindMobile( serial );
@@ -809,64 +671,15 @@ namespace Server.Accounting
 		}
 
 		/// <summary>
-		/// Deserializes a list of AccountComment instances from an xml element.
-		/// </summary>
-		/// <param name="node">The XmlElement from which to deserialize.</param>
-		/// <returns>Comment list. Value will never be null.</returns>
-		public static List<AccountComment> LoadComments( XmlElement node )
-		{
-			List<AccountComment> list = null;
-			XmlElement comments = node["comments"];
-
-			if ( comments != null )
-			{
-				list = new List<AccountComment>();
-
-				foreach ( XmlElement comment in comments.GetElementsByTagName( "comment" ) )
-				{
-					try { list.Add( new AccountComment( comment ) ); }
-					catch { }
-				}
-			}
-
-			return list;
-		}
-
-		/// <summary>
-		/// Deserializes a list of AccountTag instances from an xml element.
-		/// </summary>
-		/// <param name="node">The XmlElement from which to deserialize.</param>
-		/// <returns>Tag list. Value will never be null.</returns>
-		public static List<AccountTag> LoadTags( XmlElement node )
-		{
-			List<AccountTag> list = null;
-			XmlElement tags = node["tags"];
-
-			if ( tags != null )
-			{
-				list = new List<AccountTag>();
-
-				foreach ( XmlElement tag in tags.GetElementsByTagName( "tag" ) )
-				{
-					try { list.Add( new AccountTag( tag ) ); }
-					catch { }
-				}
-			}
-
-			return list;
-		}
-
-		/// <summary>
 		/// Checks if a specific NetState is allowed access to this account.
 		/// </summary>
 		/// <param name="ns">NetState instance to check.</param>
 		/// <returns>True if allowed, false if not.</returns>
 		public bool HasAccess( NetState ns )
 		{
-			return ( ns != null && HasAccess( ns.Address ) );
-		}
+			if ( ns == null )
+				return false;
 
-		public bool HasAccess( IPAddress ipAddress ) {
 			AccessLevel level = Misc.AccountHandler.LockdownLevel;
 
 			if ( level > AccessLevel.Player )
@@ -892,7 +705,12 @@ namespace Server.Accounting
 					return false;
 			}
 
-			bool accessAllowed = ( m_IPRestrictions.Length == 0 || IPLimiter.IsExempt( ipAddress ) );
+			IPAddress ipAddress;
+
+			try{ ipAddress = ((IPEndPoint)ns.Socket.RemoteEndPoint).Address; }
+			catch{ return false; }
+
+			bool accessAllowed = ( m_IPRestrictions.Length == 0 );
 
 			for ( int i = 0; !accessAllowed && i < m_IPRestrictions.Length; ++i )
 				accessAllowed = Utility.IPMatch( m_IPRestrictions[i], ipAddress );
@@ -906,21 +724,15 @@ namespace Server.Accounting
 		/// <param name="ns">NetState instance to record.</param>
 		public void LogAccess( NetState ns )
 		{
-			if ( ns != null ) {
-				LogAccess( ns.Address );
-			}
-		}
-
-		public void LogAccess( IPAddress ipAddress ) {
-			if ( IPLimiter.IsExempt( ipAddress ) )
+			if ( ns == null )
 				return;
 
-			if ( m_LoginIPs.Length == 0 ) {
-				if ( AccountHandler.IPTable.ContainsKey( ipAddress ) )
-					AccountHandler.IPTable[ipAddress]++;
-				else
-					AccountHandler.IPTable[ipAddress] = 1;
-			}
+			LastLogin = DateTime.Now;
+
+			IPAddress ipAddress;
+
+			try{ ipAddress = ((IPEndPoint)ns.Socket.RemoteEndPoint).Address; }
+			catch{ return; }
 
 			bool contains = false;
 
@@ -946,17 +758,11 @@ namespace Server.Accounting
 		/// <returns>True if allowed, false if not.</returns>
 		public bool CheckAccess( NetState ns )
 		{
-			return ( ns != null && CheckAccess( ns.Address ) );
-		}
+			if ( !HasAccess( ns ) )
+				return false;
 
-		public bool CheckAccess( IPAddress ipAddress ) {
-			bool hasAccess = this.HasAccess( ipAddress );
-
-			if ( hasAccess ) {
-				LogAccess( ipAddress );
-			}
-
-			return hasAccess;
+			LogAccess( ns );
+			return true;
 		}
 
 		/// <summary>
@@ -985,13 +791,6 @@ namespace Server.Accounting
 				xml.WriteEndElement();
 			}
 
-			if ( m_NewCryptPassword != null )
-			{
-				xml.WriteStartElement( "newCryptPassword" );
-				xml.WriteString( m_NewCryptPassword );
-				xml.WriteEndElement();
-			}
-
 			if ( m_AccessLevel != AccessLevel.Player )
 			{
 				xml.WriteStartElement( "accessLevel" );
@@ -1007,11 +806,11 @@ namespace Server.Accounting
 			}
 
 			xml.WriteStartElement( "created" );
-			xml.WriteString( XmlConvert.ToString( m_Created, XmlDateTimeSerializationMode.Local ) );
+			xml.WriteString( XmlConvert.ToString( m_Created ) );
 			xml.WriteEndElement();
 
 			xml.WriteStartElement( "lastLogin" );
-			xml.WriteString( XmlConvert.ToString( m_LastLogin, XmlDateTimeSerializationMode.Local ) );
+			xml.WriteString( XmlConvert.ToString( m_LastLogin ) );
 			xml.WriteEndElement();
 
 			xml.WriteStartElement( "totalGameTime" );
@@ -1037,22 +836,22 @@ namespace Server.Accounting
 
 			xml.WriteEndElement();
 
-			if ( m_Comments != null && m_Comments.Count > 0 )
+			if ( m_Comments.Count > 0 )
 			{
 				xml.WriteStartElement( "comments" );
 
 				for ( int i = 0; i < m_Comments.Count; ++i )
-					m_Comments[i].Save( xml );
+					((AccountComment)m_Comments[i]).Save( xml );
 
 				xml.WriteEndElement();
 			}
 
-			if ( m_Tags != null && m_Tags.Count > 0 )
+			if ( m_Tags.Count > 0 )
 			{
 				xml.WriteStartElement( "tags" );
 
 				for ( int i = 0; i < m_Tags.Count; ++i )
-					m_Tags[i].Save( xml );
+					((AccountTag)m_Tags[i]).Save( xml );
 
 				xml.WriteEndElement();
 			}
@@ -1110,11 +909,11 @@ namespace Server.Accounting
 		}
 
 		/// <summary>
-		/// Gets the maximum amount of characters allowed to be created on this account. Values other than 1, 5, 6, or 7 are not supported by the client.
+		/// Gets the maximum amount of characters allowed to be created on this account. Values other than 1, 5, or 6 are not supported.
 		/// </summary>
 		public int Limit
 		{
-			get { return ( Core.SA ? 7 : Core.AOS ? 6 : 5 ); }
+			get{ return 5; }
 		}
 
 		/// <summary>
@@ -1122,7 +921,7 @@ namespace Server.Accounting
 		/// </summary>
 		public int Length
 		{
-			get { return m_Mobiles.Length; }
+			get{ return m_Mobiles.Length; }
 		}
 
 		/// <summary>
@@ -1165,22 +964,6 @@ namespace Server.Accounting
 		public override string ToString()
 		{
 			return m_Username;
-		}
-
-		public int CompareTo( Account other )
-		{
-			if ( other == null )
-				return -1;
-
-			return m_Username.CompareTo( other.m_Username );
-		}
-
-		public int CompareTo( object obj )
-		{
-			if ( obj is Account )
-				return this.CompareTo( (Account) obj );
-
-			throw new ArgumentException();
 		}
 	}
 }

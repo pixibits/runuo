@@ -18,7 +18,7 @@ namespace Server.Misc
 			Mobile from = e.Beholder;
 
 			if ( from.ProfileLocked )
-				from.SendMessage( "Your profile is locked. You may not change it." );
+				from.SendAsciiMessage( "Your profile is locked. You may not change it." );
 			else
 				from.Profile = e.Text;
 		}
@@ -46,7 +46,7 @@ namespace Server.Misc
 					footer = "This profile has been locked.";
 			}
 
-			if ( footer.Length == 0 && beholder == beheld )
+			if ( footer == "" && beholder == beheld )
 				footer = GetAccountDuration( beheld );
 
 			string body = beheld.Profile;

@@ -1,13 +1,12 @@
 using System;
 using Server;
 using Server.Network;
-using Server.Spells;
 
 namespace Server.Items
 {
-	public class Teleporter : Item
+	public class Teleporter : BaseItem
 	{
-		private bool m_Active, m_Creatures, m_CombatCheck;
+		private bool m_Active, m_Creatures;
 		private Point3D m_PointDest;
 		private Map m_MapDest;
 		private bool m_SourceEffect;
@@ -68,15 +67,7 @@ namespace Server.Items
 		public bool Creatures
 		{
 			get { return m_Creatures; }
-			set { m_Creatures = value; InvalidateProperties(); }
-		}
-
-
-		[CommandProperty( AccessLevel.GameMaster )]
-		public bool CombatCheck
-		{
-			get { return m_CombatCheck; }
-			set { m_CombatCheck = value; InvalidateProperties(); }
+			set { m_Creatures = value; }
 		}
 
 		public override int LabelNumber{ get{ return 1026095; } } // teleporter
@@ -101,8 +92,6 @@ namespace Server.Items
 			m_PointDest = pointDest;
 			m_MapDest = mapDest;
 			m_Creatures = creatures;
-
-			m_CombatCheck = false;
 		}
 
 		public override void GetProperties( ObjectPropertyList list )
@@ -169,17 +158,16 @@ namespace Server.Items
 
 			Server.Mobiles.BaseCreature.TeleportPets( m, p, map );
 
-			bool sendEffect = ( !m.Hidden || m.AccessLevel == AccessLevel.Player );
-
-			if ( m_SourceEffect && sendEffect )
+			if ( m_SourceEffect )
 				Effects.SendLocationEffect( m.Location, m.Map, 0x3728, 10, 10 );
 
-			m.MoveToWorld( p, map );
+			m.Map = map;
+			m.Location = p;
 
-			if ( m_DestEffect && sendEffect )
+			if ( m_DestEffect )
 				Effects.SendLocationEffect( m.Location, m.Map, 0x3728, 10, 10 );
 
-			if ( m_SoundID > 0 && sendEffect )
+			if ( m_SoundID > 0 )
 				Effects.PlaySound( m.Location, m.Map, m_SoundID );
 		}
 
@@ -189,11 +177,6 @@ namespace Server.Items
 			{
 				if ( !m_Creatures && !m.Player )
 					return true;
-				else if ( m_CombatCheck && SpellHelper.CheckCombat( m ) )
-				{
-					m.SendLocalizedMessage( 1005564, "", 0x22 ); // Wouldst thou flee during the heat of battle??
-					return true;				
-				}
 
 				StartTeleport( m );
 				return false;
@@ -210,9 +193,7 @@ namespace Server.Items
 		{
 			base.Serialize( writer );
 
-			writer.Write( (int) 3 ); // version
-
-			writer.Write( (bool) m_CombatCheck );
+			writer.Write( (int) 2 ); // version
 
 			writer.Write( (bool) m_SourceEffect );
 			writer.Write( (bool) m_DestEffect );
@@ -234,11 +215,6 @@ namespace Server.Items
 
 			switch ( version )
 			{
-				case 3:
-				{
-					m_CombatCheck = reader.ReadBool();
-					goto case 2;
-				}
 				case 2:
 				{
 					m_SourceEffect = reader.ReadBool();
@@ -320,7 +296,7 @@ namespace Server.Items
 					if ( m.BeginAction( this ) )
 					{
 						if ( m_MessageString != null )
-							m.Send( new UnicodeMessage( Serial, ItemID, MessageType.Regular, 0x3B2, 3, "ENU", null, m_MessageString ) );
+							m.Send( new AsciiMessage( Serial, ItemID, MessageType.Regular, 0x3B2, 3, "", m_MessageString ) );
 						else if ( m_MessageNumber != 0 )
 							m.Send( new MessageLocalized( Serial, ItemID, MessageType.Regular, 0x3B2, 3, m_MessageNumber, null, "" ) );
 
@@ -511,6 +487,129 @@ namespace Server.Items
 
 					break;
 				}
+			}
+		}
+	}
+
+	public class ClickTeleporter : BaseItem
+	{
+		private Point3D m_TargLoc;
+		private Map m_TargMap;
+		private string m_Msg;
+
+		private int m_ID1, m_ID2;
+
+		[CommandProperty( AccessLevel.GameMaster )]
+		public Map TargetMap
+		{
+			get { return m_TargMap; }
+			set { m_TargMap = value; }
+		}
+
+		[CommandProperty( AccessLevel.GameMaster )]
+		public Point3D TargetLocation
+		{
+			get { return m_TargLoc; }
+			set { m_TargLoc = value; }
+		}
+
+		[CommandProperty( AccessLevel.GameMaster )]
+		public int ID1
+		{
+			get { return m_ID1; }
+			set { m_ID1 = value; }
+		}
+
+		[CommandProperty( AccessLevel.GameMaster )]
+		public int ID2
+		{
+			get { return m_ID2; }
+			set { m_ID2 = value; }
+		}
+
+		[CommandProperty( AccessLevel.GameMaster )]
+		public string Message
+		{
+			get { return m_Msg; }
+			set { m_Msg = value; }
+		}
+
+		[Constructable]
+		public ClickTeleporter( int itemID ) : base( itemID )
+		{
+			m_ID1 = m_ID2 = itemID;
+			Movable = false;
+		}
+
+		[Constructable]
+		public ClickTeleporter( int id1, int id2 ) : base( id1 )
+		{
+			m_ID1 = id1; 
+			m_ID2 = id2;
+			Movable = false;
+		}
+
+		[Constructable]
+		public ClickTeleporter( int id1, int id2, string message ) : base( id1 )
+		{
+			m_ID1 = id1; 
+			m_ID2 = id2;
+			m_Msg = message;
+			Movable = false;
+		}
+
+		public ClickTeleporter( Serial s ) : base( s )
+		{
+		}
+
+		public override void Serialize(GenericWriter writer)
+		{
+			base.Serialize (writer);
+
+			writer.Write( (int)0 );
+			writer.Write( m_TargMap );
+			writer.Write( m_TargLoc );
+			writer.Write( m_ID1 );
+			writer.Write( m_ID2 );
+			writer.Write( m_Msg );
+		}
+
+		public override void Deserialize(GenericReader reader)
+		{
+			base.Deserialize (reader);
+
+			int ver = reader.ReadInt();
+
+			m_TargMap = reader.ReadMap();
+			m_TargLoc = reader.ReadPoint3D();
+			m_ID1 = reader.ReadInt();
+			m_ID2 = reader.ReadInt();
+			m_Msg = reader.ReadString();
+		}
+
+		public override void OnDoubleClick(Mobile from)
+		{
+			if ( m_TargLoc == Point3D.Zero || m_TargMap == null )
+				return;
+
+			if ( from.InRange( this, 2 ) && from.InLOS( this ) )
+			{
+				if ( ItemID == m_ID1 )
+					ItemID = m_ID2;
+				else
+					ItemID = m_ID1;
+
+				if ( m_Msg != null && m_Msg != "" )
+					from.SendAsciiMessage( m_Msg );
+
+				Effects.SendLocationParticles( EffectItem.Create( from.Location, from.Map, EffectItem.DefaultDuration ), 0x3728, 10, 10, 2023 );
+				
+				from.MoveToWorld( m_TargLoc, m_TargMap );
+				from.ProcessDelta();
+
+				Effects.SendLocationParticles( EffectItem.Create(   m_TargLoc, m_TargMap, EffectItem.DefaultDuration ), 0x3728, 10, 10, 5023 );
+
+				from.PlaySound( 0x1FE );
 			}
 		}
 	}

@@ -4,16 +4,12 @@ using Server.Mobiles;
 
 namespace Server.Items
 {
-	public class GlassblowingBook : Item
+	public class GlassblowingBook : BaseItem
 	{
-		public override string DefaultName
-		{
-			get { return "Crafting Glass With Glassblowing"; }
-		}
-
 		[Constructable]
 		public GlassblowingBook() : base( 0xFF4 )
 		{
+			Name = "Crafting Glass With Glassblowing";
 			Weight = 1.0;
 		}
 
@@ -45,16 +41,16 @@ namespace Server.Items
 			}
 			else if ( pm == null || from.Skills[SkillName.Alchemy].Base < 100.0 )
 			{
-				pm.SendMessage( "Only a Grandmaster Alchemist can learn from this book." );
+				pm.SendAsciiMessage( "Only a Grandmaster Alchemist can learn from this book." );
 			}
 			else if ( pm.Glassblowing )
 			{
-				pm.SendMessage( "You have already learned this information." );
+				pm.SendAsciiMessage( "You have already learned this information." );
 			}
 			else
 			{
 				pm.Glassblowing = true;
-				pm.SendMessage( "You have learned to make items from glass. You will need to find miners to mine find sand for you to make these items." );
+				pm.SendAsciiMessage( "You have learned to make items from glass. You will need to find miners to mine find sand for you to make these items." );
 				Delete();
 			}
 		}

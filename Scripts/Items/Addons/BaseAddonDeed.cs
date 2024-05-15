@@ -1,13 +1,12 @@
 using System;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server;
-using Server.Multis;
 using Server.Targeting;
 
 namespace Server.Items
 {
 	[Flipable( 0x14F0, 0x14EF )]
-	public abstract class BaseAddonDeed : Item
+	public abstract class BaseAddonDeed : BaseItem
 	{
 		public abstract BaseAddon Addon{ get; }
 
@@ -73,9 +72,9 @@ namespace Server.Items
 
 					Server.Spells.SpellHelper.GetSurfaceTop( ref p );
 
-					BaseHouse house = null;
+					ArrayList houses = null;
 
-					AddonFitResult res = addon.CouldFit( p, map, from, ref house );
+					AddonFitResult res = addon.CouldFit( p, map, from, ref houses );
 
 					if ( res == AddonFitResult.Valid )
 						addon.MoveToWorld( new Point3D( p ), map );
@@ -83,15 +82,20 @@ namespace Server.Items
 						from.SendLocalizedMessage( 500269 ); // You cannot build that there.
 					else if ( res == AddonFitResult.NotInHouse )
 						from.SendLocalizedMessage( 500274 ); // You can only place this in a house that you own!
+					else if ( res == AddonFitResult.DoorsNotClosed )
+						from.SendAsciiMessage( "You must close all house doors before placing this." );
 					else if ( res == AddonFitResult.DoorTooClose )
 						from.SendLocalizedMessage( 500271 ); // You cannot build near the door.
-					else if ( res == AddonFitResult.NoWall )
-						from.SendLocalizedMessage( 500268 ); // This object needs to be mounted on something.
 					
 					if ( res == AddonFitResult.Valid )
 					{
 						m_Deed.Delete();
-						house.Addons.Add( addon );
+
+						/*if ( houses != null )
+						{
+							foreach ( Server.Multis.BaseHouse h in houses )
+								h.Addons.Add( addon );
+						}*/
 					}
 					else
 					{

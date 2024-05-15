@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Multis;
 using Server.Network;
@@ -7,172 +7,17 @@ using Server.Network;
 namespace Server.Items
 {
 	[Furniture]
-	[Flipable( 0x2815, 0x2816 )]
-	public class TallCabinet : BaseContainer
-	{
-		[Constructable]
-		public TallCabinet() : base( 0x2815 )
-		{
-			Weight = 1.0;
-		}
-
-		public TallCabinet( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-			int version = reader.ReadInt();
-		}
-	}
-
-	[Furniture]
-	[Flipable( 0x2817, 0x2818 )]
-	public class ShortCabinet : BaseContainer
-	{
-		[Constructable]
-		public ShortCabinet() : base( 0x2817 )
-		{
-			Weight = 1.0;
-		}
-
-		public ShortCabinet( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-			int version = reader.ReadInt();
-		}
-	}
-
-
-	[Furniture]
-	[Flipable( 0x2857, 0x2858 )]
-	public class RedArmoire : BaseContainer
-	{
-		[Constructable]
-		public RedArmoire() : base( 0x2857 )
-		{
-			Weight = 1.0;
-		}
-
-		public RedArmoire( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-			int version = reader.ReadInt();
-		}
-	}
-
-	[Furniture]
-	[Flipable( 0x285D, 0x285E )]
-	public class CherryArmoire : BaseContainer
-	{
-		[Constructable]
-		public CherryArmoire() : base( 0x285D )
-		{
-			Weight = 1.0;
-		}
-
-		public CherryArmoire( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-			int version = reader.ReadInt();
-		}
-	}
-
-	[Furniture]
-	[Flipable( 0x285B, 0x285C )]
-	public class MapleArmoire : BaseContainer
-	{
-		[Constructable]
-		public MapleArmoire() : base( 0x285B )
-		{
-			Weight = 1.0;
-		}
-
-		public MapleArmoire( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-			int version = reader.ReadInt();
-		}
-	}
-
-	[Furniture]
-	[Flipable( 0x2859, 0x285A )]
-	public class ElegantArmoire : BaseContainer
-	{
-		[Constructable]
-		public ElegantArmoire() : base( 0x2859 )
-		{
-			Weight = 1.0;
-		}
-
-		public ElegantArmoire( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-			int version = reader.ReadInt();
-		}
-	}
-
-	[Furniture]
 	[Flipable( 0xa97, 0xa99, 0xa98, 0xa9a, 0xa9b, 0xa9c )]
 	public class FullBookcase : BaseContainer
 	{
+		public override int DefaultGumpID{ get{ return 0x4D; } }
+		public override int DefaultDropSound{ get{ return 0x42; } }
+
+		public override Rectangle2D Bounds
+		{
+			get{ return new Rectangle2D( 80, 5, 140, 70 ); }
+		}
+
 		[Constructable]
 		public FullBookcase() : base( 0xA97 )
 		{
@@ -200,9 +45,18 @@ namespace Server.Items
 	[Flipable( 0xa9d, 0xa9e )]
 	public class EmptyBookcase : BaseContainer
 	{
+		public override int DefaultGumpID{ get{ return 0x4D; } }
+		public override int DefaultDropSound{ get{ return 0x42; } }
+
+		public override Rectangle2D Bounds
+		{
+			get{ return new Rectangle2D( 80, 5, 140, 70 ); }
+		}
+
 		[Constructable]
 		public EmptyBookcase() : base( 0xA9D )
 		{
+			Weight = 1.0;
 		}
 
 		public EmptyBookcase( Serial serial ) : base( serial )
@@ -212,17 +66,13 @@ namespace Server.Items
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
-
-			writer.Write( (int) 1 ); // version
+			writer.Write( (int) 0 ); // version
 		}
 
 		public override void Deserialize( GenericReader reader )
 		{
 			base.Deserialize( reader );
 			int version = reader.ReadInt();
-
-			if ( version == 0 && Weight == 1.0 )
-				Weight = -1;
 		}
 	}
 
@@ -230,6 +80,14 @@ namespace Server.Items
 	[Flipable( 0xa2c, 0xa34 )]
 	public class Drawer : BaseContainer
 	{
+		public override int DefaultGumpID{ get{ return 0x51; } }
+		public override int DefaultDropSound{ get{ return 0x42; } }
+
+		public override Rectangle2D Bounds
+		{
+			get{ return new Rectangle2D( 20, 10, 150, 90 ); }
+		}
+
 		[Constructable]
 		public Drawer() : base( 0xA2C )
 		{
@@ -257,6 +115,14 @@ namespace Server.Items
 	[Flipable( 0xa30, 0xa38 )]
 	public class FancyDrawer : BaseContainer
 	{
+		public override int DefaultGumpID{ get{ return 0x48; } }
+		public override int DefaultDropSound{ get{ return 0x42; } }
+
+		public override Rectangle2D Bounds
+		{
+			get{ return new Rectangle2D( 20, 10, 150, 90 ); }
+		}
+
 		[Constructable]
 		public FancyDrawer() : base( 0xA30 )
 		{
@@ -284,6 +150,14 @@ namespace Server.Items
 	[Flipable( 0xa4f, 0xa53 )]
 	public class Armoire : BaseContainer
 	{
+		public override int DefaultGumpID{ get{ return 0x4F; } }
+		public override int DefaultDropSound{ get{ return 0x42; } }
+
+		public override Rectangle2D Bounds
+		{
+			get{ return new Rectangle2D( 30, 30, 90, 150 ); }
+		}
+
 		[Constructable]
 		public Armoire() : base( 0xA4F )
 		{
@@ -319,6 +193,14 @@ namespace Server.Items
 	[Flipable( 0xa4d, 0xa51 )]
 	public class FancyArmoire : BaseContainer
 	{
+		public override int DefaultGumpID{ get{ return 0x4E; } }
+		public override int DefaultDropSound{ get{ return 0x42; } }
+
+		public override Rectangle2D Bounds
+		{
+			get{ return new Rectangle2D( 30, 30, 90, 150 ); }
+		}
+
 		[Constructable]
 		public FancyArmoire() : base( 0xA4D )
 		{
@@ -352,11 +234,11 @@ namespace Server.Items
 
 	public class DynamicFurniture
 	{
-		private static Dictionary<Container, Timer> m_Table = new Dictionary<Container, Timer>();
+		private static Hashtable m_Table = new Hashtable();
 
 		public static bool Open( Container c, Mobile m )
 		{
-			if ( m_Table.ContainsKey( c ) )
+			if ( m_Table.Contains( c ) )
 			{
 				c.SendRemovePacket();
 				Close( c );
@@ -385,9 +267,7 @@ namespace Server.Items
 
 		public static void Close( Container c )
 		{
-			Timer t = null;
-
-			m_Table.TryGetValue( c, out t );
+			Timer t = (Timer)m_Table[c];
 
 			if ( t != null )
 			{

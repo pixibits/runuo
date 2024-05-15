@@ -14,28 +14,25 @@ namespace Server.Items
 		public override int AosMinDamage{ get{ return 13; } }
 		public override int AosMaxDamage{ get{ return 15; } }
 		public override int AosSpeed{ get{ return 42; } }
-		public override float MlSpeed{ get{ return 2.75f; } }
 
 		public override int OldStrengthReq{ get{ return 30; } }
-		public override int OldMinDamage{ get{ return 2; } }
-		public override int OldMaxDamage{ get{ return 36; } }
-		public override int OldSpeed{ get{ return 46; } }
+		public override int OldSpeed{ get{ return 35; } }
+
+		public override int NumDice { get { return 5; } }
+		public override int NumSides { get { return 5; } }
+		public override int DiceBonus { get { return 2; } }
 
 		public override int InitMinHits{ get{ return 31; } }
 		public override int InitMaxHits{ get{ return 80; } }
 
 		public override int VirtualDamageBonus{ get{ return 25; } }
 
-		public override string DefaultName
-		{
-			get { return "a tribal spear"; }
-		}
-
 		[Constructable]
 		public TribalSpear() : base( 0xF62 )
 		{
 			Weight = 7.0;
 			Hue = 837;
+			Name = "a tribal spear";
 		}
 
 		public TribalSpear( Serial serial ) : base( serial )

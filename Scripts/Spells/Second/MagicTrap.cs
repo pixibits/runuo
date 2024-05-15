@@ -5,18 +5,17 @@ using Server.Items;
 
 namespace Server.Spells.Second
 {
-	public class MagicTrapSpell : MagerySpell
+	public class MagicTrapSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Magic Trap", "In Jux",
+				SpellCircle.Second,
 				212,
 				9001,
 				Reagent.Garlic,
 				Reagent.SpidersSilk,
 				Reagent.SulfurousAsh
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Second; } }
 
 		public MagicTrapSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -33,7 +32,7 @@ namespace Server.Spells.Second
 			{
 				Caster.SendLocalizedMessage( 500237 ); // Target can not be seen.
 			}
-			else if ( item.TrapType != TrapType.None && item.TrapType != TrapType.MagicTrap )
+			else if ( item.Trapped && item.TrapType != TrapType.MagicTrap )
 			{
 				base.DoFizzle();
 			}
@@ -42,8 +41,8 @@ namespace Server.Spells.Second
 				SpellHelper.Turn( Caster, item );
 
 				item.TrapType = TrapType.MagicTrap;
+				item.Trapped = true;
 				item.TrapPower = Core.AOS ? Utility.RandomMinMax( 10, 50 ) : 1;
-				item.TrapLevel = 0;
 
 				Point3D loc = item.GetWorldLocation();
 
@@ -63,7 +62,7 @@ namespace Server.Spells.Second
 		{
 			private MagicTrapSpell m_Owner;
 
-			public InternalTarget( MagicTrapSpell owner ) : base( Core.ML ? 10 : 12, false, TargetFlags.None )
+			public InternalTarget( MagicTrapSpell owner ) : base( 12, false, TargetFlags.None )
 			{
 				m_Owner = owner;
 			}
@@ -76,7 +75,7 @@ namespace Server.Spells.Second
 				}
 				else
 				{
-					from.SendMessage( "You can't trap that" );
+					from.SendAsciiMessage( "You can't trap that" );
 				}
 			}
 

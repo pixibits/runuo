@@ -61,7 +61,7 @@ namespace Server.Regions
 						return def;
 					}
 				}
-				case "treasureChest":
+				/*case "treasureChest":
 				{
 					int itemID = 0xE43;
 					Region.ReadInt32( xml, "itemID", ref itemID, false );
@@ -71,7 +71,7 @@ namespace Server.Regions
 					Region.ReadEnum( xml, "level", ref level, false );
 
 					return new SpawnTreasureChest( itemID, level );
-				}
+				}*/
 				default:
 				{
 					return null;
@@ -255,7 +255,7 @@ namespace Server.Regions
 			return (Item) Activator.CreateInstance( Type );
 		}
 	}
-
+    /*
 	public class SpawnTreasureChest : SpawnItem
 	{
 		private int m_ItemID;
@@ -280,7 +280,7 @@ namespace Server.Regions
 			return new BaseTreasureChest( m_ItemID, m_Level );
 		}
 	}
-
+    */
 	public class SpawnGroupElement
 	{
 		private SpawnDefinition m_SpawnDefinition;

@@ -4,7 +4,7 @@ using Server.Network;
 
 namespace Server.Items
 {
-	public abstract class BaseScales : Item, ICommodity
+	public abstract class BaseScales : BaseItem, ICommodity
 	{
 		public override int LabelNumber{ get{ return 1053139; } } // dragon scales
 
@@ -16,14 +16,14 @@ namespace Server.Items
 			get{ return m_Resource; }
 			set{ m_Resource = value; InvalidateProperties(); }
 		}
-
-		public override double DefaultWeight
-		{
-			get { return 0.1; }
-		}
 		
-		int ICommodity.DescriptionNumber { get { return LabelNumber; } }
-		bool ICommodity.IsDeedable { get { return true; } }
+		string ICommodity.Description
+		{
+			get
+			{
+				return String.Format( Amount == 1 ? "{1}" : "{0} {1}", Amount, CraftResources.GetName( m_Resource ).ToLower() );
+			}
+		}
 
 		public override void Serialize( GenericWriter writer )
 		{
@@ -57,6 +57,7 @@ namespace Server.Items
 		public BaseScales( CraftResource resource, int amount ) : base( 0x26B4 )
 		{
 			Stackable = true;
+			Weight = 0.1;
 			Amount = amount;
 			Hue = CraftResources.GetHue( resource );
 
@@ -98,7 +99,10 @@ namespace Server.Items
 			int version = reader.ReadInt();
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new RedScales( amount ), amount );
+		}
 	}
 
 	public class YellowScales : BaseScales
@@ -131,7 +135,10 @@ namespace Server.Items
 			int version = reader.ReadInt();
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new YellowScales( amount ), amount );
+		}
 	}
 
 	public class BlackScales : BaseScales
@@ -164,7 +171,10 @@ namespace Server.Items
 			int version = reader.ReadInt();
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new BlackScales( amount ), amount );
+		}
 	}
 
 	public class GreenScales : BaseScales
@@ -197,7 +207,10 @@ namespace Server.Items
 			int version = reader.ReadInt();
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new GreenScales( amount ), amount );
+		}
 	}
 
 	public class WhiteScales : BaseScales
@@ -230,7 +243,10 @@ namespace Server.Items
 			int version = reader.ReadInt();
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new WhiteScales( amount ), amount );
+		}
 	}
 
 	public class BlueScales : BaseScales
@@ -265,6 +281,9 @@ namespace Server.Items
 			int version = reader.ReadInt();
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new BlueScales( amount ), amount );
+		}
 	}
 }

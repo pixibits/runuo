@@ -7,7 +7,10 @@ namespace Server.Items
 	[Flipable( 0x102E, 0x102F )]
 	public class Nails : BaseTool
 	{
-		public override CraftSystem CraftSystem{ get{ return DefCarpentry.CraftSystem; } }
+		public override CraftSystem GetCraftInstance()
+		{
+			return new CarpentrySystem();
+		}
 
 		[Constructable]
 		public Nails() : base( 0x102E )

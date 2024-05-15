@@ -1,5 +1,5 @@
 using System;
-using Server;
+using Server.Items;
 
 namespace Server.Items
 {
@@ -21,7 +21,6 @@ namespace Server.Items
 		public override int ArmorBase{ get{ return 46; } }
 
 		public override ArmorMaterialType MaterialType{ get{ return ArmorMaterialType.Bone; } }
-		public override CraftResource DefaultResource{ get{ return CraftResource.RegularLeather; } }
 
 		public override int LabelNumber{ get{ return 1041374; } } // daemon bone helmet
 
@@ -30,8 +29,6 @@ namespace Server.Items
 		{
 			Hue = 0x648;
 			Weight = 3.0;
-
-			ArmorAttributes.SelfRepair = 1;
 		}
 
 		public DaemonHelm( Serial serial ) : base( serial )
@@ -41,21 +38,16 @@ namespace Server.Items
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
-
 			writer.Write( (int) 0 );
 		}
 		
 		public override void Deserialize(GenericReader reader)
 		{
 			base.Deserialize( reader );
-
 			int version = reader.ReadInt();
 
 			if ( Weight == 1.0 )
 				Weight = 3.0;
-
-			if ( ArmorAttributes.SelfRepair == 0 )
-				ArmorAttributes.SelfRepair = 1;
 		}
 	}
 }

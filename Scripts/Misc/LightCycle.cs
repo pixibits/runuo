@@ -1,7 +1,6 @@
 using System;
 using Server;
 using Server.Network;
-using Server.Commands;
 
 namespace Server
 {
@@ -23,7 +22,7 @@ namespace Server
 
 				for ( int i = 0; i < NetState.Instances.Count; ++i )
 				{
-					NetState ns = NetState.Instances[i];
+					NetState ns = (NetState)NetState.Instances[i];
 					Mobile m = ns.Mobile;
 
 					if ( m != null )
@@ -36,23 +35,23 @@ namespace Server
 		{
 			new LightCycleTimer().Start();
 			EventSink.Login += new LoginEventHandler( OnLogin );
-
-			CommandSystem.Register( "GlobalLight", AccessLevel.GameMaster, new CommandEventHandler( Light_OnCommand ) );
+		
+			Server.Commands.CommandSystem.Register( "GlobalLight", AccessLevel.GameMaster, new Server.Commands.CommandEventHandler( Light_OnCommand ) );
 		}
 
 		[Usage( "GlobalLight <value>" )]
 		[Description( "Sets the current global light level." )]
-		private static void Light_OnCommand( CommandEventArgs e )
+		private static void Light_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			if ( e.Length >= 1 )
 			{
 				LevelOverride = e.GetInt32( 0 );
-				e.Mobile.SendMessage( "Global light level override has been changed to {0}.", m_LevelOverride );
+				e.Mobile.SendAsciiMessage( "Global light level override has been changed to {0}.", m_LevelOverride );
 			}
 			else
 			{
 				LevelOverride = int.MinValue;
-				e.Mobile.SendMessage( "Global light level override has been cleared." );
+				e.Mobile.SendAsciiMessage( "Global light level override has been cleared." );
 			}
 		}
 
@@ -111,7 +110,7 @@ namespace Server
 			{
 				for ( int i = 0; i < NetState.Instances.Count; ++i )
 				{
-					NetState ns = NetState.Instances[i];
+					NetState ns = (NetState)NetState.Instances[i];
 					Mobile m = ns.Mobile;
 
 					if ( m != null )
@@ -134,7 +133,6 @@ namespace Server
 			{
 				m_Owner.EndAction( typeof( LightCycle ) );
 				m_Owner.LightLevel = 0;
-				BuffInfo.RemoveBuff( m_Owner, BuffIcon.NightSight );
 			}
 		}
 	}

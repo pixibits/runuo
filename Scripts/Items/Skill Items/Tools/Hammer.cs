@@ -6,7 +6,10 @@ namespace Server.Items
 {
 	public class Hammer : BaseTool
 	{
-		public override CraftSystem CraftSystem{ get{ return DefCarpentry.CraftSystem; } }
+		public override CraftSystem GetCraftInstance()
+		{
+			return new CarpentrySystem();
+		}
 
 		[Constructable]
 		public Hammer() : base( 0x102A )

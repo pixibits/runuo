@@ -16,7 +16,7 @@ namespace Server.Misc
 			 */
 
 			RegisterRace( new Human	( 0, 0 ) );
-			RegisterRace( new Elf	( 1, 1 ) );
+			RegisterRace( new Human	( 1, 1 ) ); // no elf
 		}
 
 		public static void RegisterRace( Race race )

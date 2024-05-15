@@ -4,17 +4,18 @@ using Server.Network;
 
 namespace Server.Spells.Second
 {
-	public class HarmSpell : MagerySpell
+	public class HarmSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Harm", "An Mani",
+				SpellCircle.Second,
 				212,
 				Core.AOS ? 9001 : 9041,
 				Reagent.Nightshade,
 				Reagent.SpidersSilk
 			);
 
-		public override SpellCircle Circle { get { return SpellCircle.Second; } }
+		public override bool DelayedDamage{ get{ return false; } }
 
 		public HarmSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -24,15 +25,6 @@ namespace Server.Spells.Second
 		{
 			Caster.Target = new InternalTarget( this );
 		}
-
-		public override bool DelayedDamage{ get{ return false; } }
-
-
-		public override double GetSlayerDamageScalar( Mobile target )
-		{
-			return 1.0; //This spell isn't affected by slayer spellbooks
-		}
-
 
 		public void Target( Mobile m )
 		{
@@ -46,30 +38,7 @@ namespace Server.Spells.Second
 
 				SpellHelper.CheckReflect( (int)this.Circle, Caster, ref m );
 
-				double damage;
-				
-				if ( Core.AOS )
-				{
-					damage = GetNewAosDamage( 17, 1, 5, m );
-				}
-				else
-				{
-					damage = Utility.Random( 1, 15 );
-
-					if ( CheckResisted( m ) )
-					{
-						damage *= 0.75;
-
-						m.SendLocalizedMessage( 501783 ); // You feel yourself resisting magical energy.
-					}
-
-					damage *= GetDamageScalar( m );
-				}
-
-				if ( !m.InRange( Caster, 2 ) )
-					damage *= 0.25; // 1/4 damage at > 2 tile range
-				else if ( !m.InRange( Caster, 1 ) )
-					damage *= 0.50; // 1/2 damage at 2 tile range
+				double damage = GetDamage( m );
 
 				if ( Core.AOS )
 				{
@@ -92,7 +61,7 @@ namespace Server.Spells.Second
 		{
 			private HarmSpell m_Owner;
 
-			public InternalTarget( HarmSpell owner ) : base( Core.ML ? 10 : 12, false, TargetFlags.Harmful )
+			public InternalTarget( HarmSpell owner ) : base( 12, false, TargetFlags.Harmful )
 			{
 				m_Owner = owner;
 			}

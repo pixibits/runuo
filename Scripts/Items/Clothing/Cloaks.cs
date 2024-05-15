@@ -1,5 +1,4 @@
 using System;
-using Server.Engines.VeteranRewards;
 
 namespace Server.Items
 {
@@ -156,7 +155,7 @@ namespace Server.Items
 	}
 
 	[Flipable]
-	public class RewardCloak : BaseCloak, IRewardItem
+	public class RewardCloak : BaseCloak, Engines.VeteranRewards.IRewardItem
 	{
 		private int m_LabelNumber;
 		private bool m_IsRewardItem;
@@ -186,7 +185,7 @@ namespace Server.Items
 			}
 		}
 
-		public override int BasePhysicalResistance{ get{ return 3; } }
+		public override int PhysicalResistance{ get{ return 3; } }
 
 		public override void OnAdded( object parent )
 		{
@@ -208,14 +207,6 @@ namespace Server.Items
 		{
 			from.SendLocalizedMessage( sender.FailMessage );
 			return false;
-		}
-
-		public override void GetProperties( ObjectPropertyList list )
-		{
-			base.GetProperties( list );
-
-			if ( Core.ML && m_IsRewardItem )
-				list.Add( RewardSystem.GetRewardYearLabel( this, new object[]{ Hue, m_LabelNumber } ) ); // X Year Veteran Reward
 		}
 
 		public override bool CanEquip( Mobile m )
@@ -280,7 +271,7 @@ namespace Server.Items
 		}
 	}
 
-	[Flipable( 0x230A, 0x2309 )]
+	[FlipableAttribute( 0x2309, 0x230A )]
 	public class FurCape : BaseCloak
 	{
 		[Constructable]
@@ -289,7 +280,7 @@ namespace Server.Items
 		}
 
 		[Constructable]
-		public FurCape( int hue ) : base( 0x230A, hue )
+		public FurCape( int hue ) : base( 0x2309, hue )
 		{
 			Weight = 4.0;
 		}

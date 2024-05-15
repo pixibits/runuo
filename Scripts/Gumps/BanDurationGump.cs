@@ -1,14 +1,14 @@
 using System;
 using System.Net;
 using System.Text;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using System.Diagnostics;
 using Server;
 using Server.Items;
 using Server.Prompts;
 using Server.Network;
 using Server.Accounting;
-using Server.Commands;
+using Server.Scripts.Commands;
 
 namespace Server.Gumps
 {
@@ -39,11 +39,11 @@ namespace Server.Gumps
 		{
 		}
 
-		public BanDurationGump( ArrayList list ) : base( (640 - 500) / 2, (480 - 305) / 2 )
+		public BanDurationGump( ArrayList list ) : base( (640 - 170) / 2, (480 - 305) / 2 )
 		{
 			m_List = list;
 
-			int width = 500;
+			int width = 170;
 			int height = 305;
 
 			AddPage( 0 );
@@ -64,9 +64,6 @@ namespace Server.Gumps
 			AddInput( 4, 1, "Hours" );
 			AddInput( 5, 2, "Minutes" );
 			AddInput( 6, 3, "Seconds" );
-
-			AddHtml( 170, 45, 240, 20, "Comments:", false, false );
-			AddTextField( 170, 65, 315, height - 80, 10 );
 		}
 
 		public void AddInput( int bid, int idx, string name )
@@ -89,8 +86,6 @@ namespace Server.Gumps
 			TextRelay h = info.GetTextEntry( 1 );
 			TextRelay m = info.GetTextEntry( 2 );
 			TextRelay s = info.GetTextEntry( 3 );
-
-			TextRelay c = info.GetTextEntry( 10 );
 
 			TimeSpan duration;
 			bool shouldSet;
@@ -225,34 +220,23 @@ namespace Server.Gumps
 				default: return;
 			}
 
-			if ( shouldSet ) {
-				string comment = null;
-				
-				if ( c != null ) {
-					comment = c.Text.Trim();
-
-					if ( comment.Length == 0 )
-						comment = null;
-				}
-
+			if ( shouldSet )
+			{
 				for ( int i = 0; i < m_List.Count; ++i )
 				{
 					Account a = (Account)m_List[i];
 
 					a.SetBanTags( from, DateTime.Now, duration );
-
-					if ( comment != null )
-						a.Comments.Add( new AccountComment( from.RawName, String.Format( "Duration: {0}, Comment: {1}", (( duration == TimeSpan.MaxValue )? "Infinite" : duration.ToString()), comment ) ) );
 				}
 
 				if ( duration == TimeSpan.MaxValue )
-					from.SendMessage( "Ban Duration: Infinite" );
+					from.SendMessage( "Duration is infinite." );
 				else
-					from.SendMessage( "Ban Duration: {0}", duration );
+					from.SendMessage( "Duration is {0}.", duration );
 			}
 			else
 			{
-				from.SendMessage( "Time values were improperly formatted." );
+				from.SendMessage( "Values improperly formatted." );
 				from.SendGump( new BanDurationGump( m_List ) );
 			}
 		}

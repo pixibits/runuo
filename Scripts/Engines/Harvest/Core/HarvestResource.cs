@@ -19,7 +19,7 @@ namespace Server.Engines.Harvest
 			if ( m_SuccessMessage is int )
 				m.SendLocalizedMessage( (int)m_SuccessMessage );
 			else if ( m_SuccessMessage is string )
-				m.SendMessage( (string)m_SuccessMessage );
+				m.SendAsciiMessage( (string)m_SuccessMessage );
 		}
 
 		public HarvestResource( double reqSkill, double minSkill, double maxSkill, object message, params Type[] types )

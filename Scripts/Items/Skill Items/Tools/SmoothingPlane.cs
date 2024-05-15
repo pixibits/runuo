@@ -7,7 +7,10 @@ namespace Server.Items
 	[Flipable( 0x1032, 0x1033 )]
 	public class SmoothingPlane : BaseTool
 	{
-		public override CraftSystem CraftSystem{ get{ return DefCarpentry.CraftSystem; } }
+		public override CraftSystem GetCraftInstance()
+		{
+			return new CarpentrySystem();
+		}
 
 		[Constructable]
 		public SmoothingPlane() : base( 0x1032 )

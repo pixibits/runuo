@@ -1,5 +1,5 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Items;
 using Server.Guilds;
@@ -31,7 +31,7 @@ namespace Server.Gumps
 			AddButton( 20, 70, 4005, 4007, 3, GumpButtonType.Reply, 0 );
 			AddHtmlLocalized( 55, 70, 470, 30, 1011109, false, false ); // Set the guild's abbreviation.
 
-			AddButton( 20, 100, 4005, 4007, 4, GumpButtonType.Reply, 0 );
+			/*AddButton( 20, 100, 4005, 4007, 4, GumpButtonType.Reply, 0 );
 			switch ( m_Guild.Type )
 			{
 				case GuildType.Regular:
@@ -43,7 +43,7 @@ namespace Server.Gumps
 				case GuildType.Chaos:
 					AddHtmlLocalized( 55, 100, 470, 30, 1013058, false, false ); // Change guild type: Currently Chaos
 					break;
-			}
+			}*/
 
 			AddButton( 20, 130, 4005, 4007, 5, GumpButtonType.Reply, 0 );
 			AddHtmlLocalized( 55, 130, 470, 30, 1011112, false, false ); // Set the guild's charter.
@@ -104,7 +104,7 @@ namespace Server.Gumps
 				}
 				case 3: // Set guild abbreviation
 				{
-					m_Mobile.SendLocalizedMessage( 1013061 ); // Enter new guild abbreviation (3 characters max):
+					m_Mobile.SendAsciiMessage( "Enter new guild abbreviation (4 characters max)" );
 					m_Mobile.Prompt = new GuildAbbrvPrompt( m_Mobile, m_Guild );
 
 					break;
@@ -112,7 +112,7 @@ namespace Server.Gumps
 				case 4: // Change guild type
 				{
 					GuildGump.EnsureClosed( m_Mobile );
-					m_Mobile.SendGump( new GuildChangeTypeGump( m_Mobile, m_Guild ) );
+					//m_Mobile.SendGump( new GuildChangeTypeGump( m_Mobile, m_Guild ) );
 
 					break;
 				}

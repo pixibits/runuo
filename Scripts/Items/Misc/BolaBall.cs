@@ -2,7 +2,7 @@ using System;
 
 namespace Server.Items
 {
-	public class BolaBall : Item
+	public class BolaBall : BaseItem
 	{
 		[Constructable]
 		public BolaBall() : this( 1 )
@@ -15,11 +15,15 @@ namespace Server.Items
 			Weight = 4.0;
 			Stackable = true;
 			Amount = amount;
-			Hue = 0x8AC;
 		}
 
 		public BolaBall( Serial serial ) : base( serial )
 		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new BolaBall( amount ), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )
@@ -34,9 +38,6 @@ namespace Server.Items
 			base.Deserialize( reader );
 
 			int version = reader.ReadInt();
-
-			if ( Hue == 0 )
-				Hue = 0x8AC;
 		}
 	}
 }

@@ -4,7 +4,8 @@ using Server;
 namespace Server.Items
 {
 	[Server.Engines.Craft.Forge]
-	public class LargeForgeWest : Item
+	[Server.Engines.Craft.Anvil]
+	public class LargeForgeWest : BaseItem
 	{
 		private InternalItem m_Item;
 		private InternalItem2 m_Item2;
@@ -69,7 +70,7 @@ namespace Server.Items
 		}
 
 		[Server.Engines.Craft.Forge]
-		private class InternalItem : Item
+		private class InternalItem : BaseItem
 		{
 			private LargeForgeWest m_Item;
 
@@ -124,7 +125,7 @@ namespace Server.Items
 		}
 
 		[Server.Engines.Craft.Forge]
-		private class InternalItem2 : Item
+		private class InternalItem2 : BaseItem
 		{
 			private LargeForgeWest m_Item;
 
@@ -180,7 +181,7 @@ namespace Server.Items
 	}
 
 	[Server.Engines.Craft.Forge]
-	public class LargeForgeEast : Item
+	public class LargeForgeEast : BaseItem
 	{
 		private InternalItem m_Item;
 		private InternalItem2 m_Item2;
@@ -245,7 +246,7 @@ namespace Server.Items
 		}
 
 		[Server.Engines.Craft.Forge]
-		private class InternalItem : Item
+		private class InternalItem : BaseItem
 		{
 			private LargeForgeEast m_Item;
 
@@ -300,7 +301,7 @@ namespace Server.Items
 		}
 
 		[Server.Engines.Craft.Forge]
-		private class InternalItem2 : Item
+		private class InternalItem2 : BaseItem
 		{
 			private LargeForgeEast m_Item;
 

@@ -42,7 +42,7 @@ namespace Server.Gumps
 						if ( g != null )
 						{
 							m_Guild.RemoveEnemy( g );
-							m_Guild.GuildMessage( 1018018, true, "{0} ({1})", g.Name, g.Abbreviation ); // Guild Message: You are now at peace with this guild:
+							m_Guild.GuildMessage( 1018018, "{0} ({1})", g.Name, g.Abbreviation ); // Guild Message: You are now at peace with this guild:
 
 							GuildGump.EnsureClosed( m_Mobile );
 

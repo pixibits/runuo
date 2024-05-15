@@ -5,11 +5,30 @@ namespace Server.Items
 	[FlipableAttribute( 0xE41, 0xE40 )]
 	public class TrashChest : Container
 	{
-		public override int DefaultMaxWeight{ get{ return 0; } } // A value of 0 signals unlimited weight
+		public override int MaxWeight{ get{ return 0; } } // A value of 0 signals unlimited weight
+
+		public override int DefaultGumpID{ get{ return 0x42; } }
+		public override int DefaultDropSound{ get{ return 0x42; } }
+
+		public override Rectangle2D Bounds
+		{
+			get{ return new Rectangle2D( 18, 105, 144, 73 ); }
+		}
+
+		public override bool IsPublicContainer
+		{
+			get
+			{
+				return true;
+			}
+		}
 
 		public override bool IsDecoContainer
 		{
-			get{ return false; }
+			get
+			{
+				return false;
+			}
 		}
 
 		[Constructable]

@@ -1,10 +1,9 @@
 using System;
 using System.Reflection;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Items;
 using Server.Targeting;
-using Server.Commands;
 
 namespace Server.Gumps
 {
@@ -40,7 +39,7 @@ namespace Server.Gumps
 
 				if ( m_Type.IsAssignableFrom( targeted.GetType() ) )
 				{
-					CommandLogging.LogChangeProperty( m_Mobile, m_Object, m_Property.Name, targeted.ToString() );
+					Server.Scripts.Commands.CommandLogging.LogChangeProperty( m_Mobile, m_Object, m_Property.Name, targeted.ToString() );
 					m_Property.SetValue( m_Object, targeted, null );
 					PropertiesGump.OnValueChanged( m_Object, m_Property, m_Stack );
 				}

@@ -1,31 +1,30 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Items;
 using Server.Multis;
 using Server.Network;
 using Server.ContextMenus;
-using Server.Gumps;
 
 namespace Server.Items
 {
-	public abstract class BaseBoard : Container, ISecurable
+	public abstract class BaseBoard : Container
 	{
-		private SecureLevel m_Level;
-
-		[CommandProperty( AccessLevel.GameMaster )]
-		public SecureLevel Level
-		{
-			get{ return m_Level; }
-			set{ m_Level = value; }
-		}
+		public override int DefaultDropSound{ get{ return -1; } }
 
 		public BaseBoard( int itemID ) : base( itemID )
 		{
 			CreatePieces();
 
 			Weight = 5.0;
+		}
+
+		public override bool IsDecoContainer
+		{
+			get
+			{
+				return false;
+			}
 		}
 
 		public abstract void CreatePieces();
@@ -35,7 +34,7 @@ namespace Server.Items
 			for ( int i = Items.Count - 1; i >= 0; --i )
 			{
 				if ( i < Items.Count )
-					Items[i].Delete();
+					((Item)Items[i]).Delete();
 			}
 
 			CreatePieces();
@@ -49,8 +48,6 @@ namespace Server.Items
 
 		public override bool DisplaysContent{ get{ return false; } } // Do not display (x items, y stones)
 
-		public override bool IsDecoContainer{ get{ return false; } }
-
 		public BaseBoard( Serial serial ) : base( serial )
 		{
 		}
@@ -58,18 +55,13 @@ namespace Server.Items
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
-			writer.Write( (int) 1 ); // version
-
-			writer.Write( (int)m_Level );
+			writer.Write( (int) 0 );
 		}
 
 		public override void Deserialize( GenericReader reader )
 		{
 			base.Deserialize( reader );
 			int version = reader.ReadInt();
-
-			if ( version == 1 )
-				m_Level = (SecureLevel)reader.ReadInt();
 
 			if ( Weight == 1.0 )
 				Weight = 5.0;
@@ -92,19 +84,17 @@ namespace Server.Items
 			{
 				Packet p = new PlaySound( 0x127, GetWorldLocation() );
 
-				p.Acquire();
-
 				if ( RootParent == from )
 				{
 					from.Send( p );
 				}
 				else
 				{
+					p.SetStatic();
 					foreach ( NetState state in this.GetClientsInRange( 2 ) )
 						state.Send( p );
+					p.Release();
 				}
-
-				p.Release();
 
 				return true;
 			}
@@ -120,8 +110,6 @@ namespace Server.Items
 
 			if ( ValidateDefault( from, this ) )
 				list.Add( new DefaultEntry( from, this ) );
-
-			SetSecureLevelEntry.AddTo( from, this, list );
 		}
 
 		public static bool ValidateDefault( Mobile from, BaseBoard board )

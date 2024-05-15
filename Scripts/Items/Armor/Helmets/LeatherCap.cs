@@ -1,5 +1,5 @@
 using System;
-using Server;
+using Server.Items;
 
 namespace Server.Items
 {
@@ -21,7 +21,6 @@ namespace Server.Items
 		public override int ArmorBase{ get{ return 13; } }
 
 		public override ArmorMaterialType MaterialType{ get{ return ArmorMaterialType.Leather; } }
-		public override CraftResource DefaultResource{ get{ return CraftResource.RegularLeather; } }
 
 		public override ArmorMeditationAllowance DefMedAllowance{ get{ return ArmorMeditationAllowance.All; } }
 

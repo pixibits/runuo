@@ -1,8 +1,7 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server.Network;
 using Server.Gumps;
-using System.Collections.Generic;
 
 namespace Server.Mobiles
 {
@@ -16,7 +15,7 @@ namespace Server.Mobiles
 
 			AddPage( 0 );
 
-			AddBackground( 0, 0, 410, 371, 5054 );
+			AddBackground( 0, 0, 260, 371, 5054 );
 
 			AddLabel( 95, 1, 0, "Creatures List" );
 
@@ -37,26 +36,26 @@ namespace Server.Mobiles
 				AddButton( 5, ( 22 * i ) + 20, 0xFA5, 0xFA7, 4 + (i * 2), GumpButtonType.Reply, 0 );
 				AddButton( 38, ( 22 * i ) + 20, 0xFA2, 0xFA4, 5 + (i * 2), GumpButtonType.Reply, 0 );
 
-				AddImageTiled( 71, ( 22 * i ) + 20, 309, 23, 0xA40 );
-				AddImageTiled( 72, ( 22 * i ) + 21, 307, 21, 0xBBC );
+				AddImageTiled( 71, ( 22 * i ) + 20, 159, 23, 0xA40 );
+				AddImageTiled( 72, ( 22 * i ) + 21, 157, 21, 0xBBC );
 
 				string str = "";
 
-				if ( i < spawner.SpawnNames.Count )
+				if ( i < spawner.CreaturesName.Count )
 				{
-					str = (string)spawner.SpawnNames[i];
+					str = (string)spawner.CreaturesName[i];
 					int count = m_Spawner.CountCreatures( str );
 
-					AddLabel( 382, ( 22 * i ) + 20, 0, count.ToString() );
+					AddLabel( 232, ( 22 * i ) + 20, 0, count.ToString() );
 				}
 
-				AddTextEntry( 75, ( 22 * i ) + 21, 304, 21, 0, i, str );
+				AddTextEntry( 75, ( 22 * i ) + 21, 154, 21, 0, i, str );
 			}
 		}
 
-		public List<string> CreateArray( RelayInfo info, Mobile from )
+		public ArrayList CreateArray( RelayInfo info, Mobile from )
 		{
-			List<string> creaturesName = new List<string>();
+			ArrayList creaturesName = new ArrayList();
 
 			for ( int i = 0;  i < 13; i++ )
 			{
@@ -70,14 +69,12 @@ namespace Server.Mobiles
 					{
 						str = str.Trim();
 
-						string t = Spawner.ParseType( str );
-
-						Type type = ScriptCompiler.FindTypeByName( t );
+						Type type = SpawnerType.GetType( str );
 
 						if ( type != null )
 							creaturesName.Add( str );
 						else
-							from.SendMessage( "{0} is not a valid type name.", t );
+							from.SendAsciiMessage( "{0} is not a valid type name.", str );
 					}
 				}
 			}
@@ -98,7 +95,7 @@ namespace Server.Mobiles
 				}
 				case 1: // Okay
 				{
-					m_Spawner.SpawnNames = CreateArray( info, state.Mobile );
+					m_Spawner.CreaturesName = CreateArray( info, state.Mobile );
 
 					break;
 				}
@@ -127,9 +124,9 @@ namespace Server.Mobiles
 						if ( type == 0 ) // Spawn creature
 							m_Spawner.Spawn( entry.Text );
 						else // Remove creatures
-							m_Spawner.RemoveSpawned( entry.Text );
+							m_Spawner.RemoveCreatures( entry.Text );
 
-						m_Spawner.SpawnNames = CreateArray( info, state.Mobile );
+						m_Spawner.CreaturesName = CreateArray( info, state.Mobile );
 					}
 
 					break;

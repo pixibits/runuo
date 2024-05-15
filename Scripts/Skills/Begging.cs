@@ -23,7 +23,7 @@ namespace Server.SkillHandlers
 
 			m.SendLocalizedMessage( 500397 ); // To whom do you wish to grovel?
 
-			return TimeSpan.FromHours( 6.0 );
+			return TimeSpan.FromHours( 1.0 );
 		}
 
 		private class InternalTarget : Target
@@ -37,7 +37,7 @@ namespace Server.SkillHandlers
 			protected override void OnTargetFinish( Mobile from )
 			{
 				if ( m_SetSkillTime )
-					from.NextSkillTime = DateTime.Now;
+					from.NextSkillTime = DateTime.Now + TimeSpan.FromSeconds( 10.0 );
 			}
 
 			protected override void OnTarget( Mobile from, object targeted )
@@ -50,11 +50,11 @@ namespace Server.SkillHandlers
 				{
 					Mobile targ = (Mobile)targeted;
 
-					if ( targ.Player ) // We can't beg from players
+					if ( targ.Player ) 
 					{
 						number = 500398; // Perhaps just asking would work better.
 					}
-					else if ( !targ.Body.IsHuman ) // Make sure the NPC is human
+					else if ( !targ.Body.IsHuman ) 
 					{
 						number = 500399; // There is little chance of getting money from that!
 					}
@@ -64,10 +64,6 @@ namespace Server.SkillHandlers
 							number = 500401; // You are too far away to beg from him.
 						else
 							number = 500402; // You are too far away to beg from her.
-					}
-					else if ( from.Mounted ) // If we're on a mount, who would give us money?
-					{
-						number = 500404; // They seem unwilling to give you any money.
 					}
 					else
 					{
@@ -106,51 +102,32 @@ namespace Server.SkillHandlers
 				{
 					Container theirPack = m_Target.Backpack;
 
-					double badKarmaChance = 0.5 - ((double)m_From.Karma / 8570);
-
 					if ( theirPack == null )
 					{
 						m_From.SendLocalizedMessage( 500404 ); // They seem unwilling to give you any money.
 					}
-					else if ( m_From.Karma < 0 && badKarmaChance > Utility.RandomDouble() )
+					else if ( ( m_From.Karma < 0 && 0.5 > Utility.RandomDouble() ) || m_From.Criminal )
 					{
 						m_Target.PublicOverheadMessage( MessageType.Regular, m_Target.SpeechHue, 500406 ); // Thou dost not look trustworthy... no gold for thee today!
 					}
 					else if ( m_From.CheckTargetSkill( SkillName.Begging, m_Target, 0.0, 100.0 ) )
 					{
-						int toConsume = theirPack.GetAmount( typeof( Gold ) ) / 10;
-						int max = 10 + (m_From.Fame / 2500);
-
-						if ( max > 14 )
-							max = 14;
-						else if ( max < 10 )
-							max = 10;
-
-						if ( toConsume > max )
-							toConsume = max;
-
-						if ( toConsume > 0 )
+						int totalGold = theirPack.GetAmount( typeof( Gold ) );
+						if ( totalGold >= 25 )
 						{
-							int consumed = theirPack.ConsumeUpTo( typeof( Gold ), toConsume );
+							int toConsume = (int)(totalGold * m_From.Skills[SkillName.Begging].Value / 100.0);
+							if ( toConsume <= 0 )
+								toConsume = 1;
+							toConsume = theirPack.ConsumeUpTo( typeof( Gold ), toConsume );
 
-							if ( consumed > 0 )
+							if ( toConsume > 0 )
 							{
 								m_Target.PublicOverheadMessage( MessageType.Regular, m_Target.SpeechHue, 500405 ); // I feel sorry for thee...
 
-								Gold gold = new Gold( consumed );
-
+								Gold gold = new Gold( toConsume );
 								m_From.AddToBackpack( gold );
 								m_From.PlaySound( gold.GetDropSound() );
-
-								if ( m_From.Karma > -3000 )
-								{
-									int toLose = m_From.Karma + 3000;
-
-									if ( toLose > 40 )
-										toLose = 40;
-
-									Titles.AwardKarma( m_From, -toLose, true );
-								}
+								Titles.AlterNotoriety( m_From, -1, NotoCap.Dishonorable );
 							}
 							else
 							{

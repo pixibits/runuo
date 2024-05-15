@@ -6,7 +6,14 @@ namespace Server.Items
 {
 	public class FireworksWand : MagicWand
 	{
-		public override int LabelNumber{ get{ return 1041424; } } // a fireworks wand
+		//public override int LabelNumber{ get{ return 1041424; } } // a fireworks wand
+		public override string BuildSingleClick()
+		{
+			if ( m_Charges < 100 )
+				return String.Format( "a fireworks wand with {0} charge{1}", m_Charges, m_Charges != 1 ? "s" : "" );
+			else
+				return "a fireworks wand";
+		}
 
 		private int m_Charges;
 
@@ -14,7 +21,7 @@ namespace Server.Items
 		public int Charges
 		{
 			get{ return m_Charges; }
-			set{ m_Charges = value; InvalidateProperties(); }
+			set{ m_Charges = value; InvalidateProperties(); SingleClickChanged(); }
 		}
 
 		[Constructable]
@@ -42,28 +49,15 @@ namespace Server.Items
 
 		public override void OnDoubleClick( Mobile from )
 		{
-			BeginLaunch( from, true );
+			BeginLaunch( from );
 		}
 
-		public void BeginLaunch( Mobile from, bool useCharges )
+		public void BeginLaunch( Mobile from )
 		{
 			Map map = from.Map;
 
 			if ( map == null || map == Map.Internal )
 				return;
-
-			if ( useCharges )
-			{
-				if ( Charges > 0 )
-				{
-					--Charges;
-				}
-				else
-				{
-					from.SendLocalizedMessage( 502412 ); // There are no charges left on that item.
-					return;
-				}
-			}
 
 			from.SendLocalizedMessage( 502615 ); // You launch a firework!
 
@@ -108,6 +102,10 @@ namespace Server.Items
 
 			Effects.PlaySound( endLoc, map, Utility.Random( 0x11B, 4 ) );
 			Effects.SendLocationEffect( endLoc, map, 0x373A + (0x10 * Utility.Random( 4 )), 16, 10, hue, renderMode );
+
+			Charges--;
+			if ( Charges <= 0 )
+				Delete();
 		}
 
 		public override void Serialize( GenericWriter writer )

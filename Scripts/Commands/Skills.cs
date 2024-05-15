@@ -1,22 +1,22 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Targeting;
 
-namespace Server.Commands
+namespace Server.Scripts.Commands
 {
 	public class SkillsCommand
 	{
 		public static void Initialize()
 		{
-			CommandSystem.Register( "SetSkill", AccessLevel.GameMaster, new CommandEventHandler( SetSkill_OnCommand ) );
-			CommandSystem.Register( "GetSkill", AccessLevel.GameMaster, new CommandEventHandler( GetSkill_OnCommand ) );
-			CommandSystem.Register( "SetAllSkills", AccessLevel.GameMaster, new CommandEventHandler( SetAllSkills_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "SetSkill", AccessLevel.GameMaster, new Server.Commands.CommandEventHandler( SetSkill_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "GetSkill", AccessLevel.GameMaster, new Server.Commands.CommandEventHandler( GetSkill_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "SetAllSkills", AccessLevel.GameMaster, new Server.Commands.CommandEventHandler( SetAllSkills_OnCommand ) );
 		}
 
 		[Usage( "SetSkill <name> <value>" )]
 		[Description( "Sets a skill value by name of a targeted mobile." )]
-		public static void SetSkill_OnCommand( CommandEventArgs arg )
+		public static void SetSkill_OnCommand( Server.Commands.CommandEventArgs arg )
 		{
 			if ( arg.Length != 2 )
 			{
@@ -40,7 +40,7 @@ namespace Server.Commands
 
 		[Usage( "SetAllSkills <name> <value>" )]
 		[Description( "Sets all skill values of a targeted mobile." )]
-		public static void SetAllSkills_OnCommand( CommandEventArgs arg )
+		public static void SetAllSkills_OnCommand( Server.Commands.CommandEventArgs arg )
 		{
 			if ( arg.Length != 1 )
 			{
@@ -54,7 +54,7 @@ namespace Server.Commands
 
 		[Usage( "GetSkill <name>" )]
 		[Description( "Gets a skill value by name of a targeted mobile." )]
-		public static void GetSkill_OnCommand( CommandEventArgs arg )
+		public static void GetSkill_OnCommand( Server.Commands.CommandEventArgs arg )
 		{
 			if ( arg.Length != 1 )
 			{

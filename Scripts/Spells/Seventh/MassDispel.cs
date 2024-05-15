@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server.Misc;
 using Server.Network;
 using Server.Items;
@@ -8,19 +8,18 @@ using Server.Mobiles;
 
 namespace Server.Spells.Seventh
 {
-	public class MassDispelSpell : MagerySpell
+	public class MassDispelSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Mass Dispel", "Vas An Ort",
-				263,
+				SpellCircle.Seventh,
+				245,
 				9002,
 				Reagent.Garlic,
 				Reagent.MandrakeRoot,
 				Reagent.BlackPearl,
 				Reagent.SulfurousAsh
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Seventh; } }
 
 		public MassDispelSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -43,7 +42,7 @@ namespace Server.Spells.Seventh
 
 				SpellHelper.GetSurfaceTop( ref p );
 
-				List<Mobile> targets = new List<Mobile>();
+				ArrayList targets = new ArrayList();
 
 				Map map = Caster.Map;
 
@@ -52,35 +51,30 @@ namespace Server.Spells.Seventh
 					IPooledEnumerable eable = map.GetMobilesInRange( new Point3D( p ), 8 );
 
 					foreach ( Mobile m in eable )
-						if ( m is BaseCreature && (m as BaseCreature).IsDispellable && Caster.CanBeHarmful( m, false ) )
+					{
+						if ( m is BaseCreature && ((BaseCreature)m).Summoned && !((BaseCreature)m).IsAnimatedDead && Caster.CanBeHarmful( m, false ) )
 							targets.Add( m );
+					}
 
 					eable.Free();
 				}
 
 				for ( int i = 0; i < targets.Count; ++i )
 				{
-					Mobile m = targets[i];
+					Mobile m = (Mobile)targets[i];
 
-					BaseCreature bc = m as BaseCreature;
+					if ( CheckResisted( m ) )
+					{
+						Caster.DoHarmful( m );
 
-					if ( bc == null )
-						continue;
-
-					double dispelChance = (50.0 + ((100 * (Caster.Skills.Magery.Value - bc.DispelDifficulty)) / (bc.DispelFocus*2))) / 100;
-
-					if ( dispelChance > Utility.RandomDouble() )
+						m.FixedEffect( 0x3779, 10, 20 );
+					}
+					else
 					{
 						Effects.SendLocationParticles( EffectItem.Create( m.Location, m.Map, EffectItem.DefaultDuration ), 0x3728, 8, 20, 5042 );
 						Effects.PlaySound( m, m.Map, 0x201 );
 
 						m.Delete();
-					}
-					else
-					{
-						Caster.DoHarmful( m );
-
-						m.FixedEffect( 0x3779, 10, 20 );
 					}
 				}
 			}
@@ -92,7 +86,7 @@ namespace Server.Spells.Seventh
 		{
 			private MassDispelSpell m_Owner;
 
-			public InternalTarget( MassDispelSpell owner ) : base( Core.ML ? 10 : 12, true, TargetFlags.None )
+			public InternalTarget( MassDispelSpell owner ) : base( 12, true, TargetFlags.None )
 			{
 				m_Owner = owner;
 			}

@@ -5,19 +5,27 @@ using Server.Targeting;
 
 namespace Server.Items
 {
-	public class OilCloth : Item, IScissorable, IDyable
+	public class OilCloth : BaseItem, IScissorable, IDyable
 	{
 		public override int LabelNumber{ get{ return 1041498; } } // oil cloth
 
-		public override double DefaultWeight
+		[Constructable]
+		public OilCloth() : this( 1 )
 		{
-			get { return 1.0; }
 		}
 
 		[Constructable]
-		public OilCloth() : base( 0x175D )
+		public OilCloth( int amount ) : base( 0x175D )
 		{
+			Weight = 1.0;
 			Hue = 2001;
+			Stackable = true;
+			Amount = amount;
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new OilCloth( amount ), amount );
 		}
 
 		public bool Dye( Mobile from, DyeTub sender )
@@ -106,29 +114,6 @@ namespace Server.Items
 					from.LocalOverheadMessage( Network.MessageType.Regular, 0x3B2, 1005422 ); // Hmmmm... this does not need to be cleaned.
 				}
 			}
-//Added for Firebomb
-			else if ( obj is BaseBeverage )
-			{
-				BaseBeverage beverage = (BaseBeverage) obj;
-
-				if ( beverage.Content == BeverageType.Liquor )
-				{
-					Firebomb bomb = new Firebomb( beverage.ItemID );
-					bomb.Name = beverage.Name;
-					Point3D loc = beverage.Location;
-					beverage.Delete();
-
-					from.AddToBackpack( bomb );
-					bomb.Location = loc;
-					from.SendLocalizedMessage( 1060580 ); // You prepare a firebomb.
-					Consume();
-				}
-			}
-			else if ( obj is Firebomb )
-			{
-				from.SendLocalizedMessage( 1060579 ); // That is already a firebomb!
-			}
-//Firebomb end
 			else
 			{
 				from.SendLocalizedMessage( 1005426 ); // The cloth will not work on that.

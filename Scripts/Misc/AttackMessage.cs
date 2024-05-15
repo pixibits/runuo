@@ -1,6 +1,5 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Network;
 
@@ -40,7 +39,7 @@ namespace Server.Misc
 
 			for ( int i = 0; i < list.Count; ++i )
 			{
-				AggressorInfo info = list[i];
+				AggressorInfo info = (AggressorInfo)list[i];
 
 				if ( info.Attacker == m2 && DateTime.Now < (info.LastCombatTime + Delay) )
 					return true;
@@ -50,7 +49,7 @@ namespace Server.Misc
 
 			for ( int i = 0; i < list.Count; ++i )
 			{
-				AggressorInfo info = list[i];
+				AggressorInfo info = (AggressorInfo)list[i];
 
 				if ( info.Attacker == m1 && DateTime.Now < (info.LastCombatTime + Delay) )
 					return true;

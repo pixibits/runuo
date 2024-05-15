@@ -8,19 +8,18 @@ namespace Server.Items
 		public override int LabelNumber{ get{ return 1061099; } } // Tunic of Fire
 		public override int ArtifactRarity{ get{ return 11; } }
 
-		public override int BasePhysicalResistance{ get{ return 24; } }
-		public override int BaseFireResistance{ get{ return 34; } }
-
 		public override int InitMinHits{ get{ return 255; } }
 		public override int InitMaxHits{ get{ return 255; } }
 
 		[Constructable]
 		public TunicOfFire()
 		{
-			Hue = 0x54F;
+			Hue = 0x54E;
 			ArmorAttributes.SelfRepair = 5;
-			Attributes.NightSight = 1;
+			// TODO: Night Sight
 			Attributes.ReflectPhysical = 15;
+			PhysicalBonus = 20;
+			FireBonus = 30;
 		}
 
 		public TunicOfFire( Serial serial ) : base( serial )
@@ -31,7 +30,7 @@ namespace Server.Items
 		{
 			base.Serialize( writer );
 
-			writer.Write( (int) 1 );
+			writer.Write( (int) 0 );
 		}
 		
 		public override void Deserialize(GenericReader reader)
@@ -39,18 +38,6 @@ namespace Server.Items
 			base.Deserialize( reader );
 
 			int version = reader.ReadInt();
-
-			if ( version < 1 )
-			{
-				if ( Hue == 0x54E )
-					Hue = 0x54F;
-
-				if ( Attributes.NightSight == 0 )
-					Attributes.NightSight = 1;
-
-				PhysicalBonus = 0;
-				FireBonus = 0;
-			}
 		}
 	}
 }

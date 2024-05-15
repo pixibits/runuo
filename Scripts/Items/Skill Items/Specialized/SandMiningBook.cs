@@ -4,16 +4,12 @@ using Server.Mobiles;
 
 namespace Server.Items
 {
-	public class SandMiningBook : Item
+	public class SandMiningBook : BaseItem
 	{
-		public override string DefaultName
-		{
-			get { return "Find Glass-Quality Sand"; }
-		}
-
 		[Constructable]
 		public SandMiningBook() : base( 0xFF4 )
 		{
+			Name = "Find Glass-Quality Sand";
 			Weight = 1.0;
 		}
 
@@ -45,16 +41,16 @@ namespace Server.Items
 			}
 			else if ( pm == null || from.Skills[SkillName.Mining].Base < 100.0 )
 			{
-				pm.SendMessage( "Only a Grandmaster Miner can learn from this book." );
+				pm.SendAsciiMessage( "Only a Grandmaster Miner can learn from this book." );
 			}
 			else if ( pm.SandMining )
 			{
-				pm.SendMessage( "You have already learned this information." );
+				pm.SendAsciiMessage( "You have already learned this information." );
 			}
 			else
 			{
 				pm.SandMining = true;
-				pm.SendMessage( "You have learned how to mine fine sand. Target sand areas when mining to look for fine sand." );
+				pm.SendAsciiMessage( "You have learned how to mine fine sand. Target sand areas when mining to look for fine sand." );
 				Delete();
 			}
 		}

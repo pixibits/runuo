@@ -154,7 +154,7 @@ namespace Server.Items
 	public class DarkFlowerTapestryEastDeed : BaseAddonDeed
 	{
 		public override BaseAddon Addon{ get{ return new DarkFlowerTapestryEastAddon(); } }
-		public override int LabelNumber{ get{ return 1049395; } } // a dark flower tapestry deed facing east
+		public override int LabelNumber{ get{ return 1049396; } } // a dark flower tapestry deed facing south
 
 		[Constructable]
 		public DarkFlowerTapestryEastDeed()

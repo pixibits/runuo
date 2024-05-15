@@ -4,7 +4,7 @@ using Server.Targeting;
 
 namespace Server.Items
 {
-	public class Cotton : Item, IDyable
+	public class Cotton : BaseItem, IDyable
 	{
 		[Constructable]
 		public Cotton() : this( 1 )
@@ -36,6 +36,12 @@ namespace Server.Items
 
 			int version = reader.ReadInt();
 		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Cotton(), amount );
+		}
+
 		public bool Dye( Mobile from, DyeTub sender )
 		{
 			if ( Deleted )

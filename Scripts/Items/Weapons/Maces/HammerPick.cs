@@ -7,6 +7,8 @@ namespace Server.Items
 	[FlipableAttribute( 0x143D, 0x143C )]
 	public class HammerPick : BaseBashing
 	{
+		public override int DefHitSound{ get{ return 0x232; } }
+
 		public override WeaponAbility PrimaryAbility{ get{ return WeaponAbility.ArmorIgnore; } }
 		public override WeaponAbility SecondaryAbility{ get{ return WeaponAbility.MortalStrike; } }
 
@@ -14,12 +16,13 @@ namespace Server.Items
 		public override int AosMinDamage{ get{ return 15; } }
 		public override int AosMaxDamage{ get{ return 17; } }
 		public override int AosSpeed{ get{ return 28; } }
-		public override float MlSpeed{ get{ return 3.75f; } }
 
 		public override int OldStrengthReq{ get{ return 35; } }
-		public override int OldMinDamage{ get{ return 6; } }
-		public override int OldMaxDamage{ get{ return 33; } }
 		public override int OldSpeed{ get{ return 30; } }
+
+		public override int NumDice { get { return 4; } }
+		public override int NumSides { get { return 7; } }
+		public override int DiceBonus { get { return 5; } }
 
 		public override int InitMinHits{ get{ return 31; } }
 		public override int InitMaxHits{ get{ return 70; } }

@@ -5,18 +5,14 @@ using Server.Spells;
 
 namespace Server.Items
 {
-	public class ClockworkAssembly : Item
+	public class ClockworkAssembly : BaseItem
 	{
-		public override string DefaultName
-		{
-			get { return "clockwork assembly"; }
-		}
-
 		[Constructable]
 		public ClockworkAssembly() : base( 0x1EA8 )
 		{
 			Weight = 5.0;
 			Hue = 1102;
+			Name = "clockwork assembly";
 		}
 
 		public ClockworkAssembly( Serial serial ) : base( serial )
@@ -35,28 +31,9 @@ namespace Server.Items
 
 			if ( tinkerSkill < 60.0 )
 			{
-				from.SendMessage( "You must have at least 60.0 skill in tinkering to construct a golem." );
+				from.SendAsciiMessage( "You must have at least 60.0 skill in tinkering to construct a golem." );
 				return;
 			}
-			else if ( (from.Followers + 4) > from.FollowersMax )
-			{
-				from.SendLocalizedMessage( 1049607 ); // You have too many followers to control that creature.
-				return;
-			}
-
-			double scalar;
-
-			if ( tinkerSkill >= 100.0 )
-				scalar = 1.0;
-			else if ( tinkerSkill >= 90.0 )
-				scalar = 0.9;
-			else if ( tinkerSkill >= 80.0 )
-				scalar = 0.8;
-			else if ( tinkerSkill >= 70.0 )
-				scalar = 0.7;
-			else
-				scalar = 0.6;
-
 			Container pack = from.Backpack;
 
 			if ( pack == null )
@@ -67,7 +44,6 @@ namespace Server.Items
 				{
 					typeof( PowerCrystal ),
 					typeof( IronIngot ),
-					typeof( BronzeIngot ),
 					typeof( Gears )
 				},
 				new int[]
@@ -82,36 +58,27 @@ namespace Server.Items
 			{
 				case 0:
 				{
-					from.SendMessage( "You must have a power crystal to construct the golem." );
+					from.SendAsciiMessage( "You must have a power crystal to construct the golem." );
 					break;
 				}
 				case 1:
 				{
-					from.SendMessage( "You must have 50 iron ingots to construct the golem." );
+					from.SendAsciiMessage( "You must have 50 iron ingots to construct the golem." );
 					break;
 				}
 				case 2:
 				{
-					from.SendMessage( "You must have 50 bronze ingots to construct the golem." );
+					from.SendAsciiMessage( "You must have 50 bronze ingots to construct the golem." );
 					break;
 				}
 				case 3:
 				{
-					from.SendMessage( "You must have 5 gears to construct the golem." );
+					from.SendAsciiMessage( "You must have 5 gears to construct the golem." );
 					break;
 				}
 				default:
 				{
-					Golem g = new Golem( true, scalar );
-
-					if ( g.SetControlMaster( from ) )
-					{
-						Delete();
-
-						g.MoveToWorld( from.Location, from.Map );
-						from.PlaySound( 0x241 );
-					}
-
+					
 					break;
 				}
 			}

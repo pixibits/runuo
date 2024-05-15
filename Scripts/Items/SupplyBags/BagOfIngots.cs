@@ -14,14 +14,6 @@ namespace Server.Items
 		[Constructable] 
 		public BagOfingots( int amount ) 
 		{ 
-			DropItem( new DullCopperIngot   ( amount ) ); 
-			DropItem( new ShadowIronIngot   ( amount ) ); 
-			DropItem( new CopperIngot   ( amount ) ); 
-			DropItem( new BronzeIngot   ( amount ) ); 
-			DropItem( new GoldIngot   ( amount ) ); 
-			DropItem( new AgapiteIngot   ( amount ) ); 
-			DropItem( new VeriteIngot   ( amount ) ); 
-			DropItem( new ValoriteIngot   ( amount ) ); 
 			DropItem( new IronIngot   ( amount ) );
 			DropItem( new Tongs() );
 			DropItem( new TinkerTools() );

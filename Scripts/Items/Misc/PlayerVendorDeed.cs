@@ -2,10 +2,11 @@ using System;
 using Server;
 using Server.Mobiles;
 using Server.Multis;
+using Server.Regions;
 
 namespace Server.Items
 {
-	public class ContractOfEmployment : Item
+	public class ContractOfEmployment : BaseItem
 	{
 		public override int LabelNumber{ get{ return 1041243; } } // a contract of employment
 
@@ -13,7 +14,6 @@ namespace Server.Items
 		public ContractOfEmployment() : base( 0x14F0 )
 		{
 			Weight = 1.0;
-			//LootType = LootType.Blessed;
 		}
 
 		public ContractOfEmployment( Serial serial ) : base( serial )
@@ -23,14 +23,14 @@ namespace Server.Items
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
-
+			
 			writer.Write( (int)0 ); //version
 		}
 
 		public override void Deserialize( GenericReader reader )
 		{
 			base.Deserialize( reader );
-
+			
 			int version = reader.ReadInt();
 		}
 
@@ -42,61 +42,55 @@ namespace Server.Items
 			}
 			else if ( from.AccessLevel >= AccessLevel.GameMaster )
 			{
-				from.SendLocalizedMessage( 503248 ); // Your godly powers allow you to place this vendor whereever you wish.
-
-				Mobile v = new PlayerVendor( from, BaseHouse.FindHouseAt( from ) );
-
+				from.SendLocalizedMessage( 503248 );//Your godly powers allow you to place this vendor whereever you wish.
+				
+				Mobile v = new PlayerVendor( from );
+				v.Location = from.Location;
 				v.Direction = from.Direction & Direction.Mask;
-				v.MoveToWorld( from.Location, from.Map );
-
+				v.Map = from.Map;
 				v.SayTo( from, 503246 ); // Ah! it feels good to be working again.
-
+		
 				this.Delete();
 			}
 			else
 			{
 				BaseHouse house = BaseHouse.FindHouseAt( from );
+				if ( house == null && from.Region is HouseRegion )
+				{
+					//allow placement in tents
+					house = ((HouseRegion)from.Region).House;
+					if ( house != null && !(house is Tent) )
+						house = null;
+				}
 
 				if ( house == null )
 				{
-					from.SendLocalizedMessage( 503240 ); // Vendors can only be placed in houses.	
+					from.SendLocalizedMessage( 503240 );//Vendors can only be placed in houses.	
 				}
-				else if ( !BaseHouse.NewVendorSystem && !house.IsFriend( from ) )
+				else if ( !house.IsOwner( from ) )
 				{
-					from.SendLocalizedMessage( 503242 ); // You must ask the owner of this building to name you a friend of the household in order to place a vendor here.
-				}
-				else if ( BaseHouse.NewVendorSystem && !house.IsOwner( from ) )
-				{
-					from.SendLocalizedMessage( 1062423 ); // Only the house owner can directly place vendors.  Please ask the house owner to offer you a vendor contract so that you may place a vendor in this house.
-				}
-				else if ( !house.Public || !house.CanPlaceNewVendor() ) 
-				{
-					from.SendLocalizedMessage( 503241 ); // You cannot place this vendor or barkeep.  Make sure the house is public and has sufficient storage available.
+					from.SendLocalizedMessage( 503242 ); // You must ask the owner of this house to make you a friend in order to place this vendor here,
 				}
 				else
 				{
-					bool vendor, contract;
-					BaseHouse.IsThereVendor( from.Location, from.Map, out vendor, out contract );
-
-					if ( vendor )
+					IPooledEnumerable eable = from.GetMobilesInRange( 0 );
+					foreach ( Mobile m in eable )
 					{
-						from.SendLocalizedMessage( 1062677 ); // You cannot place a vendor or barkeep at this location.
+						if ( !m.Player )
+						{
+							from.SendAsciiMessage( "There is something blocking that location." );
+							eable.Free();
+							return;
+						}
 					}
-					else if ( contract )
-					{
-						from.SendLocalizedMessage( 1062678 ); // You cannot place a vendor or barkeep on top of a rental contract!
-					}
-					else
-					{
-						Mobile v = new PlayerVendor( from, house );
 
-						v.Direction = from.Direction & Direction.Mask;
-						v.MoveToWorld( from.Location, from.Map );
-
-						v.SayTo( from, 503246 ); // Ah! it feels good to be working again.
-
-						this.Delete();
-					}
+					Mobile v = new PlayerVendor( from );
+					v.Location = from.Location;
+					v.Direction = from.Direction & Direction.Mask;
+					v.Map = from.Map;
+					v.SayTo( from, 503246 ); // Ah! it feels good to be working again.
+						
+					this.Delete();
 				}
 			}
 		}

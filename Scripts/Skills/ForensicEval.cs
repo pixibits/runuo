@@ -1,5 +1,5 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using System.Text;
 using Server;
 using Server.Mobiles;
@@ -22,7 +22,7 @@ namespace Server.SkillHandlers
 
 			m.SendLocalizedMessage( 500906 ); // What would you like to evaluate?
 
-			return TimeSpan.FromSeconds( 1.0 );
+			return TimeSpan.FromSeconds( 10.0 );
 		}
 
 		public class ForensicTarget : Target
@@ -35,17 +35,15 @@ namespace Server.SkillHandlers
 			{
 				if ( target is Mobile )
 				{
-					if ( from.CheckTargetSkill( SkillName.Forensics, target, 40.0, 100.0 ) )
+					/*if ( from.CheckTargetSkill( SkillName.Forensics, target, 40.0, 100.0 ) )
 					{
 						if ( target is PlayerMobile && ((PlayerMobile)target).NpcGuild == NpcGuild.ThievesGuild )
 							from.SendLocalizedMessage( 501004 );//That individual is a thief!
 						else
 							from.SendLocalizedMessage( 501003 );//You notice nothing unusual.
 					}
-					else
-					{
-						from.SendLocalizedMessage( 501001 );//You cannot determain anything useful.
-					}
+					else*/
+					from.SendLocalizedMessage( 501001 );//You cannot determain anything useful.
 				}
 				else if ( target is Corpse )
 				{
@@ -78,7 +76,22 @@ namespace Server.SkillHandlers
 						from.SendLocalizedMessage( 501001 );//You cannot determain anything useful.
 					}
 				}
-				else if ( target is ILockpickable )
+				else if ( target is TrapableContainer )
+				{
+					if ( from.CheckTargetSkill( SkillName.Forensics, target, 25.0, 100.0 ) )
+					{
+						if ( ((TrapableContainer)target).Trapped )
+							from.SendAsciiMessage( "That container looks very suspicious." );
+						else
+							from.SendLocalizedMessage( 501003 );//You notice nothing unusual.
+					}
+					else
+					{
+						from.SendLocalizedMessage( 501001 );//You cannot determain anything useful.
+					}
+				}
+				
+				if ( target is ILockpickable )
 				{
 					ILockpickable p = (ILockpickable)target;
 					if ( p.Picker != null )

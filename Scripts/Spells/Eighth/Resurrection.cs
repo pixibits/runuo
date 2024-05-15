@@ -5,18 +5,17 @@ using Server.Gumps;
 
 namespace Server.Spells.Eighth
 {
-	public class ResurrectionSpell : MagerySpell
+	public class ResurrectionSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Resurrection", "An Corp",
-				245,
-				9062,
+				SpellCircle.Eighth,
+				230,
+				9022,
 				Reagent.Bloodmoss,
 				Reagent.Garlic,
 				Reagent.Ginseng
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Eighth; } }
 
 		public ResurrectionSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -58,10 +57,6 @@ namespace Server.Spells.Eighth
 				Caster.SendLocalizedMessage( 501042 ); // Target can not be resurrected at that location.
 				m.SendLocalizedMessage( 502391 ); // Thou can not be resurrected there!
 			}
-			else if ( m.Region != null && m.Region.IsPartOf( "Khaldun" ) )
-			{
-				Caster.SendLocalizedMessage( 1010395 ); // The veil of death in this area is too strong and resists thy efforts to restore life.
-			}
 			else if ( CheckBSequence( m, true ) )
 			{
 				SpellHelper.Turn( Caster, m );
@@ -69,8 +64,7 @@ namespace Server.Spells.Eighth
 				m.PlaySound( 0x214 );
 				m.FixedEffect( 0x376A, 10, 16 );
 
-				m.CloseGump( typeof( ResurrectGump ) );
-				m.SendGump( new ResurrectGump( m, Caster ) );
+				m.SendMenu( new ResurrectMenu( m, Caster ) );
 			}
 
 			FinishSequence();

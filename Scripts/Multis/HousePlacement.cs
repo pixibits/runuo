@@ -1,12 +1,7 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server;
-using Server.Guilds;
-using Server.Items;
-using Server.Misc;
 using Server.Regions;
-using Server.Spells;
 
 namespace Server.Multis
 {
@@ -18,27 +13,32 @@ namespace Server.Multis
 		BadStatic,
 		BadItem,
 		NoSurface,
-		BadRegionHidden,
-		BadRegionTemp,
-		InvalidCastleKeep,
+		BadRegionHidden
 	}
 
 	public class HousePlacement
 	{
-		private const int YardSize = 5;
+		private const int YardSize = 0;
 
 		// Any land tile which matches one of these ID numbers is considered a road and cannot be placed over.
 		private static int[] m_RoadIDs = new int[]
 			{
-				0x0071, 0x0078,
-				0x00E8, 0x00EB,
-				0x07AE, 0x07B1,
-				0x3FF4, 0x3FF4,
-				0x3FF8, 0x3FFB,
-				0x0442, 0x0479, // Sand stones
-				0x0501, 0x0510, // Sand stones
-				0x0009, 0x0015, // Furrows
-				0x0150, 0x015C  // Furrows
+				// these are RANGEDS
+				0x009, 0x015, // Furrows
+				0x071, 0x078, // was 0x008C
+				0x0E8, 0x0EB,
+				0x14C, 0x15C,  // Furrows 
+				0x161, 0x174,
+				0x1F0, 0x1F3,
+				0x26E, 0x279,
+				0x27E, 0x281,
+				0x324, 0x3AC,
+				0x442, 0x479, // Sand stones
+				0x501, 0x510, // Sand stones
+				0x547, 0x556,
+				0x597, 0x5A6,
+				0x637, 0x63A,
+				0x7AE, 0x7B1,
 			};
 
 		public static HousePlacementResult Check( Mobile from, int multiID, Point3D center, out ArrayList toMove )
@@ -54,13 +54,10 @@ namespace Server.Multis
 			if ( from.AccessLevel >= AccessLevel.GameMaster )
 				return HousePlacementResult.Valid; // Staff can place anywhere
 
-			if ( map == Map.Ilshenar || SpellHelper.IsFeluccaT2A( map, center ) )
-				return HousePlacementResult.BadRegion; // No houses in Ilshenar/T2A
+			if ( map == Map.Ilshenar )
+				return HousePlacementResult.BadRegion; // No houses in Ilshenar
 
-			if ( map == Map.Malas && ( multiID == 0x007C || multiID == 0x007E ) )
-				return HousePlacementResult.InvalidCastleKeep;
-
-			NoHousingRegion noHousingRegion = (NoHousingRegion) Region.Find( center, map ).GetRegion( typeof( NoHousingRegion ) );
+			NoHousingRegion noHousingRegion = Region.Find( center, map ) as NoHousingRegion;
 
 			if ( noHousingRegion != null )
 				return HousePlacementResult.BadRegion;
@@ -68,18 +65,14 @@ namespace Server.Multis
 			// This holds data describing the internal structure of the house
 			MultiComponentList mcl = MultiData.GetComponents( multiID );
 
-			if ( multiID >= 0x13EC && multiID < 0x1D00 )
-				HouseFoundation.AddStairsTo( ref mcl ); // this is a AOS house, add the stairs
-
 			// Location of the nortwest-most corner of the house
 			Point3D start = new Point3D( center.X + mcl.Min.X, center.Y + mcl.Min.Y, center.Z );
 
 			// These are storage lists. They hold items and mobiles found in the map for further processing
-			List<Item> items = new List<Item>();
-			List<Mobile> mobiles = new List<Mobile>();
+			ArrayList items = new ArrayList(), mobiles = new ArrayList();
 
 			// These are also storage lists. They hold location values indicating the yard and border locations.
-			List<Point2D> yard = new List<Point2D>(), borders = new List<Point2D>();
+			ArrayList yard = new ArrayList(), borders = new ArrayList();
 
 			/* RULES:
 			 * 
@@ -89,6 +82,8 @@ namespace Server.Multis
 			 * 4) The foundation must rest flatly on a surface. Any bumps around the foundation are not allowed.
 			 * 5) No foundation tile may reside over terrain which is viewed as a road.
 			 */
+
+			bool isTent = (multiID&0x3FFF) == 0x70 || (multiID&0x3FFF) == 0x72;
 
 			for ( int x = 0; x < mcl.Width; ++x )
 			{
@@ -107,18 +102,10 @@ namespace Server.Multis
 					Region reg = Region.Find( testPoint, map );
 
 					if ( !reg.AllowHousing( from, testPoint ) ) // Cannot place houses in dungeons, towns, treasure map areas etc
-					{
-						if ( reg.IsPartOf( typeof( TempNoHousingRegion ) ) )
-							return HousePlacementResult.BadRegionTemp;
-
-						if ( reg.IsPartOf( typeof( TreasureRegion ) ) )
-							return HousePlacementResult.BadRegionHidden;
-
 						return HousePlacementResult.BadRegion;
-					}
 
 					LandTile landTile = map.Tiles.GetLandTile( tileX, tileY );
-					int landID = landTile.ID & TileData.MaxLandValue;
+					int landID = landTile.ID & 0x3FFF;
 
 					StaticTile[] oldTiles = map.Tiles.GetStaticTiles( tileX, tileY, true );
 
@@ -128,7 +115,7 @@ namespace Server.Multis
 
 					for ( int i = 0; i < sector.Items.Count; ++i )
 					{
-						Item item = sector.Items[i];
+						Item item = (Item)sector.Items[i];
 
 						if ( item.Visible && item.X == tileX && item.Y == tileY )
 							items.Add( item );
@@ -138,7 +125,7 @@ namespace Server.Multis
 
 					for ( int i = 0; i < sector.Mobiles.Count; ++i )
 					{
-						Mobile m = sector.Mobiles[i];
+						Mobile m = (Mobile)sector.Mobiles[i];
 
 						if ( m.X == tileX && m.Y == tileY )
 							mobiles.Add( m );
@@ -154,10 +141,10 @@ namespace Server.Multis
 					{
 						StaticTile addTile = addTiles[i];
 
-						if ( addTile.ID == 0x1 ) // Nodraw
+						if ( addTile.ID == 0x4001 ) // Nodraw
 							continue;
 
-						TileFlag addTileFlags = TileData.ItemTable[addTile.ID & TileData.MaxItemValue].Flags;
+						TileFlag addTileFlags = TileData.ItemTable[addTile.ID & 0x3FFF].Flags;
 
 						bool isFoundation = ( addTile.Z == 0 && (addTileFlags & TileFlag.Wall) != 0 );
 						bool hasSurface = false;
@@ -167,6 +154,8 @@ namespace Server.Multis
 
 						int addTileZ = center.Z + addTile.Z;
 						int addTileTop = addTileZ + addTile.Height;
+						if ( isTent && addTile.Z > 6 )
+							addTileZ = center.Z + 6; // dont allow trees, but do allow other crap (rocks, brambles)
 
 						if ( (addTileFlags & TileFlag.Surface) != 0 )
 							addTileTop += 16;
@@ -174,36 +163,52 @@ namespace Server.Multis
 						if ( addTileTop > landStartZ && landAvgZ > addTileZ )
 							return HousePlacementResult.BadLand; // Broke rule #2
 
-						if ( isFoundation && ((TileData.LandTable[landTile.ID & TileData.MaxLandValue].Flags & TileFlag.Impassable) == 0) && landAvgZ == center.Z )
+						if ( isFoundation && ((TileData.LandTable[landTile.ID & 0x3FFF].Flags & TileFlag.Impassable) == 0) && landAvgZ == center.Z )
 							hasSurface = true;
 
 						for ( int j = 0; j < oldTiles.Length; ++j )
 						{
 							StaticTile oldTile = oldTiles[j];
-							ItemData id = TileData.ItemTable[oldTile.ID & TileData.MaxItemValue];
+							ItemData id = TileData.ItemTable[oldTile.ID & 0x3FFF];
+
+							if( ( oldTile.ID >= 2967 && oldTile.ID <= 2978 ) ||// sign posts
+								( oldTile.ID == 3391 ) || // brambles
+								( 
+									oldTile.ID == 0x1773 || oldTile.ID == 0x1774 || 
+									oldTile.ID == 0x1777 || oldTile.ID == 0x1778 || 
+									oldTile.ID == 0x177B || oldTile.ID == 0x177C 
+								) ||// rocks
+								( oldTile.ID >= 0xCAC && oldTile.ID <= 0xCC7 ) // misc grasses and weeds
+							  )
+							{
+								continue; 
+							}
 
 							if ( (id.Impassable || (id.Surface && (id.Flags & TileFlag.Background) == 0)) && addTileTop > oldTile.Z && (oldTile.Z + id.CalcHeight) > addTileZ )
 								return HousePlacementResult.BadStatic; // Broke rule #2
-							/*else if ( isFoundation && !hasSurface && (id.Flags & TileFlag.Surface) != 0 && (oldTile.Z + id.CalcHeight) == center.Z )
-								hasSurface = true;*/
+							else if ( isFoundation && (id.Flags & TileFlag.Impassable) == 0 && (id.Flags & TileFlag.Surface) != 0 && (oldTile.Z + id.CalcHeight) == center.Z )
+								hasSurface = true;
 						}
 
 						for ( int j = 0; j < items.Count; ++j )
 						{
-							Item item = items[j];
+							Item item = (Item)items[j];
 							ItemData id = item.ItemData;
+
+							if ( item.ItemID >= 2967 && item.ItemID <= 2978 )
+								continue; // sign posts
 
 							if ( addTileTop > item.Z && (item.Z + id.CalcHeight) > addTileZ )
 							{
 								if ( item.Movable )
 									toMove.Add( item );
-								else if ( (id.Impassable || (id.Surface && (id.Flags & TileFlag.Background) == 0)) )
+								else if ( (id.Impassable || (id.Surface && (id.Flags & TileFlag.Background) == 0)) && !(item is HouseSign) )
 									return HousePlacementResult.BadItem; // Broke rule #2
 							}
-							/*else if ( isFoundation && !hasSurface && (id.Flags & TileFlag.Surface) != 0 && (item.Z + id.CalcHeight) == center.Z )
+							else if ( isFoundation && (id.Flags & TileFlag.Impassable) == 0 && (id.Flags & TileFlag.Surface) != 0 && (item.Z + id.CalcHeight) == center.Z )
 							{
 								hasSurface = true;
-							}*/
+							}
 						}
 
 						if ( isFoundation && !hasSurface )
@@ -211,7 +216,7 @@ namespace Server.Multis
 
 						for ( int j = 0; j < mobiles.Count; ++j )
 						{
-							Mobile m = mobiles[j];
+							Mobile m = (Mobile)mobiles[j];
 
 							if ( addTileTop > m.Z && (m.Z + 16) > addTileZ )
 								toMove.Add( m );
@@ -258,7 +263,7 @@ namespace Server.Multis
 									{
 										StaticTile breakTile = breakTiles[i];
 
-										if ( breakTile.Height == 0 && breakTile.Z <= 8 && TileData.ItemTable[breakTile.ID & TileData.MaxItemValue].Surface )
+										if ( breakTile.Height == 0 && breakTile.Z <= 8 && TileData.ItemTable[breakTile.ID & 0x3FFF].Surface )
 											shouldBreak = true;
 									}
 
@@ -266,10 +271,10 @@ namespace Server.Multis
 										continue;
 								}
 
-								Point2D borderPoint = new Point2D( tileX + xOffset, tileY + yOffset );
+								//Point2D borderPoint = new Point2D( tileX + xOffset, tileY + yOffset );
 
-								if ( !borders.Contains( borderPoint ) )
-									borders.Add( borderPoint );
+								//if ( !borders.Contains( borderPoint ) )
+								//	borders.Add( borderPoint );
 							}
 						}
 					}
@@ -278,10 +283,10 @@ namespace Server.Multis
 
 			for ( int i = 0; i < borders.Count; ++i )
 			{
-				Point2D borderPoint = borders[i];
+				Point2D borderPoint = (Point2D)borders[i];
 
 				LandTile landTile = map.Tiles.GetLandTile( borderPoint.X, borderPoint.Y );
-				int landID = landTile.ID & TileData.MaxLandValue;
+				int landID = landTile.ID & 0x3FFF;
 
 				if ( (TileData.LandTable[landID].Flags & TileFlag.Impassable) != 0 )
 					return HousePlacementResult.BadLand;
@@ -292,23 +297,24 @@ namespace Server.Multis
 						return HousePlacementResult.BadLand; // Broke rule #5
 				}
 
-				StaticTile[] tiles = map.Tiles.GetStaticTiles( borderPoint.X, borderPoint.Y, true );
+				/***Taken out to allow "courtyards" (houses RIGHT next to each other)
+				Tile[] tiles = map.Tiles.GetStaticTiles( borderPoint.X, borderPoint.Y, true );
 
 				for ( int j = 0; j < tiles.Length; ++j )
 				{
-					StaticTile tile = tiles[j];
-					ItemData id = TileData.ItemTable[tile.ID & TileData.MaxItemValue];
+					Tile tile = tiles[j];
+					ItemData id = TileData.ItemTable[tile.ID & 0x3FFF];
 
 					if ( id.Impassable || (id.Surface && (id.Flags & TileFlag.Background) == 0 && (tile.Z + id.CalcHeight) > (center.Z + 2)) )
 						return HousePlacementResult.BadStatic; // Broke rule #1
 				}
 
 				Sector sector = map.GetSector( borderPoint.X, borderPoint.Y );
-				List<Item> sectorItems = sector.Items;
+				ArrayList sectorItems = sector.Items;
 
 				for ( int j = 0; j < sectorItems.Count; ++j )
 				{
-					Item item = sectorItems[j];
+					Item item = (Item)sectorItems[j];
 
 					if ( item.X != borderPoint.X || item.Y != borderPoint.Y || item.Movable )
 						continue;
@@ -317,39 +323,12 @@ namespace Server.Multis
 
 					if ( id.Impassable || (id.Surface && (id.Flags & TileFlag.Background) == 0 && (item.Z + id.CalcHeight) > (center.Z + 2)) )
 						return HousePlacementResult.BadItem; // Broke rule #1
-				}
-			}
-
-			List<Sector> _sectors = new List<Sector>();
-			List<BaseHouse> _houses = new List<BaseHouse>();
-
-			for ( int i = 0; i < yard.Count; i++ ) {
-				Sector sector = map.GetSector( yard[i] );
-				
-				if ( !_sectors.Contains( sector ) ) {
-					_sectors.Add( sector );
-					
-					if ( sector.Multis != null ) {
-						for ( int j = 0; j < sector.Multis.Count; j++ ) {
-							if ( sector.Multis[j] is BaseHouse ) {
-								BaseHouse _house = (BaseHouse)sector.Multis[j];
-								if ( !_houses.Contains( _house ) ) {
-									_houses.Add( _house );
-								}
-							}
-						}
-					}
-				}
+				}*/
 			}
 
 			for ( int i = 0; i < yard.Count; ++i )
 			{
-				foreach ( BaseHouse b in _houses ) {
-					if ( b.Contains( yard[i] ) )
-						return HousePlacementResult.BadStatic; // Broke rule #3
-				}
-
-				/*Point2D yardPoint = yard[i];
+				Point2D yardPoint = (Point2D)yard[i];
 
 				IPooledEnumerable eable = map.GetMultiTilesAt( yardPoint.X, yardPoint.Y );
 
@@ -357,7 +336,7 @@ namespace Server.Multis
 				{
 					for ( int j = 0; j < tile.Length; ++j )
 					{
-						if ( (TileData.ItemTable[tile[j].ID & TileData.MaxItemValue].Flags & (TileFlag.Impassable | TileFlag.Surface)) != 0 )
+						if ( (TileData.ItemTable[tile[j].ID & 0x3FFF].Flags & (TileFlag.Impassable | TileFlag.Surface)) != 0 )
 						{
 							eable.Free();
 							return HousePlacementResult.BadStatic; // Broke rule #3
@@ -365,10 +344,36 @@ namespace Server.Multis
 					}
 				}
 
-				eable.Free();*/
+				eable.Free();
 			}
 
 			return HousePlacementResult.Valid;
+
+			/*if ( blockedLand || blockedStatic || blockedItem )
+			{
+				from.SendLocalizedMessage( 1043287 ); // The house could not be created here.  Either something is blocking the house, or the house would not be on valid terrain.
+			}
+			else if ( !foundationHasSurface )
+			{
+				from.SendAsciiMessage( "The house could not be created here.  Part of the foundation would not be on any surface." );
+			}
+			else
+			{
+				BaseHouse house = GetHouse( from );
+				house.MoveToWorld( center, from.Map );
+				this.Delete();
+
+				for ( int i = 0; i < toMove.Count; ++i )
+				{
+					object o = toMove[i];
+
+					if ( o is Mobile )
+						((Mobile)o).Location = house.BanLocation;
+					else if ( o is Item )
+						((Item)o).Location = house.BanLocation;
+				}
+			}*/
 		}
 	}
 }
+

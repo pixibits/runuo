@@ -1,6 +1,5 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Gumps;
 using Server.Network;
@@ -62,19 +61,15 @@ namespace Server.Engines.VeteranRewards
 
 			RewardCategory[] categories = RewardSystem.Categories;
 
-			int page = 2;
-
 			for ( int i = 0; i < categories.Length; ++i )
 			{
-				if ( !RewardSystem.HasAccess( m_From, categories[i] ) )
-				{
-					page += 1;
+				if ( categories[i].Entries.Count == 0 )
 					continue;
-				}
 
-				AddButton( 100, 180 + (i * 40), 4005, 4005, 0, GumpButtonType.Page, page );
+				if ( !RewardSystem.HasAccess( m_From, (RewardEntry)categories[i].Entries[0] ) )
+					continue;
 
-				page += PagesPerCategory( categories[ i ] );
+				AddButton( 100, 180 + (i * 40), 4005, 4005, 0, GumpButtonType.Page, 2 + i );
 
 				if ( categories[i].NameString != null )
 					AddHtml( 135, 180 + (i * 40), 300, 20, categories[i].NameString, false, false );
@@ -82,24 +77,8 @@ namespace Server.Engines.VeteranRewards
 					AddHtmlLocalized( 135, 180 + (i * 40), 300, 20, categories[i].Name, false, false );
 			}
 
-			page = 2;
-
 			for ( int i = 0; i < categories.Length; ++i )
-				RenderCategory( categories[ i ], i, ref page );
-		}
-
-		private int PagesPerCategory( RewardCategory category )
-		{
-			List<RewardEntry> entries = category.Entries;
-			int j = 0, i = 0;
-
-			for ( j = 0; j < entries.Count; j++ )
-			{
-				if ( RewardSystem.HasAccess( m_From, entries[ j ] ) )
-					i++;
-			}
-			
-			return (int) Math.Ceiling( i / 24.0 );
+				RenderCategory( categories[i], i );
 		}
 
 		private int GetButtonID( int type, int index )
@@ -107,44 +86,26 @@ namespace Server.Engines.VeteranRewards
 			return 2 + (index * 20) + type;
 		}
 
-		private void RenderCategory( RewardCategory category, int index, ref int page )
+		private void RenderCategory( RewardCategory category, int index )
 		{
-			AddPage( page );
+			AddPage( 2 + index );
 
-			List<RewardEntry> entries = category.Entries;
+			ArrayList entries = category.Entries;
 
-			int i = 0;
-			
-			for ( int j = 0; j < entries.Count; ++j )
+			for ( int i = 0; i < entries.Count; ++i )
 			{
-				RewardEntry entry = entries[j];
+				RewardEntry entry = (RewardEntry)entries[i];
 
 				if ( !RewardSystem.HasAccess( m_From, entry ) )
-					continue;
+					break;
 
-				if ( i == 24 )
-				{
-					AddButton( 305, 415, 0xFA5, 0xFA7, 0, GumpButtonType.Page, ++page );
-					AddHtmlLocalized( 340, 415, 200, 20, 1011066, false, false ); // Next page
-
-					AddPage( page );
-
-					AddButton( 270, 415, 0xFAE, 0xFB0, 0, GumpButtonType.Page, page - 1 );
-					AddHtmlLocalized( 185, 415, 200, 20, 1011067, false, false ); // Previous page
-
-					i = 0;
-				}
-
-				AddButton( 55 + ((i / 12) * 250), 80 + ((i % 12) * 25), 5540, 5541, GetButtonID( index, j ), GumpButtonType.Reply, 0 );
+				AddButton( 55 + ((i / 12) * 250), 80 + ((i % 12) * 25), 5540, 5541, GetButtonID( index, i ), GumpButtonType.Reply, 0 );
 
 				if ( entry.NameString != null )
 					AddHtml( 80 + ((i / 12) * 250), 80 + ((i % 12) * 25), 250, 20, entry.NameString, false, false );
 				else
 					AddHtmlLocalized( 80 + ((i / 12) * 250), 80 + ((i % 12) * 25), 250, 20, entry.Name, false, false );
-				++i;
 			}
-
-			page += 1;
 		}
 
 		public RewardChoiceGump( Mobile from ) : base( 0, 0 )
@@ -185,7 +146,7 @@ namespace Server.Engines.VeteranRewards
 
 					if ( index >= 0 && index < category.Entries.Count )
 					{
-						RewardEntry entry = category.Entries[index];
+						RewardEntry entry = (RewardEntry)category.Entries[index];
 
 						if ( !RewardSystem.HasAccess( m_From, entry ) )
 							return;

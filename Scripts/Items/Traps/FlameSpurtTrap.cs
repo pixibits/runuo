@@ -82,7 +82,7 @@ namespace Server.Items
 
 			foreach ( Mobile mob in GetMobilesInRange( 3 ) )
 			{
-				if ( !mob.Player || !mob.Alive || mob.AccessLevel > AccessLevel.Player )
+				if ( !mob.Player || !mob.Alive )
 					continue;
 
 				if ( ( (this.Z + 8) >= mob.Z && (mob.Z + 16) > this.Z ) )
@@ -110,9 +110,6 @@ namespace Server.Items
 
 		public override bool OnMoveOver( Mobile m )
 		{
-			if ( m.AccessLevel > AccessLevel.Player )
-				return true;
-
 			if ( m.Player && m.Alive )
 			{
 				CheckTimer();
@@ -128,7 +125,7 @@ namespace Server.Items
 		{
 			base.OnMovement( m, oldLocation );
 
-			if ( m.Location == oldLocation || !m.Player || !m.Alive || m.AccessLevel > AccessLevel.Player )
+			if ( m.Location == oldLocation || !m.Player || !m.Alive )
 				return;
 
 			if ( CheckRange( m.Location, oldLocation, 1 ) )

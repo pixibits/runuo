@@ -7,6 +7,8 @@ namespace Server.Items
 	[FlipableAttribute( 0xF4D, 0xF4E )]
 	public class Bardiche : BasePoleArm
 	{
+		public override int DefHitSound{ get{ return 0x236; } }
+
 		public override WeaponAbility PrimaryAbility{ get{ return WeaponAbility.ParalyzingBlow; } }
 		public override WeaponAbility SecondaryAbility{ get{ return WeaponAbility.Dismount; } }
 
@@ -14,12 +16,13 @@ namespace Server.Items
 		public override int AosMinDamage{ get{ return 17; } }
 		public override int AosMaxDamage{ get{ return 18; } }
 		public override int AosSpeed{ get{ return 28; } }
-		public override float MlSpeed{ get{ return 3.75f; } }
 
 		public override int OldStrengthReq{ get{ return 40; } }
-		public override int OldMinDamage{ get{ return 5; } }
-		public override int OldMaxDamage{ get{ return 43; } }
-		public override int OldSpeed{ get{ return 26; } }
+		public override int OldSpeed{ get{ return 30; } }
+
+		public override int NumDice { get { return 4; } }
+		public override int NumSides { get { return 8; } }
+		public override int DiceBonus { get { return 3; } }
 
 		public override int InitMinHits{ get{ return 31; } }
 		public override int InitMaxHits{ get{ return 100; } }

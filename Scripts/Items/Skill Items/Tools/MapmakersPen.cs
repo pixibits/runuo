@@ -7,8 +7,6 @@ namespace Server.Items
 	[FlipableAttribute( 0x0FBF, 0x0FC0 )]
 	public class MapmakersPen : BaseTool
 	{
-		public override CraftSystem CraftSystem{ get{ return DefCartography.CraftSystem; } }
-
 		public override int LabelNumber{ get{ return 1044167; } } // mapmaker's pen
 
 		[Constructable]

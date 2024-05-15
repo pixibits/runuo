@@ -1,15 +1,13 @@
 using System;
 using System.IO;
-using System.Collections;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Network;
-using Server.Engines.Craft;
 
 namespace Server.Items
 {
 	[Flipable( 0x14EB, 0x14EC )]
-	public class MapItem : Item, ICraftable
+	public class MapItem : BaseItem
 	{
 		private Rectangle2D m_Bounds;
 
@@ -18,7 +16,7 @@ namespace Server.Items
 		private bool m_Protected;
 		private bool m_Editable;
 
-		private List<Point2D> m_Pins = new List<Point2D>();
+		private ArrayList m_Pins = new ArrayList();
 
 		private const int MaxUserPins = 50;
 
@@ -50,7 +48,7 @@ namespace Server.Items
 			set { m_Height = value; }
 		}
 
-		public List<Point2D> Pins
+		public ArrayList Pins
 		{
 			get { return m_Pins; }
 		}
@@ -106,7 +104,7 @@ namespace Server.Items
 			from.Send( new MapDisplay( this ) );
 
 			for ( int i = 0; i < m_Pins.Count; ++i )
-				from.Send( new MapAddPin( this, m_Pins[i] ) );
+				from.Send( new MapAddPin( this, (Point2D) m_Pins[i] ) );
 
 			from.Send( new MapSetEditable( this, ValidateEdit( from ) ) );
 		}
@@ -201,24 +199,18 @@ namespace Server.Items
 			return true;
 		}
 
-		public void ConvertToWorld( int x, int y, out int worldX, out int worldY )
-		{
-			worldX = ( ( m_Bounds.Width * x ) / Width ) + m_Bounds.X;
-			worldY = ( ( m_Bounds.Height * y ) / Height ) + m_Bounds.Y;
-		}
-
-		public void ConvertToMap( int x, int y, out int mapX, out int mapY )
-		{
-			mapX = ( ( x - m_Bounds.X ) * Width ) / m_Bounds.Width;
-			mapY = ( ( y - m_Bounds.Y ) * Width ) / m_Bounds.Height;
-		}
-
 		public virtual void AddWorldPin( int x, int y )
 		{
-			int mapX, mapY;
-			ConvertToMap( x, y, out mapX, out mapY );
+			x -= m_Bounds.X;
+			y -= m_Bounds.Y;
 
-			AddPin( mapX, mapY );
+			x *= Width;
+			y *= Height;
+
+			x /= m_Bounds.Width;
+			y /= m_Bounds.Height;
+
+			AddPin( x, y );
 		}
 
 		public virtual void AddPin( int x, int y )
@@ -266,7 +258,7 @@ namespace Server.Items
 			
 			writer.Write( m_Pins.Count );
 			for ( int i = 0; i < m_Pins.Count; ++i )
-				writer.Write( m_Pins[i] );
+				writer.Write( (Point2D) m_Pins[i] );
 		}
 
 		public override void Deserialize( GenericReader reader )
@@ -372,14 +364,5 @@ namespace Server.Items
 			{
 			}
 		}
-		#region ICraftable Members
-
-		public int OnCraft( int quality, bool makersMark, Mobile from, CraftSystem craftSystem, Type typeRes, BaseTool tool, CraftItem craftItem, int resHue )
-		{
-			CraftInit( from );
-			return 1;
-		}
-
-		#endregion
 	}
 }

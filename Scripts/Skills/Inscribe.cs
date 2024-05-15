@@ -1,5 +1,5 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Targeting;
 using Server.Items;
@@ -15,12 +15,9 @@ namespace Server.SkillHandlers
 
 		public static TimeSpan OnUse( Mobile m )
 		{
-			Target target = new InternalTargetSrc();
-			m.Target = target;
-			m.SendLocalizedMessage( 1046295 ); // Target the book you wish to copy.
-			target.BeginTimeout( m, TimeSpan.FromMinutes( 1.0 ) );
-
-			return TimeSpan.FromSeconds( 1.0 );
+			m.SendAsciiMessage( "What do you wish to inscribe?" );
+			m.Target = new InternalTargetSrc();
+			return TimeSpan.FromHours( 1.0 );
 		}
 
 		private static Hashtable m_UseTable = new Hashtable();
@@ -32,7 +29,7 @@ namespace Server.SkillHandlers
 
 		private static void CancelUser( BaseBook book )
 		{
-			m_UseTable.Remove( book );
+			m_UseTable[book] = null;
 		}
 
 		public static Mobile GetUser( BaseBook book )
@@ -46,7 +43,7 @@ namespace Server.SkillHandlers
 			{
 				foreach ( string line in page.Lines )
 				{
-					if ( line.Trim().Length != 0 )
+					if ( line.Trim() != "" )
 						return false;
 				}
 			}
@@ -81,6 +78,12 @@ namespace Server.SkillHandlers
 
 			protected override void OnTarget( Mobile from, object targeted )
 			{
+				if ( targeted is BlankScroll )
+				{
+					new Engines.Craft.InscribeSystem( (BlankScroll)targeted ).Begin( from, null );
+					return;
+				}
+
 				BaseBook book = targeted as BaseBook;
 				if ( book == null )
 					from.SendLocalizedMessage( 1046296 ); // That is not a book
@@ -90,10 +93,8 @@ namespace Server.SkillHandlers
 					from.SendLocalizedMessage( 501621 ); // Someone else is inscribing that item.
 				else
 				{
-					Target target = new InternalTargetDst( book );
-					from.Target = target;
+					from.Target = new InternalTargetDst( book );
 					from.SendLocalizedMessage( 501612 ); // Select a book to copy this to.
-					target.BeginTimeout( from, TimeSpan.FromMinutes( 1.0 ) );
 					Inscribe.SetUser( book, from );
 				}
 			}
@@ -102,6 +103,11 @@ namespace Server.SkillHandlers
 			{
 				if ( cancelType == TargetCancelType.Timeout )
 					from.SendLocalizedMessage( 501619 ); // You have waited too long to make your inscribe selection, your inscription attempt has timed out.
+			}
+
+			protected override void OnTargetFinish(Mobile from)
+			{
+				from.NextSkillTime = DateTime.Now + TimeSpan.FromSeconds( 10.0 );
 			}
 		}
 
@@ -133,7 +139,7 @@ namespace Server.SkillHandlers
 					from.SendLocalizedMessage( 501621 ); // Someone else is inscribing that item.
 				else
 				{
-					if ( from.CheckTargetSkill( SkillName.Inscribe, bookDst, 0, 50 ) )
+					if ( from.CheckTargetSkill( SkillName.Inscribe, bookDst, -10, 40 ) )
 					{
 						Inscribe.Copy( m_BookSrc, bookDst );
 
@@ -156,6 +162,7 @@ namespace Server.SkillHandlers
 			protected override void OnTargetFinish( Mobile from )
 			{
 				Inscribe.CancelUser( m_BookSrc );
+				from.NextSkillTime = DateTime.Now + TimeSpan.FromSeconds( 10.0 );
 			}
 		}
 	}

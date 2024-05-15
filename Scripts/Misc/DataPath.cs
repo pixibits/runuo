@@ -8,12 +8,12 @@ namespace Server.Misc
 	public class DataPath
 	{
 		/* If you have not installed Ultima Online,
-		 * or wish the server to use a separate set of datafiles,
+		 * or wish the server to use a seperate set of datafiles,
 		 * change the 'CustomPath' value, example:
 		 * 
 		 * private const string CustomPath = @"C:\Program Files\Ultima Online";
 		 */
-		private static string CustomPath = null;
+        private static string CustomPath = @"C:\Program Files (x86)\Ultima Online";
 
 		/* The following is a list of files which a required for proper execution:
 		 * 
@@ -33,62 +33,49 @@ namespace Server.Misc
 
 		public static void Configure()
 		{
-			string pathUO = GetPath( @"Origin Worlds Online\Ultima Online\1.0", "ExePath" );
-			string pathTD = GetPath( @"Origin Worlds Online\Ultima Online Third Dawn\1.0", "ExePath" ); //These refer to 2D & 3D, not the Third Dawn expansion
-			string pathKR = GetPath( @"Origin Worlds Online\Ultima Online\KR Legacy Beta", "ExePath" ); //After KR, This is the new registry key for the 2D client
-			string pathSA = GetPath( @"Electronic Arts\EA Games\Ultima Online Stygian Abyss Classic", "InstallDir" );
+			string pathReg = GetExePath( "Ultima Online" );
+			string pathTD = GetExePath( "Ultima Online Third Dawn" );
 
-			if ( CustomPath != null ) 
-				Core.DataDirectories.Add( CustomPath ); 
+			if ( CustomPath != null )
+				Core.DataDirectories.Add( CustomPath );
 
-			if ( pathUO != null ) 
-				Core.DataDirectories.Add( pathUO ); 
+			if ( pathReg != null )
+				Core.DataDirectories.Add( pathReg );
 
-			if ( pathTD != null ) 
+			if ( pathTD != null )
 				Core.DataDirectories.Add( pathTD );
 
-			if ( pathKR != null )
-				Core.DataDirectories.Add( pathKR );
-
-			if ( pathSA != null )
-				Core.DataDirectories.Add( pathSA );
-
-			if ( Core.DataDirectories.Count == 0 && !Core.Service )
+			if ( Core.DataDirectories.Count == 0 )
 			{
 				Console.WriteLine( "Enter the Ultima Online directory:" );
 				Console.Write( "> " );
 
 				Core.DataDirectories.Add( Console.ReadLine() );
 			}
+
+            Core.CliLoc = new Ultima.StringList("ENU");
 		}
 
-		private static string GetPath( string subName, string keyName )
+		private static string GetExePath( string subName )
 		{
 			try
 			{
-				string keyString;
-
-				if( Core.Is64Bit )
-					keyString = @"SOFTWARE\Wow6432Node\{0}";
-				else
-					keyString = @"SOFTWARE\{0}";
-
-				using( RegistryKey key = Registry.LocalMachine.OpenSubKey( String.Format( keyString, subName ) ) )
+				using ( RegistryKey key = Registry.LocalMachine.OpenSubKey( String.Format( @"SOFTWARE\Origin Worlds Online\{0}\1.0", subName ) ) )
 				{
-					if( key == null )
+					if ( key == null )
 						return null;
 
-					string v = key.GetValue( keyName ) as string;
+					string v = key.GetValue( "ExePath" ) as string;
 
-					if( String.IsNullOrEmpty( v ) )
+					if ( v == null || v.Length <= 0 )
 						return null;
 
-					if ( keyName == "InstallDir" )
-						v = v + @"\";
+					if ( !File.Exists( v ) )
+						return null;
 
 					v = Path.GetDirectoryName( v );
 
-					if ( String.IsNullOrEmpty( v ) )
+					if ( v == null )
 						return null;
 
 					return v;

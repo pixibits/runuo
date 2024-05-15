@@ -4,17 +4,16 @@ using Server.Network;
 
 namespace Server.Spells.Second
 {
-	public class CunningSpell : MagerySpell
+	public class CunningSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Cunning", "Uus Wis",
+				SpellCircle.Second,
 				212,
 				9061,
 				Reagent.MandrakeRoot,
 				Reagent.Nightshade
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Second; } }
 
 		public CunningSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -39,11 +38,6 @@ namespace Server.Spells.Second
 
 				m.FixedParticles( 0x375A, 10, 15, 5011, EffectLayer.Head );
 				m.PlaySound( 0x1EB );
-
-				int percentage = (int)(SpellHelper.GetOffsetScalar( Caster, m, false )*100);
-				TimeSpan length = SpellHelper.GetDuration( Caster, m );
-
-				BuffInfo.AddBuff( m, new BuffInfo( BuffIcon.Cunning, 1075843, length, m, percentage.ToString() ) );
 			}
 
 			FinishSequence();
@@ -53,7 +47,7 @@ namespace Server.Spells.Second
 		{
 			private CunningSpell m_Owner;
 
-			public InternalTarget( CunningSpell owner ) : base( Core.ML ? 10 : 12, false, TargetFlags.Beneficial )
+			public InternalTarget( CunningSpell owner ) : base( 12, false, TargetFlags.Beneficial )
 			{
 				m_Owner = owner;
 			} 

@@ -4,13 +4,12 @@ using Server.Network;
 
 namespace Server.Items
 {
-	public interface ICommodity /* added IsDeedable prop so expansion-based deedables can determine true/false */
+	public interface ICommodity
 	{
-		int DescriptionNumber{ get; }
-		bool IsDeedable { get; }
+		string Description{ get; }
 	}
 
-	public class CommodityDeed : Item
+	public class CommodityDeed : BaseItem
 	{
 		private Item m_Commodity;
 
@@ -27,7 +26,7 @@ namespace Server.Items
 		{
 			InvalidateProperties();
 
-			if ( m_Commodity == null && item is ICommodity && ((ICommodity)item).IsDeedable )
+			if ( m_Commodity == null && item is ICommodity )
 			{
 				m_Commodity = item;
 				m_Commodity.Internalize();
@@ -45,7 +44,7 @@ namespace Server.Items
 		{
 			base.Serialize( writer );
 
-			writer.Write( (int) 1 ); // version
+			writer.Write( (int) 0 ); // version
 
 			writer.Write( m_Commodity );
 		}
@@ -56,23 +55,14 @@ namespace Server.Items
 
 			int version = reader.ReadInt();
 
-			m_Commodity = reader.ReadItem();
-
 			switch ( version )
 			{
 				case 0:
 				{
-					if (m_Commodity != null)
-					{
-						Hue = 0x592;
-					}
+					m_Commodity = reader.ReadItem();
+
 					break;
 				}
-			}
-
-			if ( m_Commodity != null && !( m_Commodity is ICommodity ) ) //Apparently, there may be items out there with this.  Funky.
-			{
-				Timer.DelayCall( TimeSpan.Zero, this.Delete );
 			}
 		}
 
@@ -82,8 +72,6 @@ namespace Server.Items
 			Hue = 0x47;
 
 			m_Commodity = commodity;
-
-			LootType = LootType.Blessed;
 		}
 
 		[Constructable]
@@ -105,46 +93,28 @@ namespace Server.Items
 
 		public override int LabelNumber{ get{ return m_Commodity == null ? 1047016 : 1047017; } }
 
-		public override void GetProperties( ObjectPropertyList list )
+		public override void GetProperties(ObjectPropertyList list)
 		{
 			base.GetProperties( list );
 
-			if (m_Commodity != null && m_Commodity is ICommodity)
-			{
-				list.Add(1060658, "#{0}\t{1}", ((ICommodity)m_Commodity).DescriptionNumber, m_Commodity.Amount); // ~1_val~: ~2_val~
-			}
-			else
-				list.Add(1060748); // unfilled
+			if ( m_Commodity != null )
+				list.Add( 1060658, "#{0}\t{1}", m_Commodity.LabelNumber, m_Commodity.Amount ); // ~1_val~: ~2_val~
 		}
 
 		public override void OnSingleClick( Mobile from )
 		{
 			base.OnSingleClick( from );
 
-			if ( m_Commodity != null && m_Commodity is ICommodity )
-
-				from.Send(new MessageLocalizedAffix(
-										Serial,
-										ItemID,
-										MessageType.Label,
-										0x3B2,
-										3,
-										(m_Commodity.Name == null) ? ((ICommodity)m_Commodity).DescriptionNumber : 0,
-										(m_Commodity.Name != null) ? m_Commodity.Name : null,
-										AffixType.Append,
-										String.Format(": {0}", m_Commodity.Amount),
-										null)
-										);
+			if ( m_Commodity != null )
+				from.Send( new AsciiMessage( Serial, ItemID, MessageType.Label, 0x3B2, 3,"", ((ICommodity)m_Commodity).Description ) );
 		}
 
 		public override void OnDoubleClick( Mobile from )
 		{
 			int number;
 
-			BankBox box = from.FindBankNoCreate();
-			CommodityDeedBox cox = CommodityDeedBox.Find( this );
-			
-			// Veteran Rewards mods
+			BankBox box = from.BankBox;
+
 			if ( m_Commodity != null )
 			{
 				if ( box != null && IsChildOf( box ) )
@@ -156,46 +126,14 @@ namespace Server.Items
 					m_Commodity = null;
 					Delete();
 				}
-				else if ( cox != null )
-				{
-					if ( cox.IsSecure )
-					{
-						number = 1047031; // The commodity has been redeemed.
-
-						cox.DropItem( m_Commodity );
-
-						m_Commodity = null;
-						Delete();
-					}
-					else
-						number = 1080525; // The commodity deed box must be secured before you can use it.
-				}
 				else
 				{
-					if( Core.ML )
-					{
-						number = 1080526; // That must be in your bank box or commodity deed box to use it.
-					}
-					else
-					{
-						number = 1047024; // To claim the resources ....
-					}
+					number = 1047024; // To claim the resources ....
 				}
 			}
-			else if ( cox != null && !cox.IsSecure )
+			else if ( box == null || !IsChildOf( box ) )
 			{
-				number = 1080525; // The commodity deed box must be secured before you can use it.
-			}
-			else if ( ( box == null || !IsChildOf( box ) ) && cox == null )
-			{
-				if( Core.ML )
-				{
-					number = 1080526; // That must be in your bank box or commodity deed box to use it.
-				}
-				else
-				{
-					number = 1047026; // That must be in your bank box to use it.
-				}
+				number = 1047026; // That must be in your bank box to use it.
 			}
 			else
 			{
@@ -229,16 +167,12 @@ namespace Server.Items
 				}
 				else if ( targeted is Item )
 				{
-					BankBox box = from.FindBankNoCreate();
-					CommodityDeedBox cox = CommodityDeedBox.Find( m_Deed );
+					BankBox box = from.BankBox;
 
-					// Veteran Rewards mods
-					if ( box != null && m_Deed.IsChildOf( box ) && ((Item)targeted).IsChildOf( box ) || 
-						cox != null && cox.IsSecure && ((Item)targeted).IsChildOf( cox ) )
+					if ( box != null && m_Deed.IsChildOf( box ) && ((Item)targeted).IsChildOf( box ) )
 					{
 						if ( m_Deed.SetCommodity( (Item) targeted ) )
 						{
-							m_Deed.Hue = 0x592;
 							number = 1047030; // The commodity deed has been filled.
 						}
 						else
@@ -248,14 +182,7 @@ namespace Server.Items
 					}
 					else
 					{
-						if( Core.ML )
-						{
-							number = 1080526; // That must be in your bank box or commodity deed box to use it.
-						}
-						else
-						{
-							number = 1047026; // That must be in your bank box to use it.
-						}
+						number = 1047026; // That must be in your bank box to use it.
 					}
 				}
 				else

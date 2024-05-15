@@ -1,5 +1,5 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
 
 namespace Server.Engines.Mahjong
@@ -380,7 +380,7 @@ namespace Server.Engines.Mahjong
 				to.Send( new MahjongPlayersInfo( m_Game, to ) );
 			}
 
-			SendLocalizedMessage( 1062774, string.Format( "{0}\t{1}\t{2}", from.Name, to.Name, amount ) ); // ~1_giver~ gives ~2_receiver~ ~3_number~ points.
+			SendLocalizedMessage( 1062774, string.Format( "{0}\t{1}\t{2}", from.Name, to.Name, amount ) ); // ~1_giver~ gives ~2_reciever~ ~3_number~ points.
 		}
 
 		public void OpenSeat( int index )
@@ -448,14 +448,11 @@ namespace Server.Engines.Mahjong
 				return;
 
 			MahjongGeneralInfo generalInfo = new MahjongGeneralInfo( m_Game );
-
-			generalInfo.Acquire();
-
+			generalInfo.SetStatic();
 			foreach ( Mobile mobile in mobiles )
 			{
 				mobile.Send( generalInfo );
 			}
-
 			generalInfo.Release();
 		}
 
@@ -483,14 +480,11 @@ namespace Server.Engines.Mahjong
 				return;
 
 			MahjongRelieve relieve = new MahjongRelieve( m_Game );
-
-			relieve.Acquire();
-
+			relieve.SetStatic();
 			foreach ( Mobile mobile in mobiles )
 			{
 				mobile.Send( relieve );
 			}
-
 			relieve.Release();
 		}
 

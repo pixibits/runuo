@@ -2,8 +2,9 @@ using System;
 using Server;
 using Server.Targeting;
 using Server.Gumps;
+using Server.Scripts.Gumps;
 
-namespace Server.Commands
+namespace Server.Scripts.Commands
 {
 	public class Skills
 	{
@@ -14,7 +15,7 @@ namespace Server.Commands
 
 		public static void Register()
 		{
-			CommandSystem.Register( "Skills", AccessLevel.Counselor, new CommandEventHandler( Skills_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "Skills", AccessLevel.Counselor, new Server.Commands.CommandEventHandler( Skills_OnCommand ) );
 		}
 
 		private class SkillsTarget : Target
@@ -32,7 +33,7 @@ namespace Server.Commands
 
 		[Usage( "Skills" )]
 		[Description( "Opens a menu where you can view or edit skills of a targeted mobile." )]
-		private static void Skills_OnCommand( CommandEventArgs e )
+		private static void Skills_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			e.Mobile.Target = new SkillsTarget();
 		}

@@ -4,7 +4,7 @@ using Server.Targeting;
 
 namespace Server.Items
 {
-	public class Flax : Item
+	public class Flax : BaseItem
 	{
 		[Constructable]
 		public Flax() : this( 1 )
@@ -36,6 +36,12 @@ namespace Server.Items
 
 			int version = reader.ReadInt();
 		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Flax(), amount );
+		}
+
 		public override void OnDoubleClick( Mobile from )
 		{
 			if ( IsChildOf( from.Backpack ) )

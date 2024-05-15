@@ -1,4 +1,6 @@
 using System;
+using Server.Regions;
+using System.Collections; using System.Collections.Generic;
 
 namespace Server.Engines.Harvest
 {
@@ -9,20 +11,43 @@ namespace Server.Engines.Harvest
 		private DateTime m_NextRespawn;
 		private HarvestVein m_Vein, m_DefaultVein;
 
-		HarvestDefinition m_Definition;
-
-		public HarvestDefinition Definition
+		public int GetCurrentFor( Mobile m )
 		{
-			get { return m_Definition; }
-		}
+            /*
+			HarvestBank fishing = Fishing.System.Definition.GetBank( m.Map, m.X, m.Y );
+			CheckRespawn();
 
-		public int Current
-		{
-			get
+			int current = m_Current;
+
+			if ( this == fishing )
+				return current;
+
+			if ( m.AccessLevel == AccessLevel.Administrator )
+				m.SendMessage( "Current: {0}", current );
+
+			ArrayList list = m.Map.GetSector( m ).Regions;
+			for(int i=0;i<list.Count;i++)
 			{
-				CheckRespawn();
-				return m_Current;
+				Region r = list[i] as Region;
+				if ( r is HouseRegion )
+				{
+					current -= m_Maximum / 2;
+					if ( current < 0 )
+						current = 0;
+					break;
+				}
+				else if ( ( r is GuardedRegion && !((GuardedRegion)r).IsDisabled() ) || r is DuelArenaRegion )
+				{
+					current = 0;
+					break;
+				}
 			}
+
+			if ( m.AccessLevel == AccessLevel.Administrator )
+				m.SendMessage( "After check: {0}", current );
+            
+			return current;*/
+            return m_Current;
 		}
 
 		public HarvestVein Vein
@@ -53,32 +78,20 @@ namespace Server.Engines.Harvest
 				return;
 
 			m_Current = m_Maximum;
-
-			if ( m_Definition.RandomizeVeins )
-			{
-				m_DefaultVein = m_Definition.GetVeinFrom( Utility.RandomDouble() );
-			}
-
 			m_Vein = m_DefaultVein;
 		}
 
-		public void Consume( int amount, Mobile from )
+		public void Consume( HarvestDefinition def, int amount )
 		{
 			CheckRespawn();
 
 			if ( m_Current == m_Maximum )
 			{
-				double min = m_Definition.MinRespawn.TotalMinutes;
-				double max = m_Definition.MaxRespawn.TotalMinutes;
-				double rnd = Utility.RandomDouble();
+				int min = (int)def.MinRespawn.TotalSeconds;
+				int max = (int)def.MaxRespawn.TotalSeconds;
 
 				m_Current = m_Maximum - amount;
-
-				double minutes = min + (rnd * (max - min));
-				if ( m_Definition.RaceBonus && from.Race == Race.Elf )	//def.RaceBonus = Core.ML
-					minutes *= .75;	//25% off the time.  
-
-				m_NextRespawn = DateTime.Now + TimeSpan.FromMinutes( minutes );
+				m_NextRespawn = DateTime.Now + TimeSpan.FromSeconds( Utility.RandomMinMax( min, max ) );
 			}
 			else
 			{
@@ -95,8 +108,6 @@ namespace Server.Engines.Harvest
 			m_Current = m_Maximum;
 			m_DefaultVein = defaultVein;
 			m_Vein = m_DefaultVein;
-
-			m_Definition = def;
 		}
 	}
 }

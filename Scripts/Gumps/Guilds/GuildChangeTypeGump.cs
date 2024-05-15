@@ -1,9 +1,8 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Guilds;
 using Server.Network;
-using Server.Factions;
 
 namespace Server.Gumps
 {
@@ -47,13 +46,7 @@ namespace Server.Gumps
 			if ( GuildGump.BadLeader( m_Mobile, m_Guild ) )
 				return;
 
-			PlayerState pl = PlayerState.Find( m_Mobile );
-
-			if ( pl != null )
-			{
-				m_Mobile.SendLocalizedMessage( 1010405 ); // You cannot change guild types while in a Faction!
-			}
-			else if ( m_Guild.TypeLastChange.AddDays( 7 ) > DateTime.Now )
+			if ( m_Guild.TypeLastChange.AddDays( 7 ) > DateTime.Now )
 			{
 				m_Mobile.SendLocalizedMessage( 1005292 ); // Your guild type will be changed in one week.
 			}
@@ -72,8 +65,34 @@ namespace Server.Gumps
 				if ( m_Guild.Type == newType )
 					return;
 
+				if ( newType != GuildType.Regular )
+				{
+					ArrayList remove = new ArrayList();
+
+					for(int i=0;i<m_Guild.Members.Count;i++)
+					{
+						if ( ((Mobile)m_Guild.Members[i]).Karma < (int)Noto.LordLady )
+							remove.Add( m_Guild.Members[i] );
+					}
+
+					if ( remove.Count >= m_Guild.Members.Count || remove.Contains( m_Guild.Leader ) )
+					{
+						m_Mobile.SendAsciiMessage( "The effects on your guild's membership would be far too great." );
+						return;
+					}
+					else
+					{
+						for(int i=0;i<remove.Count;i++)
+						{
+							Mobile m = (Mobile)remove[i];
+							m_Guild.RemoveMember( m );
+							m.SendAsciiMessage( "You are not famous enough to stay in your guild." );
+						}
+					}
+				}
+
 				m_Guild.Type = newType;
-				m_Guild.GuildMessage( 1018022, true, newType.ToString() ); // Guild Message: Your guild type has changed:
+				m_Guild.GuildMessage( 1018022, newType.ToString() ); // Guild Message: Your guild type has changed:
 			}
 
 			GuildGump.EnsureClosed( m_Mobile );

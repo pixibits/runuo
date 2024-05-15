@@ -84,7 +84,7 @@ namespace Server.Items
 
 		public override void OnTrigger( Mobile from )
 		{
-			if ( !from.Alive || from.AccessLevel > AccessLevel.Player )
+			if ( !from.Alive )
 				return;
 
 			Effects.PlaySound( Location, Map, 0x359 );
@@ -104,7 +104,7 @@ namespace Server.Items
 		{
 			foreach ( Mobile mob in GetMobilesInRange( 1 ) )
 			{
-				if ( mob.Alive && !mob.IsDeadBondedPet && mob.AccessLevel == AccessLevel.Player )
+				if ( mob.Alive && !mob.IsDeadBondedPet )
 					Spells.SpellHelper.Damage( TimeSpan.FromTicks( 1 ), mob, mob, Utility.Dice( 3, 15, 0 ) );
 			}
 		}

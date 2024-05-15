@@ -1,12 +1,11 @@
 using System;
-using System.Collections.Generic;
-using Server.Commands;
+using System.Collections; using System.Collections.Generic;
 using Server.Network;
 using Server.Targeting;
 
 namespace Server.Items
 {
-	public abstract class BaseDoor : Item, ILockable, ITelekinesisable
+	public abstract class BaseDoor : BaseItem, ILockable, ITelekinesisable
 	{
 		private bool m_Open, m_Locked;
 		private int m_OpenedID, m_OpenedSound;
@@ -26,26 +25,20 @@ namespace Server.Items
 				new Point3D( 1, 1, 0 ),
 				new Point3D( 1,-1, 0 ),
 				new Point3D( 0, 0, 0 ),
-				new Point3D( 0,-1, 0 ),
-
-				new Point3D( 0, 0, 0 ),
-				new Point3D( 0, 0, 0 ),
-				new Point3D( 0, 0, 0 ),
-				new Point3D( 0, 0, 0 )
+				new Point3D( 0,-1, 0 )
 			};
 
 		// Called by RunUO
 		public static void Initialize()
 		{
 			EventSink.OpenDoorMacroUsed += new OpenDoorMacroEventHandler( EventSink_OpenDoorMacroUsed );
-
-			CommandSystem.Register( "Link", AccessLevel.GameMaster, new CommandEventHandler( Link_OnCommand ) );
-			CommandSystem.Register( "ChainLink", AccessLevel.GameMaster, new CommandEventHandler( ChainLink_OnCommand ) );
+			Commands.CommandSystem.Register( "Link", AccessLevel.GameMaster, new Server.Commands.CommandEventHandler( Link_OnCommand ) );
+			Commands.CommandSystem.Register( "ChainLink", AccessLevel.GameMaster, new Server.Commands.CommandEventHandler( ChainLink_OnCommand ) );
 		}
 
 		[Usage( "Link" )]
 		[Description( "Links two targeted doors together." )]
-		private static void Link_OnCommand( CommandEventArgs e )
+		private static void Link_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			e.Mobile.BeginTarget( -1, false, TargetFlags.None, new TargetCallback( Link_OnFirstTarget ) );
 			e.Mobile.SendMessage( "Target the first door to link." );
@@ -87,9 +80,9 @@ namespace Server.Items
 
 		[Usage( "ChainLink" )]
 		[Description( "Chain-links two or more targeted doors together." )]
-		private static void ChainLink_OnCommand( CommandEventArgs e )
+		private static void ChainLink_OnCommand( Server.Commands.CommandEventArgs e )
 		{
-			e.Mobile.BeginTarget( -1, false, TargetFlags.None, new TargetStateCallback( ChainLink_OnTarget ), new List<BaseDoor>() );
+			e.Mobile.BeginTarget( -1, false, TargetFlags.None, new TargetStateCallback( ChainLink_OnTarget ), new ArrayList() );
 			e.Mobile.SendMessage( "Target the first of a sequence of doors to link." );
 		}
 
@@ -104,14 +97,14 @@ namespace Server.Items
 			}
 			else
 			{
-				List<BaseDoor> list = (List<BaseDoor>)state;
+				ArrayList list = (ArrayList)state;
 
 				if ( list.Count > 0 && list[0] == door )
 				{
 					if ( list.Count >= 2 )
 					{
 						for ( int i = 0; i < list.Count; ++i )
-							list[i].Link = list[(i + 1) % list.Count];
+							((BaseDoor)list[i]).Link = ((BaseDoor)list[(i + 1) % list.Count]);
 
 						from.SendMessage( "The chain of doors have been linked." );
 					}
@@ -281,14 +274,14 @@ namespace Server.Items
 			int z = p.Z;
 
 			Sector sector = map.GetSector( x, y );
-			List<Item> items  = sector.Items;
-			List<Mobile> mobs = sector.Mobiles;
+			List<Item> items = sector.Items;
+            List<Mobile> mobs = sector.Mobiles;
 
 			for ( int i = 0; i < items.Count; ++i )
 			{
-				Item item = items[i];
+				Item item = (Item)items[i];
 
-				if ( !(item is BaseMulti) && item.ItemID <= TileData.MaxItemValue && item.AtWorldPoint( x, y ) && !(item is BaseDoor) )
+				if ( item.ItemID < 0x4000 && item.AtWorldPoint( x, y ) && !(item is BaseDoor) )
 				{
 					ItemData id = item.ItemData;
 					bool surface = id.Surface;
@@ -301,7 +294,7 @@ namespace Server.Items
 
 			for ( int i = 0; i < mobs.Count; ++i )
 			{
-				Mobile m = mobs[i];
+				Mobile m = (Mobile)mobs[i];
 
 				if ( m.Location.X == x && m.Location.Y == y )
 				{
@@ -402,9 +395,9 @@ namespace Server.Items
 
 		public virtual bool UseChainedFunctionality{ get{ return false; } }
 
-		public List<BaseDoor> GetChain()
+		public ArrayList GetChain()
 		{
-			List<BaseDoor> list = new List<BaseDoor>();
+			ArrayList list = new ArrayList();
 			BaseDoor c = this;
 
 			do
@@ -421,12 +414,12 @@ namespace Server.Items
 			if ( !UseChainedFunctionality )
 				return CanClose();
 
-			List<BaseDoor> list = GetChain();
+			ArrayList list = GetChain();
 
 			bool freeToClose = true;
 
 			for ( int i = 0; freeToClose && i < list.Count; ++i )
-				freeToClose = list[i].CanClose();
+				freeToClose = ((BaseDoor)list[i]).CanClose();
 
 			return freeToClose;
 		}
@@ -458,22 +451,39 @@ namespace Server.Items
 					from.LocalOverheadMessage( MessageType.Regular, 0x3B2, 502502 ); // That is locked, but you open it with your godly powers.
 					//from.Send( new MessageLocalized( Serial, ItemID, MessageType.Regular, 0x3B2, 3, 502502, "", "" ) ); // That is locked, but you open it with your godly powers.
 				}
-				else if ( Key.ContainsKey( from.Backpack, this.KeyValue ) )
-				{
-					from.LocalOverheadMessage( MessageType.Regular, 0x3B2, 501282 ); // You quickly unlock, open, and relock the door
-				}
-				else if ( IsInside( from ) )
-				{
-					from.LocalOverheadMessage( MessageType.Regular, 0x3B2, 501280 ); // That is locked, but is usable from the inside.
-				}
 				else
 				{
-					if ( Hue == 0x44E && Map == Map.Malas ) // doom door into healer room in doom
-						this.SendLocalizedMessageTo( from, 1060014 ); // Only the dead may pass.
-					else
-						from.LocalOverheadMessage( MessageType.Regular, 0x3B2, 502503 ); // That is locked.
+					Container pack = from.Backpack;
+					bool found = false;
+						
+					if ( pack != null )
+					{
+						Item[] items = pack.FindItemsByType( typeof( Key ) );
 
-					return;
+						foreach( Key k in items )
+						{
+							if ( k.KeyValue == this.KeyValue )
+							{
+								found = true;
+								from.LocalOverheadMessage( MessageType.Regular, 0x3B2, 501282 ); // You quickly unlock, open, and relock the door
+								break;
+							}
+						}
+					}
+
+					if ( !found && IsInside( from ) )
+					{
+						from.LocalOverheadMessage( MessageType.Regular, 0x3B2, 501280 ); // That is locked, but is usable from the inside.
+					}
+					else if ( !found )
+					{
+						if ( Hue == 0x44E && Map == Map.Malas ) // doom door into healer room in doom
+							this.SendLocalizedMessageTo( from, 1060014 ); // Only the dead may pass.
+						else
+							from.LocalOverheadMessage( MessageType.Regular, 0x3B2, 502503 ); // That is locked.
+
+						return;
+					}
 				}
 			}
 
@@ -489,10 +499,10 @@ namespace Server.Items
 			{
 				bool open = !m_Open;
 
-				List<BaseDoor> list = GetChain();
+				ArrayList list = GetChain();
 
 				for ( int i = 0; i < list.Count; ++i )
-					list[i].Open = open;
+					((BaseDoor)list[i]).Open = open;
 			}
 			else
 			{

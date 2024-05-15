@@ -5,9 +5,8 @@ namespace Server.Items
 {
 	public class GreaterHealPotion : BaseHealPotion
 	{
-		public override int MinHeal { get { return (Core.AOS ? 20 : 9); } }
-		public override int MaxHeal { get { return (Core.AOS ? 25 : 30); } }
-		public override double Delay{ get{ return 10.0; } }
+		public override int MinHeal { get { return 10; } }
+		public override int MaxHeal { get { return 30; } }
 
 		[Constructable]
 		public GreaterHealPotion() : base( PotionEffect.HealGreater )

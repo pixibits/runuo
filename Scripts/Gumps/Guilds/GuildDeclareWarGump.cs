@@ -1,17 +1,14 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Guilds;
 using Server.Network;
-using Server.Factions;
-using System.Collections.Generic;
 
 namespace Server.Gumps
 {
 	public class GuildDeclareWarGump : GuildListGump
 	{
-		public GuildDeclareWarGump( Mobile from, Guild guild, List<Guild> list )
-			: base( from, guild, true, list )
+		public GuildDeclareWarGump( Mobile from, Guild guild, ArrayList list ) : base( from, guild, true, list )
 		{
 		}
 
@@ -41,7 +38,7 @@ namespace Server.Gumps
 
 					if ( index >= 0 && index < m_List.Count )
 					{
-						Guild g = m_List[index];
+						Guild g = (Guild)m_List[index];
 
 						if ( g != null )
 						{
@@ -53,22 +50,18 @@ namespace Server.Gumps
 							{
 								m_Mobile.SendLocalizedMessage( 501183 ); // You are already at war with that guild.
 							}
-							else if( Faction.Find( m_Guild.Leader ) != null )
-							{
-								m_Mobile.SendLocalizedMessage( 1005288 ); // You cannot declare war while you are in a faction
-							}
 							else
 							{
 								if ( !m_Guild.WarDeclarations.Contains( g ) )
 								{
 									m_Guild.WarDeclarations.Add( g );
-									m_Guild.GuildMessage( 1018019, true, "{0} ({1})", g.Name, g.Abbreviation ); // Guild Message: Your guild has sent an invitation for war:
+									m_Guild.GuildMessage( 1018019, "{0} ({1})", g.Name, g.Abbreviation ); // Guild Message: Your guild has sent an invitation for war:
 								}
 
 								if ( !g.WarInvitations.Contains( m_Guild ) )
 								{
 									g.WarInvitations.Add( m_Guild );
-									g.GuildMessage( 1018021, true, "{0} ({1})", m_Guild.Name, m_Guild.Abbreviation ); // Guild Message: Your guild has received an invitation to war:
+									g.GuildMessage( 1018021, "{0} ({1})", m_Guild.Name, m_Guild.Abbreviation ); // Guild Message: Your guild has received an invitation to war:
 								}
 							}
 

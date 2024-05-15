@@ -4,19 +4,18 @@ using Server.Network;
 
 namespace Server.Spells.Seventh
 {
-	public class ManaVampireSpell : MagerySpell
+	public class ManaVampireSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Mana Vampire", "Ort Sanct",
-				221,
+				SpellCircle.Seventh,
+				245,
 				9032,
 				Reagent.BlackPearl,
 				Reagent.Bloodmoss,
 				Reagent.MandrakeRoot,
 				Reagent.SpidersSilk
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Seventh; } }
 
 		public ManaVampireSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -37,68 +36,38 @@ namespace Server.Spells.Seventh
 			{
 				SpellHelper.Turn( Caster, m );
 
-				SpellHelper.CheckReflect( (int)this.Circle, Caster, ref m );
-
-				if ( m.Spell != null )
-					m.Spell.OnCasterHurt();
+				SpellHelper.CheckReflect( (int)this.Circle, Caster, ref m ) ;
 
 				m.Paralyzed = false;
 
 				int toDrain = 0;
-
-				if ( Core.AOS )
-				{
-					toDrain = (int)(GetDamageSkill( Caster ) - GetResistSkill( m ));
-
-					if ( !m.Player )
-						toDrain /= 2;
-
-					if ( toDrain < 0 )
-						toDrain = 0;
-					else if ( toDrain > m.Mana )
-						toDrain = m.Mana;
-				}
+				if ( CheckResistedEasy( m ) )
+					m.SendLocalizedMessage( 501783 ); // You feel yourself resisting magical energy.
 				else
-				{
-					if ( CheckResisted( m ) )
-						m.SendLocalizedMessage( 501783 ); // You feel yourself resisting magical energy.
-					else
-						toDrain = m.Mana;
-				}
+					toDrain = m.Mana;
 
-				if ( toDrain > (Caster.ManaMax - Caster.Mana) )
+				if ( toDrain + Caster.Mana > Caster.ManaMax )
 					toDrain = Caster.ManaMax - Caster.Mana;
 
+				if ( m.Spell is Spells.Spell && toDrain > 0 )
+					((Spells.Spell)m.Spell).OnCasterHurt( toDrain );
+
 				m.Mana -= toDrain;
-				Caster.Mana += toDrain;
+				if ( m != Caster )
+					Caster.Mana += toDrain;
 
-				if ( Core.AOS )
-				{
-					m.FixedParticles( 0x374A, 1, 15, 5054, 23, 7, EffectLayer.Head );
-					m.PlaySound( 0x1F9 );
-
-					Caster.FixedParticles( 0x0000, 10, 5, 2054, EffectLayer.Head );
-				}
-				else
-				{
-					m.FixedParticles( 0x374A, 10, 15, 5054, EffectLayer.Head );
-					m.PlaySound( 0x1F9 );
-				}
+				m.FixedParticles( 0x374A, 10, 15, 5054, EffectLayer.Head );
+				m.PlaySound( 0x1F9 );
 			}
 
 			FinishSequence();
-		}
-
-		public override double GetResistPercent( Mobile target )
-		{
-			return 98.0;
 		}
 
 		private class InternalTarget : Target
 		{
 			private ManaVampireSpell m_Owner;
 
-			public InternalTarget( ManaVampireSpell owner ) : base( Core.ML ? 10 : 12, false, TargetFlags.Harmful )
+			public InternalTarget( ManaVampireSpell owner ) : base( 12, false, TargetFlags.Harmful )
 			{
 				m_Owner = owner;
 			}

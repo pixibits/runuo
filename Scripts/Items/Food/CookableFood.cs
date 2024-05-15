@@ -5,7 +5,7 @@ using Server.Network;
 
 namespace Server.Items
 {
-	public abstract class CookableFood : Item
+	public abstract class CookableFood : BaseItem
 	{
 		private int m_CookingLevel;
 
@@ -60,24 +60,22 @@ namespace Server.Items
 			}
 		}
 
-#if false
 		public override void OnDoubleClick( Mobile from )
 		{
-			if ( !Movable )
+			if ( !Movable || !IsChildOf( from ) )
 				return;
 
 			from.Target = new InternalTarget( this );
 		}
-#endif
 
 		public static bool IsHeatSource( object targeted )
 		{
 			int itemID;
 
 			if ( targeted is Item )
-				itemID = ((Item)targeted).ItemID;
+				itemID = ((Item)targeted).ItemID & 0x3FFF;
 			else if ( targeted is StaticTarget )
-				itemID = ((StaticTarget)targeted).ItemID;
+				itemID = ((StaticTarget)targeted).ItemID & 0x3FFF;
 			else
 				return false;
 
@@ -95,6 +93,8 @@ namespace Server.Items
 				return true; // Heating stand (right)
 			else if ( itemID >= 0x398C && itemID <= 0x399F )
 				return true; // Fire field
+			else if ( targeted is Item && Engines.Craft.BlacksmithSystem.IsForge( (Item)targeted ) )
+				return true;
 
 			return false;
 		}
@@ -191,6 +191,11 @@ namespace Server.Items
 		{
 		}
 
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new RawRibs(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -223,6 +228,7 @@ namespace Server.Items
 		[Constructable]
 		public RawLambLeg( int amount ) : base( 0x1609, 10 )
 		{
+			Weight = 1.0;
 			Stackable = true;
 			Amount = amount;
 		}
@@ -231,11 +237,16 @@ namespace Server.Items
 		{
 		}
 
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new RawLambLeg(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
 
-			writer.Write( (int) 1 ); // version
+			writer.Write( (int) 0 ); // version
 		}
 
 		public override void Deserialize( GenericReader reader )
@@ -243,9 +254,6 @@ namespace Server.Items
 			base.Deserialize( reader );
 
 			int version = reader.ReadInt();
-
-			if ( version == 0 && Weight == 1 )
-				Weight = -1;
 		}
 
 		public override Food Cook()
@@ -266,6 +274,11 @@ namespace Server.Items
 
 		public RawChickenLeg( Serial serial ) : base( serial )
 		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new RawChickenLeg(), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )
@@ -307,6 +320,11 @@ namespace Server.Items
 
 		public RawBird( Serial serial ) : base( serial )
 		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new RawBird(), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )
@@ -581,7 +599,6 @@ namespace Server.Items
 		}
 	}
 
-#if false
 	// ********** UncookedPizza **********
 	public class UncookedPizza : CookableFood
 	{
@@ -620,7 +637,6 @@ namespace Server.Items
 			return new Pizza();
 		}
 	}
-#endif
 
 	// ********** UnbakedQuiche **********
 	public class UnbakedQuiche : CookableFood
@@ -661,66 +677,12 @@ namespace Server.Items
 	public class Eggs : CookableFood
 	{
 		[Constructable]
-		public Eggs() : this( 1 )
+		public Eggs() : base( 0x9B5, 15 )
 		{
-		}
-
-		[Constructable]
-		public Eggs( int amount ) : base( 0x9B5, 15 )
-		{
-			Weight = 1.0;
-			Stackable = true;
-			Amount = amount;
+			Weight = 0.5;
 		}
 
 		public Eggs( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 1 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-
-			if ( version < 1 )
-			{
-				Stackable = true;
-
-				if ( Weight == 0.5 )
-					Weight = 1.0;
-			}
-		}
-
-		public override Food Cook()
-		{
-			return new FriedEggs();
-		}
-	}
-
-	// ********** BrightlyColoredEggs **********
-	public class BrightlyColoredEggs : CookableFood
-	{
-		public override string DefaultName
-		{
-			get { return "brightly colored eggs"; }
-		}
-
-		[Constructable]
-		public BrightlyColoredEggs() : base( 0x9B5, 15 )
-		{
-			Weight = 0.5;
-			Hue = 3 + (Utility.Random( 20 ) * 5);
-		}
-
-		public BrightlyColoredEggs( Serial serial ) : base( serial )
 		{
 		}
 
@@ -850,11 +812,6 @@ namespace Server.Items
 
 	public class RawFishSteak : CookableFood
 	{
-		public override double DefaultWeight
-		{
-			get { return 0.1; }
-		}
-
 		[Constructable]
 		public RawFishSteak() : this( 1 )
 		{
@@ -864,11 +821,17 @@ namespace Server.Items
 		public RawFishSteak( int amount ) : base( 0x097A, 10 )
 		{
 			Stackable = true;
+			Weight = 0.1;
 			Amount = amount;
 		}
 
 		public RawFishSteak( Serial serial ) : base( serial )
 		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new RawFishSteak(), amount );
 		}
 
 		public override Food Cook()

@@ -4,19 +4,21 @@ using Server.Engines.Craft;
 
 namespace Server.Items
 {
-	[Flipable( 0x1EB8, 0x1EB9 )]
 	public class TinkerTools : BaseTool
 	{
-		public override CraftSystem CraftSystem{ get{ return DefTinkering.CraftSystem; } }
+		public override CraftSystem GetCraftInstance()
+		{
+			return new TinkeringSystem();
+		}
 
 		[Constructable]
-		public TinkerTools() : base( 0x1EB8 )
+		public TinkerTools() : base( 0x1EBC )
 		{
 			Weight = 1.0;
 		}
 
 		[Constructable]
-		public TinkerTools( int uses ) : base( uses, 0x1EB8 )
+		public TinkerTools( int uses ) : base( uses, 0x1EBC )
 		{
 			Weight = 1.0;
 		}

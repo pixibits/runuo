@@ -1,23 +1,20 @@
 using System;
-using Server.Mobiles;
 using Server.Targeting;
 using Server.Network;
-using Server.Spells.Chivalry;
 
 namespace Server.Spells.Fifth
 {
-	public class ParalyzeSpell : MagerySpell
+	public class ParalyzeSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Paralyze", "An Ex Por",
+				SpellCircle.Fifth,
 				218,
 				9012,
 				Reagent.Garlic,
 				Reagent.MandrakeRoot,
 				Reagent.SpidersSilk
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Fifth; } }
 
 		public ParalyzeSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -34,7 +31,7 @@ namespace Server.Spells.Fifth
 			{
 				Caster.SendLocalizedMessage( 500237 ); // Target can not be seen.
 			}
-			else if ( Core.AOS && (m.Frozen || m.Paralyzed || (m.Spell != null && m.Spell.IsCasting && !(m.Spell is PaladinSpell))) )
+			else if ( Core.AOS && (m.Frozen || m.Paralyzed || (m.Spell != null && m.Spell.IsCasting)) )
 			{
 				Caster.SendLocalizedMessage( 1061923 ); // The target is already frozen.
 			}
@@ -44,41 +41,16 @@ namespace Server.Spells.Fifth
 
 				SpellHelper.CheckReflect( (int)this.Circle, Caster, ref m );
 
-				double duration;
-				
-				if ( Core.AOS )
-				{
-					int secs = (int)((GetDamageSkill( Caster ) / 10) - (GetResistSkill( m ) / 10));
-					
-					if( !Core.SE )
-						secs += 2;
+				double duration = (Caster.Skills[SkillName.Magery].Value / 10 + 1) * 2 + 5;
 
-					if ( !m.Player )
-						secs *= 3;
-
-					if ( secs < 0 )
-						secs = 0;
-
-					duration = secs;
-				}
-				else
-				{
-					// Algorithm: ((20% of magery) + 7) seconds [- 50% if resisted]
-
-					duration = 7.0 + (Caster.Skills[SkillName.Magery].Value * 0.2);
-
-					if ( CheckResisted( m ) )
-						duration *= 0.75;
-				}
-
-				if ( m is PlagueBeastLord )
-				{
-					( (PlagueBeastLord) m ).OnParalyzed( Caster );
-					duration = 120;
-				}
+				if ( CheckResistedEasy( m ) )
+					duration /= 10.0;
 
 				m.Paralyze( TimeSpan.FromSeconds( duration ) );
-	
+
+				if ( m.Spell != null && m.Spell is Spell )
+					((Spell)m.Spell).Disturb( DisturbType.Hurt );
+
 				m.PlaySound( 0x204 );
 				m.FixedEffect( 0x376A, 6, 1 );
 			}
@@ -90,7 +62,7 @@ namespace Server.Spells.Fifth
 		{
 			private ParalyzeSpell m_Owner;
 
-			public InternalTarget( ParalyzeSpell owner ) : base( Core.ML ? 10 : 12, false, TargetFlags.Harmful )
+			public InternalTarget( ParalyzeSpell owner ) : base( 12, false, TargetFlags.Harmful )
 			{
 				m_Owner = owner;
 			}

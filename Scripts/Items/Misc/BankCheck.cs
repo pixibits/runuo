@@ -1,16 +1,10 @@
 using System;
-using System.Globalization;
-using Server;
 using Server.Items;
-using Server.Mobiles;
 using Server.Network;
-using Server.Engines.Quests;
-using Necro = Server.Engines.Quests.Necro;
-using Haven = Server.Engines.Quests.Haven;
 
 namespace Server.Items
 {
-	public class BankCheck : Item
+	public class BankCheck : BaseItem
 	{
 		private int m_Worth;
 
@@ -61,22 +55,15 @@ namespace Server.Items
 			m_Worth = worth;
 		}
 
-		public override bool DisplayLootType{ get{ return Core.AOS; } }
+		public override bool DisplayLootType{ get{ return false; } }
 
 		public override int LabelNumber{ get{ return 1041361; } } // A bank check
 
-		public override void GetProperties( ObjectPropertyList list )
+		public override void GetProperties(ObjectPropertyList list)
 		{
 			base.GetProperties( list );
 
-			string worth;
-
-			if ( Core.ML )
-				worth = m_Worth.ToString( "N0", CultureInfo.GetCultureInfo( "en-US" ) );
-			else
-				worth = m_Worth.ToString();
-
-			list.Add( 1060738, worth ); // value: ~1_val~
+			list.Add( 1060738, m_Worth.ToString() ); // value: ~1_val~
 		}
 
 		public override void OnSingleClick( Mobile from )
@@ -86,7 +73,7 @@ namespace Server.Items
 
 		public override void OnDoubleClick( Mobile from )
 		{
-			BankBox box = from.FindBankNoCreate();
+			BankBox box = from.BankBox;
 
 			if ( box != null && IsChildOf( box ) )
 			{
@@ -136,29 +123,6 @@ namespace Server.Items
 
 				// Gold was deposited in your account:
 				from.SendLocalizedMessage( 1042672, true, " " + deposited.ToString() );
-
-				PlayerMobile pm = from as PlayerMobile;
-
-				if ( pm != null )
-				{
-					QuestSystem qs = pm.Quest;
-
-					if ( qs is Necro.DarkTidesQuest )
-					{
-						QuestObjective obj = qs.FindObjective( typeof( Necro.CashBankCheckObjective ) );
-
-						if ( obj != null && !obj.Completed )
-							obj.Complete();
-					}
-
-					if ( qs is Haven.UzeraanTurmoilQuest )
-					{
-						QuestObjective obj = qs.FindObjective( typeof( Haven.CashBankCheckObjective ) );
-
-						if ( obj != null && !obj.Completed )
-							obj.Complete();
-					}
-				}
 			}
 			else
 			{

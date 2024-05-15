@@ -6,7 +6,7 @@ namespace Server.Items
 	{
 		None,
 		Silver,
-		OrcSlaying,
+		/*OrcSlaying,
 		TrollSlaughter,
 		OgreTrashing,
 		Repond,
@@ -30,7 +30,6 @@ namespace Server.Items
 		EarthShatter,
 		BloodDrinking,
 		SummerWind,
-		ElementalBan, // Bane?
-		Fey
+		ElementalBan*/ // Bane?
 	}
 }

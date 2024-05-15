@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 
 namespace Server.Engines.Harvest
 {
@@ -22,9 +22,6 @@ namespace Server.Engines.Harvest
 		private object m_NoResourcesMessage, m_OutOfRangeMessage, m_TimedOutOfRangeMessage, m_DoubleHarvestMessage, m_FailMessage, m_PackFullMessage, m_ToolBrokeMessage;
 		private HarvestResource[] m_Resources;
 		private HarvestVein[] m_Veins;
-		private BonusHarvestResource[] m_BonusResources;
-		private bool m_RaceBonus;
-		private bool m_RandomizeVeins;
 
 		public int BankWidth{ get{ return m_BankWidth; } set{ m_BankWidth = value; } }
 		public int BankHeight{ get{ return m_BankHeight; } set{ m_BankHeight = value; } }
@@ -53,20 +50,17 @@ namespace Server.Engines.Harvest
 		public object ToolBrokeMessage{ get{ return m_ToolBrokeMessage; } set{ m_ToolBrokeMessage = value; } }
 		public HarvestResource[] Resources{ get{ return m_Resources; } set{ m_Resources = value; } }
 		public HarvestVein[] Veins{ get{ return m_Veins; } set{ m_Veins = value; } }
-		public BonusHarvestResource[] BonusResources{ get { return m_BonusResources; } set { m_BonusResources = value; } }
-		public bool RaceBonus { get { return m_RaceBonus; } set { m_RaceBonus = value; } }
-		public bool RandomizeVeins { get { return m_RandomizeVeins; } set { m_RandomizeVeins = value; } }
 
-		private Dictionary<Map, Dictionary<Point2D, HarvestBank>> m_BanksByMap;
+		private Hashtable m_BanksByMap;
 
-		public Dictionary<Map, Dictionary<Point2D, HarvestBank>> Banks{ get{ return m_BanksByMap; } set{ m_BanksByMap = value; } }
+		public Hashtable Banks{ get{ return m_BanksByMap; } set{ m_BanksByMap = value; } }
 
-		public void SendMessageTo( Mobile from, object message )
+		public void SendAsciiMessageTo( Mobile from, object message )
 		{
 			if ( message is int )
 				from.SendLocalizedMessage( (int)message );
 			else if ( message is string )
-				from.SendMessage( (string)message );
+				from.SendAsciiMessage( (string)message );
 		}
 
 		public HarvestBank GetBank( Map map, int x, int y )
@@ -77,15 +71,13 @@ namespace Server.Engines.Harvest
 			x /= m_BankWidth;
 			y /= m_BankHeight;
 
-			Dictionary<Point2D, HarvestBank> banks = null;
-			m_BanksByMap.TryGetValue( map, out banks );
+			Hashtable banks = (Hashtable)m_BanksByMap[map];
 
 			if ( banks == null )
-				m_BanksByMap[map] = banks = new Dictionary<Point2D, HarvestBank>();
+				m_BanksByMap[map] = banks = new Hashtable();
 
 			Point2D key = new Point2D( x, y );
-			HarvestBank bank = null;
-			banks.TryGetValue( key, out bank );
+			HarvestBank bank = (HarvestBank)banks[key];
 
 			if ( bank == null )
 				banks[key] = bank = new HarvestBank( this, GetVeinAt( map, x, y ) );
@@ -98,27 +90,8 @@ namespace Server.Engines.Harvest
 			if ( m_Veins.Length == 1 )
 				return m_Veins[0];
 
-			double randomValue;
-
-			if ( m_RandomizeVeins )
-			{
-				randomValue = Utility.RandomDouble();
-			}
-			else
-			{
-				Random random = new Random( ( x * 17 ) + ( y * 11 ) + ( map.MapID * 3 ) );
-				randomValue = random.NextDouble();
-			}
-
-			return GetVeinFrom( randomValue );
-		}
-
-		public HarvestVein GetVeinFrom( double randomValue )
-		{
-			if ( m_Veins.Length == 1 )
-				return m_Veins[0];
-
-			randomValue *= 100;
+			Random random = new Random( (x*17)+(y*11)+(map.MapID * 3) );
+			double randomValue = random.NextDouble() * 100;
 
 			for ( int i = 0; i < m_Veins.Length; ++i )
 			{
@@ -131,27 +104,9 @@ namespace Server.Engines.Harvest
 			return null;
 		}
 
-		public BonusHarvestResource GetBonusResource()
-		{
-			if ( m_BonusResources == null )
-				return null;
-
-			double randomValue = Utility.RandomDouble() * 100;
-
-			for ( int i = 0; i < m_BonusResources.Length; ++i )
-			{
-				if ( randomValue <= m_BonusResources[i].Chance )
-					return m_BonusResources[i];
-
-				randomValue -= m_BonusResources[i].Chance;
-			}
-
-			return null;
-		}
-
 		public HarvestDefinition()
 		{
-			m_BanksByMap = new Dictionary<Map, Dictionary<Point2D, HarvestBank>>();
+			m_BanksByMap = new Hashtable();
 		}
 
 		public bool Validate( int tileID )

@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server;
 
 namespace Server.Engines.Chat
@@ -8,7 +8,7 @@ namespace Server.Engines.Chat
 	{
 		private string m_Name;
 		private string m_Password;
-		private List<ChatUser> m_Users, m_Banned, m_Moderators, m_Voices;
+		private ArrayList m_Users, m_Banned, m_Moderators, m_Voices;
 		private bool m_VoiceRestricted;
 		private bool m_AlwaysAvailable;
 
@@ -16,10 +16,10 @@ namespace Server.Engines.Chat
 		{
 			m_Name = name;
 
-			m_Users = new List<ChatUser>();
-			m_Banned = new List<ChatUser>();
-			m_Moderators = new List<ChatUser>();
-			m_Voices = new List<ChatUser>();
+			m_Users = new ArrayList();
+			m_Banned = new ArrayList();
+			m_Moderators = new ArrayList();
+			m_Voices = new ArrayList();
 		}
 
 		public Channel( string name, string password ) : this( name )
@@ -56,7 +56,7 @@ namespace Server.Engines.Chat
 				{
 					newValue = value.Trim();
 
-					if ( String.IsNullOrEmpty( newValue ) )
+					if ( newValue == null || newValue == String.Empty )
 						newValue = null;
 				}
 
@@ -98,7 +98,7 @@ namespace Server.Engines.Chat
 		{
 			if ( user != null && !IsModerator( user ) )
 			{
-				user.SendMessage( 29 ); // You must have operator status to do this.
+				user.SendAsciiMessage( 29 ); // You must have operator status to do this.
 				return false;
 			}
 
@@ -109,7 +109,7 @@ namespace Server.Engines.Chat
 		{
 			if ( from != null && target != null && from.Mobile.AccessLevel < target.Mobile.AccessLevel )
 			{
-				from.Mobile.SendMessage( "Your access level is too low to do this." );
+				from.Mobile.SendAsciiMessage( "Your access level is too low to do this." );
 				return false;
 			}
 
@@ -125,17 +125,17 @@ namespace Server.Engines.Chat
 		{
 			if ( Contains( user ) )
 			{
-				user.SendMessage( 46, m_Name ); // You are already in the conference '%1'.
+				user.SendAsciiMessage( 46, m_Name ); // You are already in the conference '%1'.
 				return true;
 			}
 			else if ( IsBanned( user ) )
 			{
-				user.SendMessage( 64 ); // You have been banned from this conference.
+				user.SendAsciiMessage( 64 ); // You have been banned from this conference.
 				return false;
 			}
 			else if ( !ValidatePassword( password ) )
 			{
-				user.SendMessage( 34 ); // That is not the correct password.
+				user.SendAsciiMessage( 34 ); // That is not the correct password.
 				return false;
 			} 
 			else
@@ -222,19 +222,19 @@ namespace Server.Engines.Chat
 				if ( moderator != null )
 				{
 					if ( wasBanned )
-						user.SendMessage( 63, moderator.Username ); // %1, a conference moderator, has banned you from the conference.
+						user.SendAsciiMessage( 63, moderator.Username ); // %1, a conference moderator, has banned you from the conference.
 					else
-						user.SendMessage( 45, moderator.Username ); // %1, a conference moderator, has kicked you out of the conference.
+						user.SendAsciiMessage( 45, moderator.Username ); // %1, a conference moderator, has kicked you out of the conference.
 				}
 
 				RemoveUser( user );
 				ChatSystem.SendCommandTo( user.Mobile, ChatCommand.AddUserToChannel, user.GetColorCharacter() + user.Username );
 
-				SendMessage( 44, user.Username ) ; // %1 has been kicked out of the conference.
+				SendAsciiMessage( 44, user.Username ) ; // %1 has been kicked out of the conference.
 			}
 
 			if ( wasBanned && moderator != null )
-				moderator.SendMessage( 62, user.Username ); // You are banning %1 from this conference.
+				moderator.SendAsciiMessage( 62, user.Username ); // You are banning %1 from this conference.
 		}
 
 		public bool VoiceRestricted
@@ -248,9 +248,9 @@ namespace Server.Engines.Chat
 				m_VoiceRestricted = value;
 
 				if ( value )
-					SendMessage( 56 ); // From now on, only moderators will have speaking privileges in this conference by default.
+					SendAsciiMessage( 56 ); // From now on, only moderators will have speaking privileges in this conference by default.
 				else
-					SendMessage( 55 ); // From now on, everyone in the conference will have speaking privileges by default.
+					SendAsciiMessage( 55 ); // From now on, everyone in the conference will have speaking privileges by default.
 			}
 		}
 
@@ -281,9 +281,9 @@ namespace Server.Engines.Chat
 				m_Voices.Add( user );
 
 				if ( moderator != null )
-					user.SendMessage( 54, moderator.Username ); // %1, a conference moderator, has granted you speaking priviledges in this conference.
+					user.SendAsciiMessage( 54, moderator.Username ); // %1, a conference moderator, has granted you speaking priviledges in this conference.
 
-				SendMessage( 52, user, user.Username ); // %1 now has speaking privileges in this conference.
+				SendAsciiMessage( 52, user, user.Username ); // %1 now has speaking privileges in this conference.
 				SendCommand( ChatCommand.AddUserToChannel, user, user.GetColorCharacter() + user.Username );
 			} 
 		}
@@ -298,9 +298,9 @@ namespace Server.Engines.Chat
 				m_Voices.Remove( user );
 
 				if ( moderator != null )
-					user.SendMessage( 53, moderator.Username ); // %1, a conference moderator, has removed your speaking priviledges for this conference.
+					user.SendAsciiMessage( 53, moderator.Username ); // %1, a conference moderator, has removed your speaking priviledges for this conference.
 
-				SendMessage( 51, user, user.Username ); // %1 no longer has speaking privileges in this conference.
+				SendAsciiMessage( 51, user, user.Username ); // %1 no longer has speaking privileges in this conference.
 				SendCommand( ChatCommand.AddUserToChannel, user, user.GetColorCharacter() + user.Username );
 			}
 		}
@@ -324,9 +324,9 @@ namespace Server.Engines.Chat
 			m_Moderators.Add( user );
 
 			if ( moderator != null )
-				user.SendMessage( 50, moderator.Username ); // %1 has made you a conference moderator.
+				user.SendAsciiMessage( 50, moderator.Username ); // %1 has made you a conference moderator.
 
-			SendMessage( 48, user, user.Username ); // %1 is now a conference moderator.
+			SendAsciiMessage( 48, user, user.Username ); // %1 is now a conference moderator.
 			SendCommand( ChatCommand.AddUserToChannel, user.GetColorCharacter() + user.Username );
 		}
 
@@ -345,49 +345,49 @@ namespace Server.Engines.Chat
 				m_Moderators.Remove( user );
 
 				if ( moderator != null )
-					user.SendMessage( 49, moderator.Username ); // %1 has removed you from the list of conference moderators.
+					user.SendAsciiMessage( 49, moderator.Username ); // %1 has removed you from the list of conference moderators.
 
-				SendMessage( 47, user, user.Username ); // %1 is no longer a conference moderator.
+				SendAsciiMessage( 47, user, user.Username ); // %1 is no longer a conference moderator.
 				SendCommand( ChatCommand.AddUserToChannel, user.GetColorCharacter() + user.Username );
 			}
 		}
 
-		public void SendMessage( int number )
+		public void SendAsciiMessage( int number )
 		{
-			SendMessage( number, null, null, null );
+			SendAsciiMessage( number, null, null, null );
 		}
 
-		public void SendMessage( int number, string param1 )
+		public void SendAsciiMessage( int number, string param1 )
 		{
-			SendMessage( number, null, param1, null );
+			SendAsciiMessage( number, null, param1, null );
 		}
 
-		public void SendMessage( int number, string param1, string param2 )
+		public void SendAsciiMessage( int number, string param1, string param2 )
 		{
-			SendMessage( number, null, param1, param2 );
+			SendAsciiMessage( number, null, param1, param2 );
 		}
 
-		public void SendMessage( int number, ChatUser initiator )
+		public void SendAsciiMessage( int number, ChatUser initiator )
 		{
-			SendMessage( number, initiator, null, null );
+			SendAsciiMessage( number, initiator, null, null );
 		}
 
-		public void SendMessage( int number, ChatUser initiator, string param1 )
+		public void SendAsciiMessage( int number, ChatUser initiator, string param1 )
 		{
-			SendMessage( number, initiator, param1, null );
+			SendAsciiMessage( number, initiator, param1, null );
 		}
 
-		public void SendMessage( int number, ChatUser initiator, string param1, string param2 )
+		public void SendAsciiMessage( int number, ChatUser initiator, string param1, string param2 )
 		{
 			for ( int i = 0; i < m_Users.Count; ++i )
 			{
-				ChatUser user = m_Users[i];
+				ChatUser user = (ChatUser)m_Users[i];
 
 				if ( user == initiator )
 					continue;
 
 				if ( user.CheckOnline() )
-					user.SendMessage( number, param1, param2 );
+					user.SendAsciiMessage( number, param1, param2 );
 				else if ( !Contains( user ) )
 					--i;
 			}
@@ -397,13 +397,13 @@ namespace Server.Engines.Chat
 		{
 			for ( int i = 0; i < m_Users.Count; ++i )
 			{
-				ChatUser user = m_Users[i];
+				ChatUser user = (ChatUser)m_Users[i];
 
 				if ( user.IsIgnored( from ) )
 					continue;
 
 				if ( user.CheckOnline() )
-					user.SendMessage( number, from.Mobile, param1, param2 );
+					user.SendAsciiMessage( number, from.Mobile, param1, param2 );
 				else if ( !Contains( user ) )
 					--i;
 			}
@@ -438,7 +438,7 @@ namespace Server.Engines.Chat
 		{
 			for ( int i = 0; i < m_Users.Count; ++i )
 			{
-				ChatUser user = m_Users[i];
+				ChatUser user = (ChatUser)m_Users[i];
 
 				if ( user == initiator )
 					continue;
@@ -454,15 +454,15 @@ namespace Server.Engines.Chat
 		{
 			for ( int i = 0; i < m_Users.Count; ++i )
 			{
-				ChatUser user = m_Users[i];
+				ChatUser user = (ChatUser)m_Users[i];
 
 				ChatSystem.SendCommandTo( to.Mobile, ChatCommand.AddUserToChannel, user.GetColorCharacter() + user.Username );
 			} 
 		}
 
-		private static List<Channel> m_Channels = new List<Channel>();
+		private static ArrayList m_Channels = new ArrayList();
 
-		public static List<Channel> Channels
+		public static ArrayList Channels
 		{
 			get
 			{
@@ -474,7 +474,7 @@ namespace Server.Engines.Chat
 		{
 			for ( int i = 0; i < m_Channels.Count; ++i )
 			{
-				Channel channel = m_Channels[i];
+				Channel channel = (Channel)m_Channels[i];
 
 				if ( !channel.IsBanned( user ) )
 					ChatSystem.SendCommandTo( user.Mobile, ChatCommand.AddChannel, channel.Name, "0" );
@@ -526,7 +526,7 @@ namespace Server.Engines.Chat
 		{
 			for ( int i = 0; i < m_Channels.Count; ++i )
 			{
-				Channel channel = m_Channels[i];
+				Channel channel = (Channel)m_Channels[i];
 
 				if ( channel.m_Name == name )
 					return channel;

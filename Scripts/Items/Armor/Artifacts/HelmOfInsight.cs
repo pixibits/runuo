@@ -8,8 +8,6 @@ namespace Server.Items
 		public override int LabelNumber{ get{ return 1061096; } } // Helm of Insight
 		public override int ArtifactRarity{ get{ return 11; } }
 
-		public override int BaseEnergyResistance{ get{ return 17; } }
-
 		public override int InitMinHits{ get{ return 255; } }
 		public override int InitMaxHits{ get{ return 255; } }
 
@@ -21,6 +19,7 @@ namespace Server.Items
 			Attributes.BonusMana = 15;
 			Attributes.RegenMana = 2;
 			Attributes.LowerManaCost = 8;
+			EnergyBonus = 15;
 		}
 
 		public HelmOfInsight( Serial serial ) : base( serial )
@@ -31,7 +30,7 @@ namespace Server.Items
 		{
 			base.Serialize( writer );
 
-			writer.Write( (int) 1 );
+			writer.Write( (int) 0 );
 		}
 		
 		public override void Deserialize(GenericReader reader)
@@ -39,9 +38,6 @@ namespace Server.Items
 			base.Deserialize( reader );
 
 			int version = reader.ReadInt();
-
-			if ( version < 1 )
-				EnergyBonus = 0;
 		}
 	}
 }

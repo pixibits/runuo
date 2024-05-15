@@ -6,8 +6,14 @@ namespace Server.Items
 {
 	public class Ginseng : BaseReagent, ICommodity
 	{
-		int ICommodity.DescriptionNumber { get { return LabelNumber; } }
-		bool ICommodity.IsDeedable { get { return true; } }
+
+		string ICommodity.Description
+		{
+			get
+			{
+				return String.Format( "{0} ginseng", Amount );
+			}
+		}
 
 		[Constructable]
 		public Ginseng() : this( 1 )
@@ -23,7 +29,10 @@ namespace Server.Items
 		{
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Ginseng( amount ), amount );
+		}
 
 		public override void Serialize( GenericWriter writer )
 		{

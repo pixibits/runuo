@@ -18,12 +18,9 @@ namespace Server.Items
 		public override int AosStrReq{ get{ return 55; } }
 		public override int OldStrReq{ get{ return 40; } }
 
-		public override int OldDexBonus{ get{ return -4; } }
-
 		public override int ArmorBase{ get{ return 46; } }
 
 		public override ArmorMaterialType MaterialType{ get{ return ArmorMaterialType.Bone; } }
-		public override CraftResource DefaultResource{ get{ return CraftResource.RegularLeather; } }
 
 		public override int LabelNumber{ get{ return 1041375; } } // daemon bone leggings
 
@@ -32,8 +29,6 @@ namespace Server.Items
 		{
 			Weight = 3.0;
 			Hue = 0x648;
-
-			ArmorAttributes.SelfRepair = 1;
 		}
 
 		public DaemonLegs( Serial serial ) : base( serial )
@@ -50,9 +45,6 @@ namespace Server.Items
 		{
 			base.Deserialize( reader );
 			int version = reader.ReadInt();
-
-			if ( ArmorAttributes.SelfRepair == 0 )
-				ArmorAttributes.SelfRepair = 1;
 		}
 	}
 }

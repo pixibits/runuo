@@ -1,5 +1,4 @@
 using System;
-using Server.Engines.Craft;
 
 namespace Server.Items
 {
@@ -17,11 +16,8 @@ namespace Server.Items
 		Diamond
 	}
 
-	public abstract class BaseJewel : Item, ICraftable
+	/*public abstract class BaseJewel : BaseItem
 	{
-		private int m_MaxHitPoints;
-		private int m_HitPoints;
-
 		private AosAttributes m_AosAttributes;
 		private AosElementAttributes m_AosResistances;
 		private AosSkillBonuses m_AosSkillBonuses;
@@ -29,36 +25,6 @@ namespace Server.Items
 		private GemType m_GemType;
 
 		[CommandProperty( AccessLevel.GameMaster )]
-		public int MaxHitPoints
-		{
-			get{ return m_MaxHitPoints; }
-			set{ m_MaxHitPoints = value; InvalidateProperties(); }
-		}
-
-		[CommandProperty( AccessLevel.GameMaster )]
-		public int HitPoints
-		{
-			get 
-			{
-				return m_HitPoints;
-			}
-			set 
-			{
-				if ( value != m_HitPoints && MaxHitPoints > 0 )
-				{
-					m_HitPoints = value;
-
-					if ( m_HitPoints < 0 )
-						Delete();
-					else if ( m_HitPoints > MaxHitPoints )
-						m_HitPoints = MaxHitPoints;
-
-					InvalidateProperties();
-				}
-			}
-		}
-
-		[CommandProperty( AccessLevel.Player )]
 		public AosAttributes Attributes
 		{
 			get{ return m_AosAttributes; }
@@ -100,9 +66,6 @@ namespace Server.Items
 		public override int EnergyResistance{ get{ return m_AosResistances.Energy; } }
 		public virtual int BaseGemTypeNumber{ get{ return 0; } }
 
-		public virtual int InitMinHits{ get{ return 0; } }
-		public virtual int InitMaxHits{ get{ return 0; } }
-
 		public override int LabelNumber
 		{
 			get
@@ -112,18 +75,6 @@ namespace Server.Items
 
 				return BaseGemTypeNumber + (int)m_GemType - 1;
 			}
-		}
-
-		public override void OnAfterDuped( Item newItem )
-		{
-			BaseJewel jewel = newItem as BaseJewel;
-
-			if ( jewel == null )
-				return;
-
-			jewel.m_AosAttributes = new AosAttributes( newItem, m_AosAttributes );
-			jewel.m_AosResistances = new AosElementAttributes( newItem, m_AosResistances );
-			jewel.m_AosSkillBonuses = new AosSkillBonuses( newItem, m_AosSkillBonuses );
 		}
 
 		public virtual int ArtifactRarity{ get{ return 0; } }
@@ -137,8 +88,6 @@ namespace Server.Items
 			m_GemType = GemType.None;
 
 			Layer = layer;
-
-			m_HitPoints = m_MaxHitPoints = Utility.RandomMinMax( InitMinHits, InitMaxHits );
 		}
 
 		public override void OnAdded( object parent )
@@ -246,9 +195,6 @@ namespace Server.Items
 			if ( (prop = m_AosAttributes.RegenMana) != 0 )
 				list.Add( 1060440, prop.ToString() ); // mana regeneration ~1_val~
 
-			if ( (prop = m_AosAttributes.NightSight) != 0 )
-				list.Add( 1060441 ); // night sight
-
 			if ( (prop = m_AosAttributes.ReflectPhysical) != 0 )
 				list.Add( 1060442, prop.ToString() ); // reflect physical damage ~1_val~%
 
@@ -274,19 +220,13 @@ namespace Server.Items
 				list.Add( 1060486, prop.ToString() ); // swing speed increase ~1_val~%
 
 			base.AddResistanceProperties( list );
-
-			if ( m_HitPoints >= 0 && m_MaxHitPoints > 0 )
-				list.Add( 1060639, "{0}\t{1}", m_HitPoints, m_MaxHitPoints ); // durability ~1_val~ / ~2_val~
 		}
 
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
 
-			writer.Write( (int) 3 ); // version
-
-			writer.WriteEncodedInt( (int) m_MaxHitPoints );
-			writer.WriteEncodedInt( (int) m_HitPoints );
+			writer.Write( (int) 2 ); // version
 
 			writer.WriteEncodedInt( (int) m_Resource );
 			writer.WriteEncodedInt( (int) m_GemType );
@@ -304,13 +244,6 @@ namespace Server.Items
 
 			switch ( version )
 			{
-				case 3:
-				{
-					m_MaxHitPoints = reader.ReadEncodedInt();
-					m_HitPoints = reader.ReadEncodedInt();
-
-					goto case 2;
-				}
 				case 2:
 				{
 					m_Resource = (CraftResource)reader.ReadEncodedInt();
@@ -368,49 +301,5 @@ namespace Server.Items
 				m_GemType = GemType.None;
 			}
 		}
-		#region ICraftable Members
-
-		public int OnCraft( int quality, bool makersMark, Mobile from, CraftSystem craftSystem, Type typeRes, BaseTool tool, CraftItem craftItem, int resHue )
-		{
-			Type resourceType = typeRes;
-
-			if ( resourceType == null )
-				resourceType = craftItem.Resources.GetAt( 0 ).ItemType;
-
-			Resource = CraftResources.GetFromType( resourceType );
-
-			CraftContext context = craftSystem.GetContext( from );
-
-			if ( context != null && context.DoNotColor )
-				Hue = 0;
-
-			if ( 1 < craftItem.Resources.Count )
-			{
-				resourceType = craftItem.Resources.GetAt( 1 ).ItemType;
-
-				if ( resourceType == typeof( StarSapphire ) )
-					GemType = GemType.StarSapphire;
-				else if ( resourceType == typeof( Emerald ) )
-					GemType = GemType.Emerald;
-				else if ( resourceType == typeof( Sapphire ) )
-					GemType = GemType.Sapphire;
-				else if ( resourceType == typeof( Ruby ) )
-					GemType = GemType.Ruby;
-				else if ( resourceType == typeof( Citrine ) )
-					GemType = GemType.Citrine;
-				else if ( resourceType == typeof( Amethyst ) )
-					GemType = GemType.Amethyst;
-				else if ( resourceType == typeof( Tourmaline ) )
-					GemType = GemType.Tourmaline;
-				else if ( resourceType == typeof( Amber ) )
-					GemType = GemType.Amber;
-				else if ( resourceType == typeof( Diamond ) )
-					GemType = GemType.Diamond;
-			}
-
-			return 1;
-		}
-
-		#endregion
-	}
+	}*/
 }

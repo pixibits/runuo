@@ -34,6 +34,9 @@ namespace Server.Items
 			int version = reader.ReadInt();
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new SummonEarthElementalScroll( amount ), amount );
+		}
 	}
 }

@@ -7,9 +7,8 @@ namespace Server.Misc
 {
 	public class AutoSave : Timer
 	{
-		private static TimeSpan m_Delay = TimeSpan.FromMinutes( 5.0 );
-		private static TimeSpan m_Warning = TimeSpan.Zero;
-		//private static TimeSpan m_Warning = TimeSpan.FromSeconds( 15.0 );
+		private static TimeSpan m_Delay = TimeSpan.FromHours( 3.0 );
+		private static TimeSpan m_Warning = TimeSpan.FromSeconds( 15.0 );
 
 		public static void Initialize()
 		{
@@ -52,7 +51,7 @@ namespace Server.Misc
 
 			if ( m_Warning == TimeSpan.Zero )
 			{
-				Save( true );
+				Save();
 			}
 			else
 			{
@@ -60,12 +59,12 @@ namespace Server.Misc
 				int m = s / 60;
 				s %= 60;
 
-				if ( m > 0 && s > 0 )
+				/*if ( m > 0 && s > 0 )
 					World.Broadcast( 0x35, true, "The world will save in {0} minute{1} and {2} second{3}.", m, m != 1 ? "s" : "", s, s != 1 ? "s" : "" );
 				else if ( m > 0 )
 					World.Broadcast( 0x35, true, "The world will save in {0} minute{1}.", m, m != 1 ? "s" : "" );
-				else
-					World.Broadcast( 0x35, true, "The world will save in {0} second{1}.", s, s != 1 ? "s" : "" );
+				else*/
+					World.Broadcast( 0x35, true, "World data saving.  You may experience some lag fopr the next several seconds" );
 
 				Timer.DelayCall( m_Warning, new TimerCallback( Save ) );
 			}
@@ -73,20 +72,13 @@ namespace Server.Misc
 
 		public static void Save()
 		{
-			AutoSave.Save( false );
-		}
-
-		public static void Save( bool permitBackgroundWrite )
-		{
 			if ( AutoRestart.Restarting )
 				return;
 
-			World.WaitForWriteCompletion();
-
 			try{ Backup(); }
-			catch ( Exception e ) { Console.WriteLine("WARNING: Automatic backup FAILED: {0}", e); }
+            catch (Exception e) { Console.WriteLine("WARNING: Automatic backup FAILED: {0}", e); }
 
-			World.Save( true, permitBackgroundWrite );
+			World.Save();
 		}
 
 		private static string[] m_Backups = new string[]

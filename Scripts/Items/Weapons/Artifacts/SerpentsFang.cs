@@ -14,7 +14,6 @@ namespace Server.Items
 		[Constructable]
 		public SerpentsFang()
 		{
-			ItemID = 0x1400;
 			Hue = 0x488;
 			WeaponAttributes.HitPoisonArea = 100;
 			WeaponAttributes.ResistPoisonBonus = 20;
@@ -22,9 +21,9 @@ namespace Server.Items
 			Attributes.WeaponDamage = 50;
 		}
 
-		public override void GetDamageTypes( Mobile wielder, out int phys, out int fire, out int cold, out int pois, out int nrgy, out int chaos, out int direct )
+		public override void GetDamageTypes( out int phys, out int fire, out int cold, out int pois, out int nrgy )
 		{
-			fire = cold = nrgy = chaos = direct = 0;
+			fire = cold = nrgy = 0;
 			phys = 25;
 			pois = 75;
 		}
@@ -45,9 +44,6 @@ namespace Server.Items
 			base.Deserialize( reader );
 
 			int version = reader.ReadInt();
-
-			if ( ItemID == 0x1401 )
-				ItemID = 0x1400;
 		}
 	}
 }

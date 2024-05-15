@@ -1,11 +1,18 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 
 namespace Server.Items
 {
 	[Flipable( 0xE1C, 0xFAD )]
 	public class Backgammon : BaseBoard
 	{
+		public override int DefaultGumpID{ get{ return 0x92E; } }
+
+		public override Rectangle2D Bounds
+		{
+			get{ return new Rectangle2D( 0, 0, 282, 230 ); }
+		}
+
 		[Constructable]
 		public Backgammon() : base( 0xE1C )
 		{

@@ -3,13 +3,8 @@ using Server;
 
 namespace Server.Items
 {
-	public class Citrine : Item
+	public class Citrine : BaseItem
 	{
-		public override double DefaultWeight
-		{
-			get { return 0.1; }
-		}
-
 		[Constructable]
 		public Citrine() : this( 1 )
 		{
@@ -19,6 +14,7 @@ namespace Server.Items
 		public Citrine( int amount ) : base( 0xF15 )
 		{
 			Stackable = true;
+			Weight = 0.1;
 			Amount = amount;
 		}
 
@@ -26,7 +22,10 @@ namespace Server.Items
 		{
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Citrine( amount ), amount );
+		}
 
 		public override void Serialize( GenericWriter writer )
 		{

@@ -3,10 +3,11 @@ using Server.Items;
 
 namespace Server.Spells.First
 {
-	public class CreateFoodSpell : MagerySpell
+	public class CreateFoodSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Create Food", "In Mani Ylem",
+				SpellCircle.First,
 				224,
 				9011,
 				Reagent.Garlic,
@@ -14,22 +15,25 @@ namespace Server.Spells.First
 				Reagent.MandrakeRoot
 			);
 
-		public override SpellCircle Circle { get { return SpellCircle.First; } }
-
 		public CreateFoodSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
 		}
 
 		private static FoodInfo[] m_Food = new FoodInfo[]
 			{
-				new FoodInfo( typeof( Grapes ), "a grape bunch" ),
 				new FoodInfo( typeof( Ham ), "a ham" ),
+				new FoodInfo( typeof( Ham ), "a ham" ),
+				new FoodInfo( typeof( Ham ), "a ham" ),
+				new FoodInfo( typeof( Ham ), "a ham" ),
+				new FoodInfo( typeof( Ham ), "a ham" ),
+				new FoodInfo( typeof( Ham ), "a ham" ),
+				new FoodInfo( typeof( Ham ), "a ham" ),
+				new FoodInfo( typeof( Ham ), "a ham" ),
+				new FoodInfo( typeof( Grapes ), "a grape bunch" ),
 				new FoodInfo( typeof( CheeseWedge ), "a wedge of cheese" ),
-				new FoodInfo( typeof( Muffins ), "muffins" ),
 				new FoodInfo( typeof( FishSteak ), "a fish steak" ),
 				new FoodInfo( typeof( Ribs ), "cut of ribs" ),
 				new FoodInfo( typeof( CookedBird ), "a cooked bird" ),
-				new FoodInfo( typeof( Sausage ), "sausage" ),
 				new FoodInfo( typeof( Apple ), "an apple" ),
 				new FoodInfo( typeof( Peach ), "a peach" )
 			};

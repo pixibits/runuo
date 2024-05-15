@@ -2,7 +2,6 @@ using System;
 using Server;
 using Server.Items;
 using Server.Network;
-using Server.Commands;
 
 namespace Server.Gumps
 {
@@ -75,12 +74,12 @@ namespace Server.Gumps
 				if ( button >= 0 && button < 8 )
 				{
 					from.SendGump( new AddDoorGump( m_Type ) );
-					CommandSystem.Handle( from, String.Format( "{0}Add {1} {2}", CommandSystem.Prefix, m_Types[m_Type].m_Type.Name, (DoorFacing) button ) );
+					Commands.CommandSystem.Handle( from, String.Format( "{0}Add {1} {2}", Commands.CommandSystem.Prefix, m_Types[m_Type].m_Type.Name, (DoorFacing)button ) );
 				}
 				else if ( button == 8 )
 				{
 					from.SendGump( new AddDoorGump( m_Type ) );
-					CommandSystem.Handle( from, String.Format( "{0}Link", CommandSystem.Prefix ) );
+					Commands.CommandSystem.Handle( from, String.Format( "{0}Link", Commands.CommandSystem.Prefix ) );
 				}
 				else
 				{
@@ -91,12 +90,12 @@ namespace Server.Gumps
 
 		public static void Initialize()
 		{
-			CommandSystem.Register( "AddDoor", AccessLevel.GameMaster, new CommandEventHandler( AddDoor_OnCommand ) );
+			Commands.CommandSystem.Register( "AddDoor", AccessLevel.GameMaster, new Server.Commands.CommandEventHandler( AddDoor_OnCommand ) );
 		}
 
 		[Usage( "AddDoor" )]
 		[Description( "Displays a menu from which you can interactively add doors." )]
-		public static void AddDoor_OnCommand( CommandEventArgs e )
+		public static void AddDoor_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			e.Mobile.SendGump( new AddDoorGump() );
 		}

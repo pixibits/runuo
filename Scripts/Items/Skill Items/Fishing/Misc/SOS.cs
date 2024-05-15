@@ -4,41 +4,13 @@ using Server.Gumps;
 
 namespace Server.Items
 {
-	public class SOS : Item
+	public class SOS : BaseItem
 	{
-		public override int LabelNumber
-		{
-			get
-			{
-				if ( IsAncient )
-					return 1063450; // an ancient SOS
+		public override int LabelNumber{ get{ return 1041081; } } // a waterstained SOS
 
-				return 1041081; // a waterstained SOS
-			}
-		}
-
-		private int m_Level;
 		private Map m_TargetMap;
 		private Point3D m_TargetLocation;
 		private int m_MessageIndex;
-
-		[CommandProperty( AccessLevel.GameMaster )]
-		public bool IsAncient
-		{
-			get{ return ( m_Level >= 4 ); }
-		}
-
-		[CommandProperty( AccessLevel.GameMaster )]
-		public int Level
-		{
-			get{ return m_Level; }
-			set
-			{
-				m_Level = Math.Max( 1, Math.Min( value, 4 ) );
-				UpdateHue();
-				InvalidateProperties();
-			}
-		}
 
 		[CommandProperty( AccessLevel.GameMaster )]
 		public Map TargetMap
@@ -61,35 +33,19 @@ namespace Server.Items
 			set{ m_MessageIndex = value; }
 		}
 
-		public void UpdateHue()
-		{
-			if ( IsAncient )
-				Hue = 0x481;
-			else
-				Hue = 0;
-		}
-
 		[Constructable]
 		public SOS() : this( Map.Trammel )
 		{
 		}
 
 		[Constructable]
-		public SOS( Map map ) : this( map, MessageInABottle.GetRandomLevel() )
-		{
-		}
-
-		[Constructable]
-		public SOS( Map map, int level ) : base( 0x14ED )
+		public SOS( Map map ) : base( 0x14ED )
 		{
 			Weight = 1.0;
 
-			m_Level = level;
 			m_MessageIndex = Utility.Random( MessageEntry.Entries.Length );
 			m_TargetMap = map;
 			m_TargetLocation = FindLocation( m_TargetMap );
-
-			UpdateHue();
 		}
 
 		public SOS( Serial serial ) : base( serial )
@@ -100,9 +56,7 @@ namespace Server.Items
 		{
 			base.Serialize( writer );
 
-			writer.Write( (int) 4 ); // version
-
-			writer.Write( m_Level );
+			writer.Write( (int) 1 ); // version
 
 			writer.Write( m_TargetMap );
 			writer.Write( m_TargetLocation );
@@ -117,13 +71,6 @@ namespace Server.Items
 
 			switch ( version )
 			{
-				case 4:
-				case 3:
-				case 2:
-				{
-					m_Level = reader.ReadInt();
-					goto case 1;
-				}
 				case 1:
 				{
 					m_TargetMap = reader.ReadMap();
@@ -145,15 +92,6 @@ namespace Server.Items
 					break;
 				}
 			}
-
-			if ( version < 2 )
-				m_Level = MessageInABottle.GetRandomLevel();
-
-			if ( version < 3 )
-				UpdateHue();
-
-			if( version < 4 && m_TargetMap == Map.Tokuno )
-				m_TargetMap = Map.Trammel;
 		}
 		
 		public override void OnDoubleClick( Mobile from )

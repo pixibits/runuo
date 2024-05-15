@@ -1,9 +1,8 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Guilds;
 using Server.Network;
-using System.Collections.Generic;
 
 namespace Server.Gumps
 {
@@ -35,7 +34,7 @@ namespace Server.Gumps
 
 			AddHtmlLocalized( 20, 45, 400, 20, 1011134, false, false ); // We are at war with:
 
-			List<Guild> enemies = guild.Enemies;
+			ArrayList enemies = guild.Enemies;
 
 			if ( enemies.Count == 0 )
 			{
@@ -45,7 +44,7 @@ namespace Server.Gumps
 			{
 				for ( int i = 0; i < enemies.Count; ++i )
 				{
-					Guild g = enemies[i];
+					Guild g = (Guild)enemies[i];
 
 					AddHtml( 20, 65 + (i * 20), 300, 20, g.Name, false, false );
 				}
@@ -61,7 +60,7 @@ namespace Server.Gumps
 
 			AddHtmlLocalized( 20, 45, 400, 20, 1011136, false, false ); // Guilds that we have declared war on: 
 
-			List<Guild> declared = guild.WarDeclarations;
+			ArrayList declared = guild.WarDeclarations;
 
 			if ( declared.Count == 0 )
 			{
@@ -84,7 +83,7 @@ namespace Server.Gumps
 
 			AddHtmlLocalized( 20, 45, 400, 20, 1011135, false, false ); // Guilds that have declared war on us: 
 
-			List<Guild> invites = guild.WarInvitations;
+			ArrayList invites = guild.WarInvitations;
 
 			if ( invites.Count == 0 )
 			{
@@ -94,7 +93,7 @@ namespace Server.Gumps
 			{
 				for ( int i = 0; i < invites.Count; ++i )
 				{
-					Guild g = invites[i];
+					Guild g = (Guild)invites[i];
 
 					AddHtml( 20, 65 + (i * 20), 300, 20, g.Name, false, false );
 				}

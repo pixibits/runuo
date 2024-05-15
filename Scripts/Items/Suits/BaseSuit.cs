@@ -3,7 +3,7 @@ using Server;
 
 namespace Server.Items
 {
-	public abstract class BaseSuit : Item
+	public abstract class BaseSuit : BaseItem
 	{
 		private AccessLevel m_AccessLevel;
 
@@ -83,7 +83,7 @@ namespace Server.Items
 		public override bool OnEquip( Mobile from )
 		{
 			if ( from.AccessLevel < m_AccessLevel )
-				from.SendMessage( "You may not wear this." );
+				from.SendAsciiMessage( "You may not wear this." );
 
 			return ( from.AccessLevel >= m_AccessLevel );
 		}

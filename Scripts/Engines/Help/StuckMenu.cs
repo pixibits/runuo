@@ -4,121 +4,26 @@ using Server.Gumps;
 
 namespace Server.Menus.Questions
 {
-	public class StuckMenuEntry
-	{
-		private int m_Name;
-		private Point3D[] m_Locations;
-
-		public int Name{ get{ return m_Name; } }
-		public Point3D[] Locations{ get{ return m_Locations; } }
-
-		public StuckMenuEntry( int name, Point3D[] locations )
-		{
-			m_Name = name;
-			m_Locations = locations;
-		}
-	}
-
 	public class StuckMenu : Gump
 	{
-		private static StuckMenuEntry[] m_Entries = new StuckMenuEntry[]
+		private static Point3D[] m_Locations = new Point3D[]
 			{
-				// Britain
-				new StuckMenuEntry( 1011028, new Point3D[]
-					{
-						new Point3D( 1522, 1757, 28 ),
-						new Point3D( 1519, 1619, 10 ),
-						new Point3D( 1457, 1538, 30 ),
-						new Point3D( 1607, 1568, 20 ),
-						new Point3D( 1643, 1680, 18 )
-					} ),
-
-				// Trinsic
-				new StuckMenuEntry( 1011029, new Point3D[]
-					{
-						new Point3D( 2005, 2754, 30 ),
-						new Point3D( 1993, 2827,  0 ),
-						new Point3D( 2044, 2883,  0 ),
-						new Point3D( 1876, 2859, 20 ),
-						new Point3D( 1865, 2687,  0 )
-					} ),
-
-				// Vesper
-				new StuckMenuEntry( 1011030, new Point3D[]
-					{
-						new Point3D( 2973, 891, 0 ),
-						new Point3D( 3003, 776, 0 ),
-						new Point3D( 2910, 727, 0 ),
-						new Point3D( 2865, 804, 0 ),
-						new Point3D( 2832, 927, 0 )
-					} ),
-
-				// Minoc
-				new StuckMenuEntry( 1011031, new Point3D[]
-					{
-						new Point3D( 2498, 392,  0 ),
-						new Point3D( 2433, 541,  0 ),
-						new Point3D( 2445, 501, 15 ),
-						new Point3D( 2501, 469, 15 ),
-						new Point3D( 2444, 420, 15 )
-					} ),
-
-				// Yew
-				new StuckMenuEntry( 1011032, new Point3D[]
-					{
-						new Point3D( 490, 1166, 0 ),
-						new Point3D( 652, 1098, 0 ),
-						new Point3D( 650, 1013, 0 ),
-						new Point3D( 536,  979, 0 ),
-						new Point3D( 464,  970, 0 )
-					} ),
-
-				// Cove
-				new StuckMenuEntry( 1011033, new Point3D[]
-					{
-						new Point3D( 2230, 1159, 0 ),
-						new Point3D( 2218, 1203, 0 ),
-						new Point3D( 2247, 1194, 0 ),
-						new Point3D( 2236, 1224, 0 ),
-						new Point3D( 2273, 1231, 0 )
-					} )
+				new Point3D( 1522, 1757, 28 ), // Britain
+				new Point3D( 2005, 2754, 30 ), // Trinsic
+				new Point3D( 2973,  891,  0 ), // Vesper
+				new Point3D( 2498,  392,  0 ), // Minoc
+				new Point3D(  490, 1166,  0 ), // Yew
+				//new Point3D( 2230, 1159,  0 ), // Cove
+				//new Point3D( 5720, 3109, -1 ), // Papua
+				//new Point3D( 5216, 4033, 37 )  // Delucia
 			};
 
-		private static StuckMenuEntry[] m_T2AEntries = new StuckMenuEntry[]
-			{
-				// Papua
-				new StuckMenuEntry( 1011057, new Point3D[]
-					{
-						new Point3D( 5720, 3109, -1 ),
-						new Point3D( 5677, 3176, -3 ),
-						new Point3D( 5678, 3227,  0 ),
-						new Point3D( 5769, 3206, -2 ),
-						new Point3D( 5777, 3270, -1 )
-					} ),
-
-				// Delucia
-				new StuckMenuEntry( 1011058, new Point3D[]
-					{
-						new Point3D( 5216, 4033, 37 ),
-						new Point3D( 5262, 4049, 37 ),
-						new Point3D( 5284, 4006, 37 ),
-						new Point3D( 5189, 3971, 39 ),
-						new Point3D( 5243, 3960, 37 )
-					} )
-			};
-
-		private static bool IsInSecondAgeArea( Mobile m )
+		public static bool IsInSecondAgeArea( Mobile m )
 		{
-			if ( m.Map != Map.Trammel && m.Map != Map.Felucca )
-				return false;
+			// Must be redone with a specific external support
+			// in order to consider dungeons too
 
-			if ( m.X >= 5120 && m.Y >= 2304 )
-				return true;
-
-			if ( m.Region.IsPartOf( "Terathan Keep" ) )
-				return true;
-
-			return false;
+			return ( m.X >= 5120 && m.Y >= 2304 );
 		}
 
 		private Mobile m_Mobile, m_Sender;
@@ -131,27 +36,43 @@ namespace Server.Menus.Questions
 			m_Sender = beholder;
 			m_Mobile = beheld;
 			m_MarkUse = markUse;
-
 			Closable = false; 
 			Dragable = false; 
-			Disposable = false;
+
+			AddPage( 0 );
 
 			AddBackground( 0, 0, 270, 320, 2600 );
 
-			AddHtmlLocalized( 50, 20, 250, 35, 1011027, false, false ); // Chose a town:
+			AddHtmlLocalized( 50, 25, 170, 40, 1011027, false, false ); //Chose a town:
 
-			StuckMenuEntry[] entries = IsInSecondAgeArea( beheld ) ? m_T2AEntries : m_Entries;
-
-			for ( int i = 0; i < entries.Length; i++ )
+			if ( beholder == null || beholder.AccessLevel == AccessLevel.Player )
 			{
-				StuckMenuEntry entry = entries[i];
+				AddButton( 50, 60, 208, 209, 0xFF, GumpButtonType.Reply, 0 );
+				AddHtml( 75, 60, 335, 40, "Random Mainland City", false, false );
+			}
+			else
+			{
+				AddButton( 50, 60, 208, 209, 1, GumpButtonType.Reply, 0 );
+				AddHtmlLocalized( 75, 60, 335, 40, 1011028, false, false ); // Britain
 
-				AddButton( 50, 55 + 35 * i, 208, 209, i + 1, GumpButtonType.Reply, 0 );
-				AddHtmlLocalized( 75, 55 + 35 * i, 335, 40, entry.Name, false, false );
+				AddButton( 50, 95, 208, 209, 2, GumpButtonType.Reply, 0 );
+				AddHtmlLocalized( 75, 95, 335, 40, 1011029, false, false ); // Trinsic
+
+				AddButton( 50, 130, 208, 209, 3, GumpButtonType.Reply, 0 );
+				AddHtmlLocalized( 75, 130, 335, 40, 1011030, false, false ); // Vesper
+
+				AddButton( 50, 165, 208, 209, 4, GumpButtonType.Reply, 0 );
+				AddHtmlLocalized( 75, 165, 335, 40, 1011031, false, false ); // Minoc
+
+				AddButton( 50, 200, 208, 209, 5, GumpButtonType.Reply, 0 );
+				AddHtmlLocalized( 75, 200, 335, 40, 1011032, false, false ); // Yew
+
+				AddButton( 50, 235, 208, 209, 6, GumpButtonType.Reply, 0 );
+				AddHtmlLocalized( 75, 235, 335, 40, 1011033, false, false ); // Cove
 			}
 
-			AddButton( 55, 263, 4005, 4007, 0, GumpButtonType.Reply, 0 );
-			AddHtmlLocalized( 90, 265, 200, 35, 1011012, false, false ); // CANCEL
+			AddButton( 55, 268, 4005, 4007, 0, GumpButtonType.Reply, 0 );
+			AddHtmlLocalized( 90, 270, 320, 40, 1011012, false, false ); // CANCEL
 		}
 
 		public void BeginClose()
@@ -176,38 +97,41 @@ namespace Server.Menus.Questions
 		{
 			StopClose();
 
-			if ( Factions.Sigil.ExistsOn( m_Mobile ) )
+			try
 			{
-				m_Mobile.SendLocalizedMessage( 1061632 ); // You can't do that while carrying the sigil.
+				if ( info.ButtonID == 0 )
+				{
+					if ( m_Mobile == m_Sender )
+						m_Mobile.SendLocalizedMessage( 1010588 ); // You choose not to go to any city.
+				}
+				else if ( info.ButtonID == 0xFF )
+				{
+					Teleport( Utility.Random( m_Locations.Length ) );
+				}
+				else 
+				{
+					Teleport( info.ButtonID - 1 );
+				}
 			}
-			else if ( info.ButtonID == 0 )
+			catch
 			{
-				if ( m_Mobile == m_Sender )
-					m_Mobile.SendLocalizedMessage( 1010588 ); // You choose not to go to any city.
-			}
-			else
-			{
-				int index = info.ButtonID - 1;
-				StuckMenuEntry[] entries = IsInSecondAgeArea( m_Mobile ) ? m_T2AEntries : m_Entries;
-
-				if ( index >= 0 && index < entries.Length )
-					Teleport( entries[index] );
+				m_Mobile.SendMessage( "Error.  Try again." );
 			}
 		}
 
-		private void Teleport( StuckMenuEntry entry )
+		private void Teleport( int index )
 		{
 			if ( m_MarkUse ) 
 			{
 				m_Mobile.SendLocalizedMessage( 1010589 ); // You will be teleported within the next two minutes.
 
-				new TeleportTimer( m_Mobile, entry, TimeSpan.FromSeconds( 10.0 + (Utility.RandomDouble() * 110.0) ) ).Start();
+				new TeleportTimer( m_Mobile, m_Locations[index], TimeSpan.FromSeconds( 10.0 + (Utility.RandomDouble() * 110.0) ) ).Start();
 
 				m_Mobile.UsedStuckMenu();
 			}
 			else
 			{
-				new TeleportTimer( m_Mobile, entry, TimeSpan.Zero ).Start();
+				new TeleportTimer( m_Mobile, m_Locations[index], TimeSpan.Zero ).Start();
 			}
 		}
 
@@ -241,48 +165,33 @@ namespace Server.Menus.Questions
 		private class TeleportTimer : Timer
 		{
 			private Mobile m_Mobile;
-			private StuckMenuEntry m_Destination;
+			private Point3D m_Location;
 			private DateTime m_End;
+			private DateTime m_NextMessage;
 
-			public TeleportTimer( Mobile mobile, StuckMenuEntry destination, TimeSpan delay ) : base( TimeSpan.Zero, TimeSpan.FromSeconds( 1.0 ) )
+			public TeleportTimer( Mobile m, Point3D loc, TimeSpan delay ) : base( TimeSpan.Zero, TimeSpan.FromSeconds( 1.0 ) )
 			{
 				Priority = TimerPriority.TwoFiftyMS;
 
-				m_Mobile = mobile;
-				m_Destination = destination;
+				m_Mobile = m;
+				m_Location = loc;
 				m_End = DateTime.Now + delay;
+				m_NextMessage = DateTime.Now + TimeSpan.FromSeconds( 5.0 );
 			}
 
 			protected override void OnTick()
 			{
-				if ( DateTime.Now < m_End )
+				m_Mobile.RevealingAction();
+				if ( DateTime.Now > m_End && !( m_Mobile.Alive && Server.SkillHandlers.Hiding.CheckCombat( m_Mobile, 12 ) ) )
 				{
-					m_Mobile.Frozen = true;
+					m_Mobile.Frozen = false;
+					m_Mobile.Location = m_Location;
+
+					Stop();
 				}
 				else
 				{
-					m_Mobile.Frozen = false;
-					Stop();
-
-					if ( Factions.Sigil.ExistsOn( m_Mobile ) )
-					{
-						m_Mobile.SendLocalizedMessage( 1061632 ); // You can't do that while carrying the sigil.
-						return;
-					}
-
-					int idx = Utility.Random( m_Destination.Locations.Length );
-					Point3D dest = m_Destination.Locations[idx];
-
-					Map destMap;
-					if ( m_Mobile.Map == Map.Trammel )
-						destMap = Map.Trammel;
-					else if ( m_Mobile.Map == Map.Felucca )
-						destMap = Map.Felucca;
-					else
-						destMap = m_Mobile.Kills >= 5 ? Map.Felucca : Map.Trammel;
-
-					Mobiles.BaseCreature.TeleportPets( m_Mobile, dest, destMap );
-					m_Mobile.MoveToWorld( dest, destMap );
+					m_Mobile.Frozen = true;
 				}
 			}
 		}

@@ -4,22 +4,19 @@ using Server.Network;
 
 namespace Server.Spells.First
 {
-	public class MagicArrowSpell : MagerySpell
+	public class MagicArrowSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Magic Arrow", "In Por Ylem",
+				SpellCircle.First,
 				212,
 				9041,
 				Reagent.SulfurousAsh
 			);
 
-		public override SpellCircle Circle { get { return SpellCircle.First; } }
-
 		public MagicArrowSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
 		}
-
-        public override bool DelayedDamageStacking { get { return !Core.AOS; } }
 
 		public override void OnCast()
 		{
@@ -42,30 +39,12 @@ namespace Server.Spells.First
 
 				SpellHelper.CheckReflect( (int)this.Circle, ref source, ref m );
 
-				double damage;
-				
-				if ( Core.AOS )
-				{
-					damage = GetNewAosDamage( 10, 1, 4, m );
-				}
-				else
-				{
-					damage = Utility.Random( 4, 4 );
+				double damage = GetDamage( m );
 
-					if ( CheckResisted( m ) )
-					{
-						damage *= 0.75;
-
-						m.SendLocalizedMessage( 501783 ); // You feel yourself resisting magical energy.
-					}
-
-					damage *= GetDamageScalar( m );
-				}
-
-				source.MovingParticles( m, 0x36E4, 5, 0, false, false, 3006, 0, 0 );
+				source.MovingParticles( m, 0x36E4, 5, 0, false, true, 3006, 4006, 0 );
 				source.PlaySound( 0x1E5 );
 
-				SpellHelper.Damage( this, m, damage, 0, 100, 0, 0, 0 );
+				SpellHelper.Damage( this, m, damage, 0, 0, 100, 0, 0 );
 			}
 
 			FinishSequence();
@@ -75,7 +54,7 @@ namespace Server.Spells.First
 		{
 			private MagicArrowSpell m_Owner;
 
-			public InternalTarget( MagicArrowSpell owner ) : base( Core.ML ? 10 : 12, false, TargetFlags.Harmful )
+			public InternalTarget( MagicArrowSpell owner ) : base( 12, false, TargetFlags.Harmful )
 			{
 				m_Owner = owner;
 			}

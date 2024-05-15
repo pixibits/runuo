@@ -1,22 +1,21 @@
 using System;
-using System.Collections.Generic;
-using Server.Network;
+using System.Collections; using System.Collections.Generic;
 using Server.Targeting;
+using Server.Network;
 
 namespace Server.Spells.Fourth
 {
-	public class ManaDrainSpell : MagerySpell
+	public class ManaDrainSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Mana Drain", "Ort Rel",
+				SpellCircle.Fourth,
 				215,
 				9031,
 				Reagent.BlackPearl,
 				Reagent.MandrakeRoot,
 				Reagent.SpidersSilk
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Fourth; } }
 
 		public ManaDrainSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -27,7 +26,7 @@ namespace Server.Spells.Fourth
 			Caster.Target = new InternalTarget( this );
 		}
 
-		private static Dictionary<Mobile, Timer> m_Table = new Dictionary<Mobile, Timer>();
+		private Hashtable m_Table = new Hashtable();
 
 		private void AosDelay_Callback( object state )
 		{
@@ -59,60 +58,31 @@ namespace Server.Spells.Fourth
 
 				SpellHelper.CheckReflect( (int)this.Circle, Caster, ref m );
 
-				if ( m.Spell != null )
-					m.Spell.OnCasterHurt();
-
 				m.Paralyzed = false;
 
-				if ( Core.AOS )
+				if ( CheckResistedEasy( m ) )
 				{
-					int toDrain = 40 + (int)(GetDamageSkill( Caster ) - GetResistSkill( m ));
-
-					if ( toDrain < 0 )
-						toDrain = 0;
-					else if ( toDrain > m.Mana )
-						toDrain = m.Mana;
-
-					if ( m_Table.ContainsKey( m ) )
-						toDrain = 0;
-
-					m.FixedParticles( 0x3789, 10, 25, 5032, EffectLayer.Head );
-					m.PlaySound( 0x1F8 );
-
-					if ( toDrain > 0 )
-					{
-						m.Mana -= toDrain;
-
-						m_Table[m] = Timer.DelayCall( TimeSpan.FromSeconds( 5.0 ), new TimerStateCallback( AosDelay_Callback ), new object[]{ m, toDrain } );
-					}
+					m.SendLocalizedMessage( 501783 ); // You feel yourself resisting magical energy.
 				}
-				else
+				else 
 				{
-					if ( CheckResisted( m ) )
-						m.SendLocalizedMessage( 501783 ); // You feel yourself resisting magical energy.
-					else if ( m.Mana >= 100 )
-						m.Mana -= Utility.Random( 1, 100 );
-					else
-						m.Mana -= Utility.Random( 1, m.Mana );
-
-					m.FixedParticles( 0x374A, 10, 15, 5032, EffectLayer.Head );
-					m.PlaySound( 0x1F8 );
+					if ( m.Spell is Spells.Spell )
+						((Spells.Spell)m.Spell).OnCasterHurt( m.Mana );
+					m.Mana = 0;
 				}
+
+				m.FixedParticles( 0x374A, 10, 15, 5032, EffectLayer.Head );
+				m.PlaySound( 0x1F8 );
 			}
 
 			FinishSequence();
-		}
-
-		public override double GetResistPercent( Mobile target )
-		{
-			return 99.0;
 		}
 
 		private class InternalTarget : Target
 		{
 			private ManaDrainSpell m_Owner;
 
-			public InternalTarget( ManaDrainSpell owner ) : base( Core.ML ? 10 : 12, false, TargetFlags.Harmful )
+			public InternalTarget( ManaDrainSpell owner ) : base( 12, false, TargetFlags.Harmful )
 			{
 				m_Owner = owner;
 			}

@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Network;
 using Server.Gumps;
@@ -35,10 +35,10 @@ namespace Server.Engines.Help
 
 		public override void OnResponse( NetState state, RelayInfo info )
 		{
-			m_Mobile.SendGump( new PageResponseGump( m_Mobile, m_Name, m_Text ) );
+			//m_Mobile.SendGump( new PageResponseGump( m_Mobile, m_Name, m_Text ) );
 
-			//m_Mobile.SendMessage( 0x482, "{0} tells you:", m_Name );
-			//m_Mobile.SendMessage( 0x482, m_Text );
+			m_Mobile.SendAsciiMessage( 0x35, "{0} tells you:", m_Name );
+			m_Mobile.SendAsciiMessage( 0x35, m_Text );
 		}
 	}
 
@@ -62,14 +62,9 @@ namespace Server.Engines.Help
 				PageEntry e = (PageEntry)list[i];
 
 				if ( e.Sender.Deleted || e.Sender.NetState == null )
-				{
-					e.AddResponse( e.Sender, "[Logout]" );
 					PageQueue.Remove( e );
-				}
 				else
-				{
 					++i;
-				}
 			}
 
 			m_List = (PageEntry[])list.ToArray( typeof( PageEntry ) );
@@ -91,7 +86,7 @@ namespace Server.Engines.Help
 						Add( new GumpLabel( 48, 12, 2100, "Previous Page" ) );
 					}
 
-					string typeString = PageQueue.GetPageTypeName( e.Type );
+					string typeString = ( e.Type == PageType.PhysicalHarassment ? "Physical Harassment" : e.Type.ToString() );
 
 					string html = String.Format( "[{0}] {1} <basefont color=#{2:X6}>[<u>{3}</u>]</basefont>", typeString, e.Message, e.Handler == null ? 0xFF0000 : 0xFF, e.Handler == null ? "Unhandled" : "Handling" );
 
@@ -109,17 +104,9 @@ namespace Server.Engines.Help
 		{
 			if ( info.ButtonID >= 1 && info.ButtonID <= m_List.Length )
 			{
-				if ( PageQueue.List.IndexOf( m_List[info.ButtonID - 1] ) >= 0 )
-				{
-					PageEntryGump g = new PageEntryGump( state.Mobile, m_List[info.ButtonID - 1] );
+				PageEntryGump g = new PageEntryGump( state.Mobile, m_List[info.ButtonID - 1] );
 
-					g.SendTo( state );
-				}
-				else
-				{
-					state.Mobile.SendGump( new PageQueueGump() );
-					state.Mobile.SendMessage( "That page has been removed." );
-				}
+				g.SendTo( state );
 			}
 		}
 	}
@@ -471,123 +458,108 @@ namespace Server.Engines.Help
 				2122,
 				2117,
 				2129,
-				2415,
-				2415,
 				2415
 			};
 
 		public PageEntryGump( Mobile m, PageEntry entry ) : base( 30, 30 )
 		{
-			try
+			m_Mobile = m;
+			m_Entry = entry;
+
+			int buttons = 0;
+
+			int bottom = 336;
+
+			AddPage( 0 );
+
+			AddImageTiled( 0, 0, 410, 436, 0xA40 );
+			AddAlphaRegion( 1, 1, 408, 434 );
+
+			AddPage( 1 );
+
+			AddLabel( 18, 18, 2100, "Sent:" );
+			AddLabelCropped( 128, 18, 264, 20, 2100, entry.Sent.ToString() );
+
+			AddLabel( 18, 38, 2100, "Sender:" );
+			AddLabelCropped( 128, 38, 264, 20, 2100, String.Format( "{0} {1} [{2}]", entry.Sender.RawName, entry.Sender.Location, entry.Sender.Map ) );
+
+			AddButton( 18, bottom - (buttons * 22), 0xFAB, 0xFAD, 8, GumpButtonType.Reply, 0 );
+			AddImageTiled( 52, bottom - (buttons * 22) + 1, 340, 80, 0xA40/*0xBBC*//*0x2458*/ );
+			AddImageTiled( 53, bottom - (buttons * 22) + 2, 338, 78, 0xBBC/*0x2426*/ );
+			AddTextEntry( 55, bottom - (buttons++ * 22) + 2, 336, 78, 0x480, 0, "" );
+
+			AddButton( 18, bottom - (buttons * 22), 0xFA5, 0xFA7, 0, GumpButtonType.Page, 2 );
+			AddLabel( 52, bottom - (buttons++ * 22), 2100, "Predefined Response" );
+
+			if ( entry.Sender != m )
 			{
-				m_Mobile = m;
-				m_Entry = entry;
+				AddButton( 18, bottom - (buttons * 22), 0xFA5, 0xFA7, 1, GumpButtonType.Reply, 0 );
+				AddLabel( 52, bottom - (buttons++ * 22), 2100, "Go to Sender" );
+			}
 
-				int buttons = 0;
+			AddLabel(  18, 58, 2100, "Handler:" );
 
-				int bottom = 356;
+			if ( entry.Handler == null )
+			{
+				AddLabelCropped( 128, 58, 264, 20, 2100, "Unhandled" );
 
-				AddPage( 0 );
+				AddButton( 18, bottom - (buttons * 22), 0xFB1, 0xFB3, 5, GumpButtonType.Reply, 0 );
+				AddLabel( 52, bottom - (buttons++ * 22), 2100, "Delete Page" );
 
-				AddImageTiled( 0, 0, 410, 456, 0xA40 );
-				AddAlphaRegion( 1, 1, 408, 454 );
+				AddButton( 18, bottom - (buttons * 22), 0xFB7, 0xFB9, 4, GumpButtonType.Reply, 0 );
+				AddLabel( 52, bottom - (buttons++ * 22), 2100, "Handle Page" );
+			}
+			else
+			{
+				AddLabelCropped( 128, 58, 264, 20, m_AccessLevelHues[(int)entry.Handler.AccessLevel], entry.Handler.Name );
 
-				AddPage( 1 );
-
-				AddLabel( 18, 18, 2100, "Sent:" );
-				AddLabelCropped( 128, 18, 264, 20, 2100, entry.Sent.ToString() );
-
-				AddLabel( 18, 38, 2100, "Sender:" );
-				AddLabelCropped( 128, 38, 264, 20, 2100, String.Format( "{0} {1} [{2}]", entry.Sender.RawName, entry.Sender.Location, entry.Sender.Map ) );
-
-				AddButton( 18, bottom - (buttons * 22), 0xFAB, 0xFAD, 8, GumpButtonType.Reply, 0 );
-				AddImageTiled( 52, bottom - (buttons * 22) + 1, 340, 80, 0xA40/*0xBBC*//*0x2458*/ );
-				AddImageTiled( 53, bottom - (buttons * 22) + 2, 338, 78, 0xBBC/*0x2426*/ );
-				AddTextEntry( 55, bottom - (buttons++ * 22) + 2, 336, 78, 0x480, 0, "" );
-
-				AddButton( 18, bottom - (buttons * 22), 0xFA5, 0xFA7, 0, GumpButtonType.Page, 2 );
-				AddLabel( 52, bottom - (buttons++ * 22), 2100, "Predefined Response" );
-
-				if ( entry.Sender != m )
+				if ( entry.Handler != m )
 				{
-					AddButton( 18, bottom - (buttons * 22), 0xFA5, 0xFA7, 1, GumpButtonType.Reply, 0 );
-					AddLabel( 52, bottom - (buttons++ * 22), 2100, "Go to Sender" );
-				}
-
-				AddLabel(  18, 58, 2100, "Handler:" );
-
-				if ( entry.Handler == null )
-				{
-					AddLabelCropped( 128, 58, 264, 20, 2100, "Unhandled" );
-
-					AddButton( 18, bottom - (buttons * 22), 0xFB1, 0xFB3, 5, GumpButtonType.Reply, 0 );
-					AddLabel( 52, bottom - (buttons++ * 22), 2100, "Delete Page" );
-
-					AddButton( 18, bottom - (buttons * 22), 0xFB7, 0xFB9, 4, GumpButtonType.Reply, 0 );
-					AddLabel( 52, bottom - (buttons++ * 22), 2100, "Handle Page" );
+					AddButton( 18, bottom - (buttons * 22), 0xFA5, 0xFA7, 2, GumpButtonType.Reply, 0 );
+					AddLabel( 52, bottom - (buttons++ * 22), 2100, "Go to Handler" );
 				}
 				else
 				{
-					AddLabelCropped( 128, 58, 264, 20, m_AccessLevelHues[(int)entry.Handler.AccessLevel], entry.Handler.Name );
+					AddButton( 18, bottom - (buttons * 22), 0xFA2, 0xFA4, 6, GumpButtonType.Reply, 0 );
+					AddLabel( 52, bottom - (buttons++ * 22), 2100, "Abandon Page" );
 
-					if ( entry.Handler != m )
-					{
-						AddButton( 18, bottom - (buttons * 22), 0xFA5, 0xFA7, 2, GumpButtonType.Reply, 0 );
-						AddLabel( 52, bottom - (buttons++ * 22), 2100, "Go to Handler" );
-					}
-					else
-					{
-						AddButton( 18, bottom - (buttons * 22), 0xFA2, 0xFA4, 6, GumpButtonType.Reply, 0 );
-						AddLabel( 52, bottom - (buttons++ * 22), 2100, "Abandon Page" );
-
-						AddButton( 18, bottom - (buttons * 22), 0xFB7, 0xFB9, 7, GumpButtonType.Reply, 0 );
-						AddLabel( 52, bottom - (buttons++ * 22), 2100, "Page Handled" );
-					}
-				}
-
-				AddLabel(  18, 78, 2100, "Page Location:" );
-				AddLabelCropped( 128, 78, 264, 20, 2100, String.Format( "{0} [{1}]", entry.PageLocation, entry.PageMap ) );
-
-				AddButton( 18, bottom - (buttons * 22), 0xFA5, 0xFA7, 3, GumpButtonType.Reply, 0 );
-				AddLabel( 52, bottom - (buttons++ * 22), 2100, "Go to Page Location" );
-
-				if ( entry.SpeechLog != null )
-				{
-					AddButton( 18, bottom - (buttons * 22), 0xFA5, 0xFA7, 10, GumpButtonType.Reply, 0 );
-					AddLabel( 52, bottom - (buttons++ * 22), 2100, "View Speech Log" );
-				}
-
-				AddLabel(  18, 98, 2100, "Page Type:" );
-				AddLabelCropped( 128, 98, 264, 20, 2100, PageQueue.GetPageTypeName( entry.Type ) );
-
-				AddLabel(  18, 118, 2100, "Message:" );
-				AddHtml(  128, 118, 250, 100, entry.Message, true, true );
-
-				AddPage( 2 );
-
-				ArrayList preresp = PredefinedResponse.List;
-
-				AddButton( 18, 18, 0xFAE, 0xFB0, 0, GumpButtonType.Page, 1 );
-				AddButton( 410 - 18 - 32, 18, 0xFAB, 0xFAC, 9, GumpButtonType.Reply, 0 );
-
-				if ( preresp.Count == 0 )
-				{
-					AddLabel( 52, 18, 2100, "There are no predefined responses." );
-				}
-				else
-				{
-					AddLabel( 52, 18, 2100, "Back" );
-
-					for ( int i = 0; i < preresp.Count; ++i )
-					{
-						AddButton( 18, 40 + (i * 22), 0xFA5, 0xFA7, 100 + i, GumpButtonType.Reply, 0 );
-						AddLabel( 52, 40 + (i * 22), 2100, ((PredefinedResponse)preresp[i]).Title );
-					}
+					AddButton( 18, bottom - (buttons * 22), 0xFB7, 0xFB9, 7, GumpButtonType.Reply, 0 );
+					AddLabel( 52, bottom - (buttons++ * 22), 2100, "Page Handled" );
 				}
 			}
-			catch ( Exception e )
+
+			AddLabel(  18, 78, 2100, "Page Location:" );
+			AddLabelCropped( 128, 78, 264, 20, 2100, String.Format( "{0} [{1}]", entry.PageLocation, entry.PageMap ) );
+
+			AddButton( 18, bottom - (buttons * 22), 0xFA5, 0xFA7, 3, GumpButtonType.Reply, 0 );
+			AddLabel( 52, bottom - (buttons++ * 22), 2100, "Go to Page Location" );
+
+			AddLabel(  18, 98, 2100, "Page Type:" );
+			AddLabelCropped( 128, 98, 264, 20, 2100, entry.Type.ToString() );
+
+			AddLabel(  18, 118, 2100, "Message:" );
+			AddHtml(  128, 118, 250, 100, entry.Message, true, true );
+
+			AddPage( 2 );
+
+			ArrayList preresp = PredefinedResponse.List;
+
+			AddButton( 18, 18, 0xFAE, 0xFB0, 0, GumpButtonType.Page, 1 );
+			AddButton( 410 - 18 - 32, 18, 0xFAB, 0xFAC, 9, GumpButtonType.Reply, 0 );
+
+			if ( preresp.Count == 0 )
 			{
-				Console.WriteLine(e);
+				AddLabel( 52, 18, 2100, "There are no predefined responses." );
+			}
+			else
+			{
+				AddLabel( 52, 18, 2100, "Back" );
+
+				for ( int i = 0; i < preresp.Count; ++i )
+				{
+					AddButton( 18, 40 + (i * 22), 0xFA5, 0xFA7, 100 + i, GumpButtonType.Reply, 0 );
+					AddLabel( 52, 40 + (i * 22), 2100, ((PredefinedResponse)preresp[i]).Title );
+				}
 			}
 		}
 
@@ -600,13 +572,6 @@ namespace Server.Engines.Help
 
 		public override void OnResponse( NetState state, RelayInfo info )
 		{
-			if ( info.ButtonID != 0 && PageQueue.List.IndexOf( m_Entry ) < 0 )
-			{
-				state.Mobile.SendGump( new PageQueueGump() );
-				state.Mobile.SendMessage( "That page has been removed." );
-				return;
-			}
-
 			switch ( info.ButtonID )
 			{
 				case 0: // close
@@ -626,18 +591,18 @@ namespace Server.Engines.Help
 
 					if ( m_Entry.Sender.Deleted )
 					{
-						m.SendMessage( "That character no longer exists." );
+						m.SendAsciiMessage( "That character no longer exists." );
 					}
 					else if ( m_Entry.Sender.Map == null || m_Entry.Sender.Map == Map.Internal )
 					{
-						m.SendMessage( "That character is not in the world." );
+						m.SendAsciiMessage( "That character is not in the world." );
 					}
 					else
 					{
-						m_Entry.AddResponse( state.Mobile, "[Go Sender]" );
-						m.MoveToWorld( m_Entry.Sender.Location, m_Entry.Sender.Map );
+						m.Map = m_Entry.Sender.Map;
+						m.Location = m_Entry.Sender.Location;
 
-						m.SendMessage( "You have been teleported to that pages sender." );
+						m.SendAsciiMessage( "You have been teleported to that pages sender." );
 
 						Resend( state );
 					}
@@ -653,24 +618,24 @@ namespace Server.Engines.Help
 					{
 						if ( h.Deleted )
 						{
-							m.SendMessage( "That character no longer exists." );
+							m.SendAsciiMessage( "That character no longer exists." );
 						}
 						else if ( h.Map == null || h.Map == Map.Internal )
 						{
-							m.SendMessage( "That character is not in the world." );
+							m.SendAsciiMessage( "That character is not in the world." );
 						}
 						else
 						{
-							m_Entry.AddResponse( state.Mobile, "[Go Handler]" );
-							m.MoveToWorld( h.Location, h.Map );
+							m.Map = h.Map;
+							m.Location = h.Location;
 
-							m.SendMessage( "You have been teleported to that pages handler." );
+							m.SendAsciiMessage( "You have been teleported to that pages handler." );
 							Resend( state );
 						}
 					}
 					else
 					{
-						m.SendMessage( "Nobody is handling that page." );
+						m.SendAsciiMessage( "Nobody is handling that page." );
 						Resend( state );
 					}
 
@@ -682,14 +647,14 @@ namespace Server.Engines.Help
 
 					if ( m_Entry.PageMap == null || m_Entry.PageMap == Map.Internal )
 					{
-						m.SendMessage( "That location is not in the world." );
+						m.SendAsciiMessage( "That location is not in the world." );
 					}
 					else
 					{
-						m_Entry.AddResponse( state.Mobile, "[Go PageLoc]" );
-						m.MoveToWorld( m_Entry.PageLocation, m_Entry.PageMap );
+						m.Map = m_Entry.PageMap;
+						m.Location = m_Entry.PageLocation;
 
-						state.Mobile.SendMessage( "You have been teleported to the original page location." );
+						state.Mobile.SendAsciiMessage( "You have been teleported to the original page location." );
 
 						Resend( state );
 					}
@@ -700,14 +665,13 @@ namespace Server.Engines.Help
 				{
 					if ( m_Entry.Handler == null )
 					{
-						m_Entry.AddResponse( state.Mobile, "[Handling]" );
 						m_Entry.Handler = state.Mobile;
 
-						state.Mobile.SendMessage( "You are now handling the page." );
+						state.Mobile.SendAsciiMessage( "You are now handling the page." );
 					}
 					else
 					{
-						state.Mobile.SendMessage( "Someone is already handling that page." );
+						state.Mobile.SendAsciiMessage( "Someone is already handling that page." );
 					}
 
 					Resend( state );
@@ -718,10 +682,9 @@ namespace Server.Engines.Help
 				{
 					if ( m_Entry.Handler == null )
 					{
-						m_Entry.AddResponse( state.Mobile, "[Deleting]" );
 						PageQueue.Remove( m_Entry );
 
-						state.Mobile.SendMessage( "You delete the page." );
+						state.Mobile.SendAsciiMessage( "You delete the page." );
 
 						PageQueueGump g = new PageQueueGump();
 
@@ -729,7 +692,7 @@ namespace Server.Engines.Help
 					}
 					else
 					{
-						state.Mobile.SendMessage( "Someone is handling that page, it can not be deleted." );
+						state.Mobile.SendAsciiMessage( "Someone is handling that page, it can not be deleted." );
 
 						Resend( state );
 					}
@@ -740,14 +703,13 @@ namespace Server.Engines.Help
 				{
 					if ( m_Entry.Handler == state.Mobile )
 					{
-						m_Entry.AddResponse( state.Mobile, "[Abandoning]" );
-						state.Mobile.SendMessage( "You abandon the page." );
+						state.Mobile.SendAsciiMessage( "You abandon the page." );
 
 						m_Entry.Handler = null;
 					}
 					else
 					{
-						state.Mobile.SendMessage( "You are not handling that page." );
+						state.Mobile.SendAsciiMessage( "You are not handling that page." );
 					}
 
 					Resend( state );
@@ -758,12 +720,11 @@ namespace Server.Engines.Help
 				{
 					if ( m_Entry.Handler == state.Mobile )
 					{
-						m_Entry.AddResponse( state.Mobile, "[Handled]" );
 						PageQueue.Remove( m_Entry );
 
 						m_Entry.Handler = null;
 
-						state.Mobile.SendMessage( "You mark the page as handled, and remove it from the queue." );
+						state.Mobile.SendAsciiMessage( "You mark the page as handled, and remove it from the queue." );
 
 						PageQueueGump g = new PageQueueGump();
 
@@ -771,7 +732,7 @@ namespace Server.Engines.Help
 					}
 					else
 					{
-						state.Mobile.SendMessage( "You are not handling that page." );
+						state.Mobile.SendAsciiMessage( "You are not handling that page." );
 
 						Resend( state );
 					}
@@ -784,10 +745,9 @@ namespace Server.Engines.Help
 
 					if ( text != null )
 					{
-						m_Entry.AddResponse( state.Mobile, "[Response] " + text.Text );
-						m_Entry.Sender.SendGump( new MessageSentGump( m_Entry.Sender, state.Mobile.Name, text.Text ) );
-						//m_Entry.Sender.SendMessage( 0x482, "{0} tells you:", state.Mobile.Name );
-						//m_Entry.Sender.SendMessage( 0x482, text.Text );
+						//m_Entry.Sender.SendGump( new MessageSentGump( m_Entry.Sender, state.Mobile.Name, text.Text ) );
+						m_Entry.Sender.SendAsciiMessage( 0x35, "{0} tells you:", state.Mobile.Name );
+						m_Entry.Sender.SendAsciiMessage( 0x35, text.Text );
 					}
 
 					Resend( state );
@@ -801,18 +761,6 @@ namespace Server.Engines.Help
 
 					break;
 				}
-				case 10: // View Speech Log
-				{
-					Resend( state );
-
-					if ( m_Entry.SpeechLog != null )
-					{
-						Gump gump = new SpeechLogGump( m_Entry.Sender, m_Entry.SpeechLog );
-						state.Mobile.SendGump( gump );
-					}
-
-					break;
-				}
 				default:
 				{
 					int index = info.ButtonID - 100;
@@ -820,15 +768,16 @@ namespace Server.Engines.Help
 
 					if ( index >= 0 && index < preresp.Count )
 					{
-						m_Entry.AddResponse( state.Mobile, "[PreDef] " + ((PredefinedResponse)preresp[index]).Title );
-						m_Entry.Sender.SendGump( new MessageSentGump( m_Entry.Sender, state.Mobile.Name, ((PredefinedResponse)preresp[index]).Message ) );
+						m_Entry.Sender.SendAsciiMessage( 0x35, "{0} tells you:", state.Mobile.Name ); 
+						m_Entry.Sender.SendAsciiMessage( 0x35, ((PredefinedResponse)preresp[index]).Message );
+						//m_Entry.Sender.SendGump( new MessageSentGump( m_Entry.Sender, state.Mobile.Name, ((PredefinedResponse)preresp[index]).Message ) );
 					}
 
 					Resend( state );
-
 					break;
 				}
 			}
 		}
 	}
 }
+

@@ -1,12 +1,10 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server.Network;
-using System.Collections.Generic;
-using Server.ContextMenus;
 
 namespace Server.Items
 {
-	public abstract class Food : Item
+	public class Food : BaseItem
 	{
 		private Mobile m_Poisoner;
 		private Poison m_Poison;
@@ -48,7 +46,7 @@ namespace Server.Items
 		{
 		}
 
-		public override void GetContextMenuEntries( Mobile from, List<ContextMenuEntry> list )
+		public override void GetContextMenuEntries( Mobile from, List<ContextMenus.ContextMenuEntry> list )
 		{
 			base.GetContextMenuEntries( from, list );
 
@@ -193,6 +191,53 @@ namespace Server.Items
 		{
 		}
 
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new BreadLoaf(), amount );
+		}
+
+		public override void Serialize( GenericWriter writer )
+		{
+			base.Serialize( writer );
+
+			writer.Write( (int) 0 ); // version
+		}
+
+		public override void Deserialize( GenericReader reader )
+		{
+			base.Deserialize( reader );
+
+			int version = reader.ReadInt();
+		}
+	}
+
+	public class HumanJerky : Food
+	{
+		[Constructable]
+		public HumanJerky() : this( null )
+		{
+		}
+		
+		public HumanJerky( Mobile from ) : base( 1, 0x979 )
+		{
+			if ( from != null )
+				this.Name = String.Format( "jerky of {0}", from.Name );
+			else
+				this.Name = "human jerky";
+			this.Stackable = false;
+			this.Weight = 0.5;
+			this.FillFactor = 1;
+		}
+
+		public HumanJerky( Serial serial ) : base( serial )
+		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new BreadLoaf(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -226,37 +271,9 @@ namespace Server.Items
 		{
 		}
 
-		public override void Serialize( GenericWriter writer )
+		public override Item Dupe( int amount )
 		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-	}
-
-	public class SlabOfBacon : Food
-	{
-		[Constructable]
-		public SlabOfBacon() : this( 1 )
-		{
-		}
-
-		[Constructable]
-		public SlabOfBacon( int amount ) : base( amount, 0x976 )
-		{
-			this.Weight = 1.0;
-			this.FillFactor = 3;
-		}
-
-		public SlabOfBacon( Serial serial ) : base( serial )
-		{
+			return base.Dupe( new Bacon(), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )
@@ -276,11 +293,6 @@ namespace Server.Items
 
 	public class FishSteak : Food
 	{
-		public override double DefaultWeight
-		{
-			get { return 0.1; }
-		}
-
 		[Constructable]
 		public FishSteak() : this( 1 )
 		{
@@ -289,11 +301,17 @@ namespace Server.Items
 		[Constructable]
 		public FishSteak( int amount ) : base( amount, 0x97B )
 		{
+			this.Weight = 0.1;
 			this.FillFactor = 3;
 		}
 
 		public FishSteak( Serial serial ) : base( serial )
 		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new FishSteak(), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )
@@ -313,11 +331,6 @@ namespace Server.Items
 
 	public class CheeseWheel : Food
 	{
-		public override double DefaultWeight
-		{
-			get { return 0.1; }
-		}
-
 		[Constructable]
 		public CheeseWheel() : this( 1 )
 		{
@@ -326,11 +339,17 @@ namespace Server.Items
 		[Constructable]
 		public CheeseWheel( int amount ) : base( amount, 0x97E )
 		{
+			this.Weight = 0.1;
 			this.FillFactor = 3;
 		}
 
 		public CheeseWheel( Serial serial ) : base( serial )
 		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new CheeseWheel(), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )
@@ -350,11 +369,6 @@ namespace Server.Items
 
 	public class CheeseWedge : Food
 	{
-		public override double DefaultWeight
-		{
-			get { return 0.1; }
-		}
-
 		[Constructable]
 		public CheeseWedge() : this( 1 )
 		{
@@ -363,6 +377,7 @@ namespace Server.Items
 		[Constructable]
 		public CheeseWedge( int amount ) : base( amount, 0x97D )
 		{
+			this.Weight = 0.1;
 			this.FillFactor = 3;
 		}
 
@@ -370,41 +385,9 @@ namespace Server.Items
 		{
 		}
 
-		public override void Serialize( GenericWriter writer )
+		public override Item Dupe( int amount )
 		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-	}
-
-	public class CheeseSlice : Food
-	{
-		public override double DefaultWeight
-		{
-			get { return 0.1; }
-		}
-
-		[Constructable]
-		public CheeseSlice() : this( 1 )
-		{
-		}
-
-		[Constructable]
-		public CheeseSlice( int amount ) : base( amount, 0x97C )
-		{
-			this.FillFactor = 1;
-		}
-
-		public CheeseSlice( Serial serial ) : base( serial )
-		{
+			return base.Dupe( new CheeseWedge(), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )
@@ -438,6 +421,11 @@ namespace Server.Items
 
 		public FrenchBread( Serial serial ) : base( serial )
 		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new FrenchBread(), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )
@@ -474,6 +462,11 @@ namespace Server.Items
 		{
 		}
 
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new FriedEggs(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -505,6 +498,11 @@ namespace Server.Items
 
 		public CookedBird( Serial serial ) : base( serial )
 		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new CookedBird(), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )
@@ -540,6 +538,11 @@ namespace Server.Items
 		{
 		}
 
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new RoastPig(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -573,6 +576,11 @@ namespace Server.Items
 		{
 		}
 
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Sausage(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -604,6 +612,11 @@ namespace Server.Items
 
 		public Ham( Serial serial ) : base( serial )
 		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Ham(), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )
@@ -668,6 +681,11 @@ namespace Server.Items
 		{
 		}
 
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Ribs(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -688,7 +706,7 @@ namespace Server.Items
 		[Constructable]
 		public Cookies() : base( 0x160b )
 		{
-			Stackable = Core.ML;
+			Stackable = false;
 			this.Weight = 1.0;
 			this.FillFactor = 4;
 		}
@@ -804,7 +822,6 @@ namespace Server.Items
 		}
 	}
 
-#if false
 	public class Pizza : Food
 	{
 		[Constructable]
@@ -833,7 +850,6 @@ namespace Server.Items
 			int version = reader.ReadInt();
 		}
 	}
-#endif
 
 	public class FruitPie : Food
 	{
@@ -997,7 +1013,7 @@ namespace Server.Items
 		[Constructable]
 		public Quiche() : base( 0x1041 )
 		{
-			Stackable = Core.ML;
+			Stackable = false;
 			this.Weight = 1.0;
 			this.FillFactor = 5;
 		}
@@ -1039,6 +1055,11 @@ namespace Server.Items
 		{
 		}
 
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new LambLeg(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -1070,6 +1091,11 @@ namespace Server.Items
 
 		public ChickenLeg( Serial serial ) : base( serial )
 		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new ChickenLeg(), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )
@@ -1106,6 +1132,11 @@ namespace Server.Items
 		{
 		}
 
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new HoneydewMelon(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -1138,6 +1169,11 @@ namespace Server.Items
 
 		public YellowGourd( Serial serial ) : base( serial )
 		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new YellowGourd(), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )
@@ -1174,98 +1210,9 @@ namespace Server.Items
 		{
 		}
 
-		public override void Serialize( GenericWriter writer )
+		public override Item Dupe( int amount )
 		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-	}
-
-	[FlipableAttribute( 0xC7F, 0xC81 )]
-	public class EarOfCorn : Food
-	{
-		[Constructable]
-		public EarOfCorn() : this( 1 )
-		{
-		}
-
-		[Constructable]
-		public EarOfCorn( int amount ) : base( amount, 0xC81 )
-		{
-			this.Weight = 1.0;
-			this.FillFactor = 1;
-		}
-
-		public EarOfCorn( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-	}
-
-	public class Turnip : Food
-	{
-		[Constructable]
-		public Turnip() : this( 1 )
-		{
-		}
-
-		[Constructable]
-		public Turnip( int amount ) : base( amount, 0xD3A )
-		{
-			this.Weight = 1.0;
-			this.FillFactor = 1;
-		}
-
-		public Turnip( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-	}
-
-	public class SheafOfHay : Item
-	{
-		[Constructable]
-		public SheafOfHay() : base( 0xF36 )
-		{
-			this.Weight = 10.0;
-		}
-
-		public SheafOfHay( Serial serial ) : base( serial )
-		{
+			return base.Dupe( new GreenGourd(), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )

@@ -5,7 +5,7 @@ using Server.Network;
 
 namespace Server.Items
 {
-	public class TillerMan : Item
+	public class TillerMan : BaseItem
 	{
 		private BaseBoat m_Boat;
 
@@ -14,6 +14,8 @@ namespace Server.Items
 			m_Boat = boat;
 			Movable = false;
 		}
+
+		public BaseBoat Boat { get{ return m_Boat; } }
 
 		public TillerMan( Serial serial ) : base(serial)
 		{
@@ -28,13 +30,6 @@ namespace Server.Items
 				case Direction.West:  ItemID = 0x3E50; break;
 				case Direction.East:  ItemID = 0x3E53; break;
 			}
-		}
-
-		public override void GetProperties( ObjectPropertyList list )
-		{
-			base.GetProperties( list );
-
-			list.Add( m_Boat.Status );
 		}
 
 		public void Say( int number )
@@ -58,9 +53,36 @@ namespace Server.Items
 		public override void OnSingleClick( Mobile from )
 		{
 			if ( m_Boat != null && m_Boat.ShipName != null )
-				LabelTo( from, 1042884, m_Boat.ShipName ); // the tiller man of the ~1_SHIP_NAME~
+				LabelTo( from, true, "the tiller man of the {0}", m_Boat.ShipName );
 			else
 				base.OnSingleClick( from );
+
+			if ( m_Boat != null )
+			{
+				if ( m_Boat.TimeOfDecay == DateTime.MinValue )
+				{
+					LabelTo( from, true, "This boat is ageless." );
+				}
+				else
+				{
+					switch ( (int)( m_Boat.TimeOfDecay - DateTime.Now ).TotalDays )
+					{
+						case 6:
+							LabelTo( from, true, "This boat is like new." ); break;
+						case 5: 
+						case 4: 
+							LabelTo( from, true, "This boat is slightly weathered." ); break;
+						case 3: 
+							LabelTo( from, true, "This boat is somewhat weathered." ); break;
+						case 2: 
+							LabelTo( from, true, "This boat is grealy weathered." ); break;
+						case 1: 
+							LabelTo( from, true, "This boat is barely sea worthy." ); break;
+						case 0: 
+							LabelTo( from, true, "This boat is in danger of sinking." ); break;
+					}
+				}
+			}
 		}
 
 		public override void OnDoubleClick( Mobile from )
@@ -69,16 +91,6 @@ namespace Server.Items
 				m_Boat.BeginRename( from );
 			else if ( m_Boat != null )
 				m_Boat.BeginDryDock( from );
-		}
-
-		public override bool OnDragDrop( Mobile from, Item dropped )
-		{
-			if ( dropped is MapItem && m_Boat != null && m_Boat.CanCommand( from ) && m_Boat.Contains( from ) )
-			{
-				m_Boat.AssociateMap( (MapItem) dropped );
-			}
-
-			return false;
 		}
 
 		public override void OnAfterDelete()

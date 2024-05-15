@@ -1,128 +1,129 @@
-using System;
-using Server;
+using System; 
+using Server; 
+using Server.Mobiles; 
 
-namespace Server.Items
-{
-	public enum HeadType
+namespace Server.Items 
+{ 
+	public class Head : BaseItem, ICarvable
 	{
-		Regular,
-		Duel,
-		Tournament
-	}
-
-	public class Head : Item
-	{
-		private string m_PlayerName;
-		private HeadType m_HeadType;
-
-		[CommandProperty( AccessLevel.GameMaster )]
-		public string PlayerName
+		#region ICarvable Members
+		public void Carve(Mobile from, Item item)
 		{
-			get { return m_PlayerName; }
-			set { m_PlayerName = value; }
-		}
-
-		[CommandProperty( AccessLevel.GameMaster )]
-		public HeadType HeadType
-		{
-			get { return m_HeadType; }
-			set { m_HeadType = value; }
-		}
-
-		public override string DefaultName
-		{
-			get
+			Item brain = new BaseItem( 7408 );
+			Item skull = new BaseItem( 6882 );
+			if ( m_Owner != null )
 			{
-				if ( m_PlayerName == null )
-					return base.DefaultName;
-
-				switch ( m_HeadType )
-				{
-					default:
-						return String.Format( "the head of {0}", m_PlayerName );
-
-					case HeadType.Duel:
-						return String.Format( "the head of {0}, taken in a duel", m_PlayerName );
-
-					case HeadType.Tournament:
-						return String.Format( "the head of {0}, taken in a tournament", m_PlayerName );
-				}
+				brain.Name = "brain of " + m_Owner.Name;
+				skull.Name = "skull of " + m_Owner.Name;
 			}
+
+			if ( !(Parent is Container) )
+			{
+				brain.MoveToWorld( GetWorldLocation(), Map );
+				skull.MoveToWorld( GetWorldLocation(), Map );
+			}
+			else
+			{
+				Container cont = (Container)Parent;
+				cont.DropItem( brain );
+				cont.DropItem( skull );
+			}
+
+			Delete();
+		}
+		#endregion
+
+		private Mobile m_Owner; 
+		private DateTime m_Created;
+		private int m_Bounty;
+	   
+		[CommandProperty( AccessLevel.GameMaster )] 
+		public Mobile Owner 
+		{	
+			get{ return m_Owner; }	
+			set{ m_Owner =	value; } 
+		}	
+
+		[CommandProperty( AccessLevel.GameMaster )] 
+		public int MaxBounty 
+		{	
+			get{ return m_Bounty; }	
+			set{ m_Bounty =	value; } 
+		}	
+
+		[CommandProperty( AccessLevel.GameMaster )]
+		public TimeSpan Age 
+		{
+			get { return DateTime.Now - m_Created; }
 		}
 
-		[Constructable]
-		public Head()
-			: this( null )
+		[Constructable] 
+		public Head() : base( 0x1DA0 ) 
 		{
+			m_Created = DateTime.Now;
+			Weight = 1.0; 
+			LastMoved = (DateTime.Now - Item.DefaultDecayTime) + TimeSpan.FromMinutes( 7.5 );
 		}
 
-		[Constructable]
-		public Head( string playerName )
-			: this( HeadType.Regular, playerName )
+		[Constructable] 
+		public Head( string name ) : this()
+		{	
+			Name = name; 
+		}	
+
+		public Head( Mobile owner ) : this( owner == null ? "a head" : String.Format( "head of {0}", owner.Name ) )
 		{
+			m_Owner = owner;
+			if ( m_Owner != null && !m_Owner.Deleted && m_Owner is PlayerMobile )
+				m_Bounty = ((PlayerMobile)m_Owner).Bounty;
 		}
 
-		[Constructable]
-		public Head( HeadType headType, string playerName )
-			: base( 0x1DA0 )
-		{
-			m_HeadType = headType;
-			m_PlayerName = playerName;
-		}
+		public Head( Serial serial ) : base( serial )	
+		{	
+		}	
 
-		public Head( Serial serial )
-			: base( serial )
-		{
-		}
+		public override void Serialize( GenericWriter writer ) 
+		{	
+			base.Serialize( writer ); 
+			writer.Write( (int) 1 ); // version 
 
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
+			writer.Write( m_Bounty );
 
-			writer.Write( (int) 1 ); // version
+			writer.Write( m_Owner ); 
+			writer.Write( m_Created );	
+		}	
 
-			writer.Write( (string) m_PlayerName );
-			writer.WriteEncodedInt( (int) m_HeadType );
-		}
+		public override void Deserialize( GenericReader reader ) 
+		{	
+			base.Deserialize( reader ); 
 
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
+			int version = reader.ReadInt(); 
 
 			switch ( version )
 			{
 				case 1:
-					m_PlayerName = reader.ReadString();
-					m_HeadType = (HeadType) reader.ReadEncodedInt();
-					break;
-
+				{
+					m_Bounty = reader.ReadInt();
+					goto case 0;
+				}
 				case 0:
-					string format = this.Name;
-
-					if ( format != null )
-					{
-						if ( format.StartsWith( "the head of " ) )
-							format = format.Substring( "the head of ".Length );
-
-						if ( format.EndsWith( ", taken in a duel" ) )
-						{
-							format = format.Substring( 0, format.Length - ", taken in a duel".Length );
-							m_HeadType = HeadType.Duel;
-						}
-						else if ( format.EndsWith( ", taken in a tournament" ) )
-						{
-							format = format.Substring( 0, format.Length - ", taken in a tournament".Length );
-							m_HeadType = HeadType.Tournament;
-						}
-					}
-
-					m_PlayerName = format;
-					this.Name = null;
+				{
+					m_Owner = reader.ReadMobile();	
+					m_Created = reader.ReadDateTime();	
 
 					break;
+				}
 			}
+
+			if ( version == 0 && m_Owner is PlayerMobile )
+				Timer.DelayCall( TimeSpan.Zero, new TimerCallback( UpdateBounty ) );
+		}	
+
+		private void UpdateBounty()
+		{
+			if ( m_Owner is PlayerMobile && !m_Owner.Deleted )
+				m_Bounty = ((PlayerMobile)m_Owner).Bounty;
 		}
 	}
 }
+

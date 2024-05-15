@@ -3,7 +3,7 @@ using System;
 namespace Server.Items
 {
 	[Furniture]
-	public class Stool : Item
+	public class Stool : BaseItem
 	{
 		[Constructable]
 		public Stool() : base( 0xA2A )
@@ -34,7 +34,7 @@ namespace Server.Items
 	}
 
 	[Furniture]
-	public class FootStool : Item
+	public class FootStool : BaseItem
 	{
 		[Constructable]
 		public FootStool() : base( 0xB5E )

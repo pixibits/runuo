@@ -4,7 +4,7 @@ using Server.Network;
 
 namespace Server.Items
 {
-	public class LOSBlocker : Item
+	public class LOSBlocker : BaseItem
 	{
 		public static void Initialize()
 		{

@@ -3,13 +3,8 @@ using Server;
 
 namespace Server.Items
 {
-	public class StarSapphire : Item
+	public class StarSapphire : BaseItem
 	{
-		public override double DefaultWeight
-		{
-			get { return 0.1; }
-		}
-
 		[Constructable]
 		public StarSapphire() : this( 1 )
 		{
@@ -19,6 +14,7 @@ namespace Server.Items
 		public StarSapphire( int amount ) : base( 0xF21 )
 		{
 			Stackable = true;
+			Weight = 0.1;
 			Amount = amount;
 		}
 
@@ -26,7 +22,10 @@ namespace Server.Items
 		{
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new StarSapphire( amount ), amount );
+		}
 
 		public override void Serialize( GenericWriter writer )
 		{

@@ -33,18 +33,18 @@ namespace Server.Items
 			if ( from.BeginAction( typeof( LightCycle ) ) )
 			{
 				new LightCycle.NightSightTimer( from ).Start();
-				from.LightLevel = LightCycle.DungeonLevel / 2;
+				from.LightLevel = Math.Abs( LightCycle.DungeonLevel / 2 );
 
 				from.FixedParticles( 0x376A, 9, 32, 5007, EffectLayer.Waist );
 				from.PlaySound( 0x1E3 );
 
 				BasePotion.PlayDrinkEffect( from );
 
-				this.Consume();
+				this.Delete();
 			}
 			else
 			{
-				from.SendMessage( "You already have nightsight." );
+				from.SendAsciiMessage( "You already have nightsight." );
 			}
 		}
 	}

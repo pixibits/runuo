@@ -1,6 +1,6 @@
 using Server;
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server.Multis;
 using Server.Targeting;
 using Server.Items;
@@ -31,15 +31,13 @@ namespace Server.Multis.Deeds
 
 				if ( from.AccessLevel >= AccessLevel.GameMaster || reg.AllowHousing( from, p ) )
 					m_Deed.OnPlacement( from, p );
-				else if ( reg.IsPartOf( typeof( TreasureRegion ) ) )
-					from.SendLocalizedMessage( 1043287 ); // The house could not be created here.  Either something is blocking the house, or the house would not be on valid terrain.
 				else
 					from.SendLocalizedMessage( 501265 ); // Housing can not be created in this area.
 			}
 		}
 	}
 
-	public abstract class HouseDeed : Item
+	public abstract class HouseDeed : BaseItem
 	{
 		private int m_MultiID;
 		private Point3D m_Offset;
@@ -73,9 +71,9 @@ namespace Server.Multis.Deeds
 		public HouseDeed( int id, Point3D offset ) : base( 0x14F0 )
 		{
 			Weight = 1.0;
-			LootType = LootType.Newbied;
+			//LootType = LootType.Newbied;
 
-			m_MultiID = id;
+			m_MultiID = id & 0x3FFF;
 			m_Offset = offset;
 		}
 
@@ -126,10 +124,6 @@ namespace Server.Multis.Deeds
 			{
 				from.SendLocalizedMessage( 1042001 ); // That must be in your pack for you to use it.
 			}
-			else if ( from.AccessLevel < AccessLevel.GameMaster && BaseHouse.HasAccountHouse( from ) )
-			{
-				from.SendLocalizedMessage( 501271 ); // You already own a house, you may not place another!
-			}
 			else
 			{
 				from.SendLocalizedMessage( 1010433 ); /* House placement cancellation could result in a
@@ -151,10 +145,6 @@ namespace Server.Multis.Deeds
 			if ( !IsChildOf( from.Backpack ) )
 			{
 				from.SendLocalizedMessage( 1042001 ); // That must be in your pack for you to use it.
-			}
-			else if ( from.AccessLevel < AccessLevel.GameMaster && BaseHouse.HasAccountHouse( from ) )
-			{
-				from.SendLocalizedMessage( 501271 ); // You already own a house, you may not place another!
 			}
 			else
 			{
@@ -192,7 +182,7 @@ namespace Server.Multis.Deeds
 					}
 					case HousePlacementResult.NoSurface:
 					{
-						from.SendMessage( "The house could not be created here.  Part of the foundation would not be on any surface." );
+						from.SendAsciiMessage( "The house could not be created here.  Part of the foundation would not be on any surface." );
 						break;
 					}
 					case HousePlacementResult.BadRegion:
@@ -200,13 +190,76 @@ namespace Server.Multis.Deeds
 						from.SendLocalizedMessage( 501265 ); // Housing cannot be created in this area.
 						break;
 					}
-					case HousePlacementResult.BadRegionTemp:
-					{
-						from.SendLocalizedMessage( 501270 ); //Lord British has decreed a 'no build' period, thus you cannot build this house at this time.
-						break;
-					}
 				}
 			}
+		}
+	}
+
+	public class BlueTentDeed : HouseDeed
+	{
+		[Constructable]
+		public BlueTentDeed() : base( 0x70, new Point3D( 0, 4, 0 ) )
+		{
+		}
+
+		public BlueTentDeed( Serial serial ) : base( serial )
+		{
+		}
+
+		public override BaseHouse GetHouse( Mobile owner )
+		{
+			return new Tent( owner, 0x70 );
+		}
+
+		public override int LabelNumber{ get{ return 1041217; } }
+		public override Rectangle2D[] Area{ get{ return Tent.AreaArray; } }
+
+		public override void Serialize( GenericWriter writer )
+		{
+			base.Serialize( writer );
+
+			writer.Write( (int) 0 ); // version
+		}
+
+		public override void Deserialize( GenericReader reader )
+		{
+			base.Deserialize( reader );
+
+			int version = reader.ReadInt();
+		}
+	}
+
+	public class GreenTentDeed : HouseDeed
+	{
+		[Constructable]
+		public GreenTentDeed() : base( 0x72, new Point3D( 0, 4, 0 ) )
+		{
+		}
+
+		public GreenTentDeed( Serial serial ) : base( serial )
+		{
+		}
+
+		public override BaseHouse GetHouse( Mobile owner )
+		{
+			return new Tent( owner, 0x72 );
+		}
+
+		public override int LabelNumber{ get{ return 1041218; } }
+		public override Rectangle2D[] Area{ get{ return Tent.AreaArray; } }
+
+		public override void Serialize( GenericWriter writer )
+		{
+			base.Serialize( writer );
+
+			writer.Write( (int) 0 ); // version
+		}
+
+		public override void Deserialize( GenericReader reader )
+		{
+			base.Deserialize( reader );
+
+			int version = reader.ReadInt();
 		}
 	}
 
@@ -363,6 +416,176 @@ namespace Server.Multis.Deeds
 		}
 
 		public override int LabelNumber{ get{ return 1041215; } }
+		public override Rectangle2D[] Area{ get{ return SmallOldHouse.AreaArray; } }
+
+		public override void Serialize( GenericWriter writer )
+		{
+			base.Serialize( writer );
+
+			writer.Write( (int) 0 ); // version
+		}
+
+		public override void Deserialize( GenericReader reader )
+		{
+			base.Deserialize( reader );
+
+			int version = reader.ReadInt();
+		}
+	}
+
+	public class SmallTrainingHouseDeed : HouseDeed
+	{
+		[Constructable]
+		public SmallTrainingHouseDeed() : base( 0x6D, new Point3D( 0, 4, 0 ) )
+		{
+			Name = "Deed to a Weapon Training Hut";
+		}
+
+		public SmallTrainingHouseDeed( Serial serial ) : base( serial )
+		{
+		}
+
+		public override BaseHouse GetHouse( Mobile owner )
+		{
+			return new SmallTrainingHouse( owner, 0x6D );
+		}
+
+		public override Rectangle2D[] Area{ get{ return SmallOldHouse.AreaArray; } }
+
+		public override void Serialize( GenericWriter writer )
+		{
+			base.Serialize( writer );
+
+			writer.Write( (int) 0 ); // version
+		}
+
+		public override void Deserialize( GenericReader reader )
+		{
+			base.Deserialize( reader );
+
+			int version = reader.ReadInt();
+		}
+	}
+
+	public class SmallPickpocketHouseDeed : HouseDeed
+	{
+		[Constructable]
+		public SmallPickpocketHouseDeed() : base( 0x6D, new Point3D( 0, 4, 0 ) )
+		{
+			Name = "Deed to a Pickpocket's Den";
+		}
+
+		public SmallPickpocketHouseDeed( Serial serial ) : base( serial )
+		{
+		}
+
+		public override BaseHouse GetHouse( Mobile owner )
+		{
+			return new SmallPickpocketHouse( owner, 0x6D );
+		}
+
+		public override Rectangle2D[] Area{ get{ return SmallOldHouse.AreaArray; } }
+
+		public override void Serialize( GenericWriter writer )
+		{
+			base.Serialize( writer );
+
+			writer.Write( (int) 0 ); // version
+		}
+
+		public override void Deserialize( GenericReader reader )
+		{
+			base.Deserialize( reader );
+
+			int version = reader.ReadInt();
+		}
+	}
+
+	public class SmallTailorHouseDeed : HouseDeed
+	{
+		[Constructable]
+		public SmallTailorHouseDeed() : base( 0x6D, new Point3D( 0, 4, 0 ) )
+		{
+			Name = "Deed to a Small Weaver's Shop";
+		}
+
+		public SmallTailorHouseDeed( Serial serial ) : base( serial )
+		{
+		}
+
+		public override BaseHouse GetHouse( Mobile owner )
+		{
+			return new SmallTailorHouse( owner, 0x6D );
+		}
+
+		public override Rectangle2D[] Area{ get{ return SmallOldHouse.AreaArray; } }
+
+		public override void Serialize( GenericWriter writer )
+		{
+			base.Serialize( writer );
+
+			writer.Write( (int) 0 ); // version
+		}
+
+		public override void Deserialize( GenericReader reader )
+		{
+			base.Deserialize( reader );
+
+			int version = reader.ReadInt();
+		}
+	}
+
+	public class SmallForgeHouseDeed : HouseDeed
+	{
+		[Constructable]
+		public SmallForgeHouseDeed() : base( 0x6D, new Point3D( 0, 4, 0 ) )
+		{
+			Name = "Deed to a Small Smith's Shop";
+		}
+
+		public SmallForgeHouseDeed( Serial serial ) : base( serial )
+		{
+		}
+
+		public override BaseHouse GetHouse( Mobile owner )
+		{
+			return new SmallForgeHouse( owner, 0x6D );
+		}
+
+		public override Rectangle2D[] Area{ get{ return SmallOldHouse.AreaArray; } }
+
+		public override void Serialize( GenericWriter writer )
+		{
+			base.Serialize( writer );
+
+			writer.Write( (int) 0 ); // version
+		}
+
+		public override void Deserialize( GenericReader reader )
+		{
+			base.Deserialize( reader );
+
+			int version = reader.ReadInt();
+		}
+	}
+
+	public class SmallBakeryHouseDeed : HouseDeed
+	{
+		[Constructable]
+		public SmallBakeryHouseDeed() : base( 0x6D, new Point3D( 0, 4, 0 ) )
+		{
+			Name = "Deed to a Small Baker's Shop";
+		}
+
+		public SmallBakeryHouseDeed( Serial serial ) : base( serial )
+		{
+		}
+
+		public override BaseHouse GetHouse( Mobile owner )
+		{
+			return new SmallBakeryHouse( owner, 0x6D );
+		}
+
 		public override Rectangle2D[] Area{ get{ return SmallOldHouse.AreaArray; } }
 
 		public override void Serialize( GenericWriter writer )
@@ -648,6 +871,38 @@ namespace Server.Multis.Deeds
 		{
 			base.Deserialize( reader );
 
+			int version = reader.ReadInt();
+		}
+	}
+
+	public class LargeForgeHouseDeed : HouseDeed
+	{
+		[Constructable]
+		public LargeForgeHouseDeed() : base( 0x8C, new Point3D( -4, 7, 0 ) )
+		{
+			Name = "deed to a large blacksmith's shop";
+		}
+
+		public LargeForgeHouseDeed( Serial serial ) : base( serial )
+		{
+		}
+
+		public override BaseHouse GetHouse( Mobile owner )
+		{
+			return new LargeForgeHouse( owner );
+		}
+
+		public override Rectangle2D[] Area{ get{ return LargePatioHouse.AreaArray; } }
+
+		public override void Serialize( GenericWriter writer )
+		{
+			base.Serialize( writer );
+			writer.Write( (int) 0 ); // version
+		}
+
+		public override void Deserialize( GenericReader reader )
+		{
+			base.Deserialize( reader );
 			int version = reader.ReadInt();
 		}
 	}

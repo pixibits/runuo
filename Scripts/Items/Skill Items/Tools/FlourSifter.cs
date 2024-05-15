@@ -6,8 +6,6 @@ namespace Server.Items
 {
 	public class FlourSifter : BaseTool
 	{
-		public override CraftSystem CraftSystem{ get{ return DefCooking.CraftSystem; } }
-
 		[Constructable]
 		public FlourSifter() : base( 0x103E )
 		{

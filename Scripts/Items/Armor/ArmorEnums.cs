@@ -2,14 +2,14 @@ using System;
 
 namespace Server.Items
 {
-	public enum ArmorQuality
+	public enum CraftQuality
 	{
 		Low,
 		Regular,
 		Exceptional
 	}
 
-	public enum ArmorDurabilityLevel
+	public enum DurabilityLevel
 	{
 		Regular,
 		Durable,
@@ -51,8 +51,7 @@ namespace Server.Items
 		Barbed,
 		Ringmail,
 		Chainmail,
-		Plate,
-		Dragon	// On OSI, Dragon is seen and considered its own type.
+		Plate
 	}
 
 	public enum ArmorMeditationAllowance

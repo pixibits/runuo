@@ -4,10 +4,15 @@ using Server.Items;
 namespace Server.Items
 {
 	[FlipableAttribute( 0x11EA, 0x11EB )]
-	public class Sand : Item, ICommodity
+	public class Sand : BaseItem, ICommodity
 	{
-		int ICommodity.DescriptionNumber { get { return LabelNumber; } }
-		bool ICommodity.IsDeedable { get { return true; } }
+		string ICommodity.Description
+		{
+			get
+			{
+				return String.Format( Amount == 1 ? "{0} sand" : "{0} sand", Amount );
+			}
+		}
 
 		public override int LabelNumber{ get{ return 1044626; } } // sand
 
@@ -19,7 +24,8 @@ namespace Server.Items
 		[Constructable]
 		public Sand( int amount ) : base( 0x11EA )
 		{
-			Stackable = Core.ML;
+			Name = "sand";
+			Stackable = false;
 			Weight = 1.0;
 		}
 
@@ -31,7 +37,7 @@ namespace Server.Items
 		{
 			base.Serialize( writer );
 
-			writer.Write( (int) 1 ); // version
+			writer.Write( (int) 0 ); // version
 		}
 
 		public override void Deserialize( GenericReader reader )
@@ -39,9 +45,6 @@ namespace Server.Items
 			base.Deserialize( reader );
 
 			int version = reader.ReadInt();
-
-			if ( version == 0 && this.Name == "sand" )
-				this.Name = null;
 		}
 	}
 }

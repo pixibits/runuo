@@ -1,22 +1,16 @@
-#if false
 using System;
 using Server.Network;
-using Server.Commands;
 
 namespace Server.Items
 {
-	public class GMStone : Item
+	public class GMStone : BaseItem
 	{
-		public override string DefaultName
-		{
-			get { return "a GM stone"; }
-		}
-
 		[Constructable]
 		public GMStone() : base( 0xED4 )
 		{
 			Movable = false;
 			Hue = 0x489;
+			Name = "a special stone";
 		}
 
 		public GMStone( Serial serial ) : base( serial )
@@ -39,18 +33,17 @@ namespace Server.Items
 
 		public override void OnDoubleClick( Mobile from )
 		{
-			if ( from.AccessLevel < AccessLevel.GameMaster )
+			if ( from.AccessLevel == AccessLevel.Player && from.Account.AccessLevel > AccessLevel.Player )
 			{
-				from.AccessLevel = AccessLevel.GameMaster;
+                from.AccessLevel = from.Account.AccessLevel;
 
-				from.SendAsciiMessage( 0x482, "The command prefix is \"{0}\"", CommandSystem.Prefix );
-				CommandHandlers.Help_OnCommand( new CommandEventArgs( from, "help", "", new string[0] ) );
+				from.SendAsciiMessage( 0x482, "The command prefix is \"{0}\"", Server.Commands.CommandSystem.Prefix );
+				//Server.Scripts.Commands.CommandHandlers.Help_OnCommand( new Server.Commands.CommandEventArgs( from, "help", "", new string[0] ) );
 			}
 			else
 			{
-				from.SendMessage( "The stone has no effect." );
+                from.AccessLevel = AccessLevel.Player;
 			}
 		}
 	}
 }
-#endif

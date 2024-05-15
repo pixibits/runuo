@@ -4,7 +4,7 @@ using Server.Network;
 
 namespace Server.Items
 {
-	public abstract class BaseIngot : Item, ICommodity
+	public abstract class BaseIngot : BaseItem, ICommodity
 	{
 		private CraftResource m_Resource;
 
@@ -14,14 +14,14 @@ namespace Server.Items
 			get{ return m_Resource; }
 			set{ m_Resource = value; InvalidateProperties(); }
 		}
-
-		public override double DefaultWeight
-		{
-			get { return 0.1; }
-		}
 		
-		int ICommodity.DescriptionNumber { get { return LabelNumber; } }
-		bool ICommodity.IsDeedable { get { return true; } }
+		string ICommodity.Description
+		{
+			get
+			{
+				return String.Format( Amount == 1 ? "{0} {1} ingot" : "{0} {1} ingots", Amount, CraftResources.GetName( m_Resource ).ToLower() );
+			}
+		}
 
 		public override void Serialize( GenericWriter writer )
 		{
@@ -76,6 +76,7 @@ namespace Server.Items
 		public BaseIngot( CraftResource resource, int amount ) : base( 0x1BF2 )
 		{
 			Stackable = true;
+			Weight = 0.1;
 			Amount = amount;
 			Hue = CraftResources.GetHue( resource );
 
@@ -109,7 +110,7 @@ namespace Server.Items
 			}
 		}
 
-		public override int LabelNumber
+		/*public override int LabelNumber
 		{
 			get
 			{
@@ -118,7 +119,7 @@ namespace Server.Items
 
 				return 1042692;
 			}
-		}
+		}*/
 	}
 
 	[FlipableAttribute( 0x1BF2, 0x1BEF )]
@@ -152,278 +153,16 @@ namespace Server.Items
 			int version = reader.ReadInt();
 		}
 
-		
-	}
-
-	[FlipableAttribute( 0x1BF2, 0x1BEF )]
-	public class DullCopperIngot : BaseIngot
-	{
-		[Constructable]
-		public DullCopperIngot() : this( 1 )
+		public override Item Dupe( int amount )
 		{
+			return base.Dupe( new IronIngot( amount ), amount );
 		}
 
-		[Constructable]
-		public DullCopperIngot( int amount ) : base( CraftResource.DullCopper, amount )
+		public override void AppendClickName( System.Text.StringBuilder sb )
 		{
+			sb.Append( "iron ingot" );
+			if ( Amount != 1 )
+				sb.Append( 's' );
 		}
-
-		public DullCopperIngot( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-
-		
-	}
-
-	[FlipableAttribute( 0x1BF2, 0x1BEF )]
-	public class ShadowIronIngot : BaseIngot
-	{
-		[Constructable]
-		public ShadowIronIngot() : this( 1 )
-		{
-		}
-
-		[Constructable]
-		public ShadowIronIngot( int amount ) : base( CraftResource.ShadowIron, amount )
-		{
-		}
-
-		public ShadowIronIngot( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-
-		
-	}
-
-	[FlipableAttribute( 0x1BF2, 0x1BEF )]
-	public class CopperIngot : BaseIngot
-	{
-		[Constructable]
-		public CopperIngot() : this( 1 )
-		{
-		}
-
-		[Constructable]
-		public CopperIngot( int amount ) : base( CraftResource.Copper, amount )
-		{
-		}
-
-		public CopperIngot( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-
-		
-	}
-
-	[FlipableAttribute( 0x1BF2, 0x1BEF )]
-	public class BronzeIngot : BaseIngot
-	{
-		[Constructable]
-		public BronzeIngot() : this( 1 )
-		{
-		}
-
-		[Constructable]
-		public BronzeIngot( int amount ) : base( CraftResource.Bronze, amount )
-		{
-		}
-
-		public BronzeIngot( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-
-		
-	}
-
-	[FlipableAttribute( 0x1BF2, 0x1BEF )]
-	public class GoldIngot : BaseIngot
-	{
-		[Constructable]
-		public GoldIngot() : this( 1 )
-		{
-		}
-
-		[Constructable]
-		public GoldIngot( int amount ) : base( CraftResource.Gold, amount )
-		{
-		}
-
-		public GoldIngot( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-
-		
-	}
-
-	[FlipableAttribute( 0x1BF2, 0x1BEF )]
-	public class AgapiteIngot : BaseIngot
-	{
-		[Constructable]
-		public AgapiteIngot() : this( 1 )
-		{
-		}
-
-		[Constructable]
-		public AgapiteIngot( int amount ) : base( CraftResource.Agapite, amount )
-		{
-		}
-
-		public AgapiteIngot( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-
-		
-	}
-
-	[FlipableAttribute( 0x1BF2, 0x1BEF )]
-	public class VeriteIngot : BaseIngot
-	{
-		[Constructable]
-		public VeriteIngot() : this( 1 )
-		{
-		}
-
-		[Constructable]
-		public VeriteIngot( int amount ) : base( CraftResource.Verite, amount )
-		{
-		}
-
-		public VeriteIngot( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-
-		
-	}
-
-	[FlipableAttribute( 0x1BF2, 0x1BEF )]
-	public class ValoriteIngot : BaseIngot
-	{
-		[Constructable]
-		public ValoriteIngot() : this( 1 )
-		{
-		}
-
-		[Constructable]
-		public ValoriteIngot( int amount ) : base( CraftResource.Valorite, amount )
-		{
-		}
-
-		public ValoriteIngot( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-
-		
 	}
 }

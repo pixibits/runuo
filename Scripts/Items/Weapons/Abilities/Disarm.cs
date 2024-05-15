@@ -14,8 +14,7 @@ namespace Server.Items
 
 		public override int BaseMana{ get{ return 20; } }
 
-		// No longer active in pub21:
-		/*public override bool CheckSkills( Mobile from )
+		public override bool CheckSkills( Mobile from )
 		{
 			if ( !base.CheckSkills( from ) )
 				return false;
@@ -31,16 +30,6 @@ namespace Server.Items
 			from.SendLocalizedMessage( 1061812 ); // You lack the required skill in armslore to perform that attack!
 
 			return false;
-		}*/
-
-		public override bool RequiresTactics( Mobile from )
-		{
-			BaseWeapon weapon = from.Weapon as BaseWeapon;
-
-			if ( weapon == null )
-				return false;
-
-			return weapon.Skill != SkillName.Wrestling;
 		}
 
 		public static readonly TimeSpan BlockEquipDuration = TimeSpan.FromSeconds( 5.0 );
@@ -52,7 +41,7 @@ namespace Server.Items
 
 			ClearCurrentAbility( attacker );
 
-			Item toDisarm = defender.FindItemOnLayer( Layer.OneHanded );
+			/*Item toDisarm = defender.FindItemOnLayer( Layer.OneHanded );
 
 			if ( toDisarm == null || !toDisarm.Movable )
 				toDisarm = defender.FindItemOnLayer( Layer.TwoHanded );
@@ -63,7 +52,7 @@ namespace Server.Items
 			{
 				attacker.SendLocalizedMessage( 1004001 ); // You cannot disarm your opponent.
 			}
-			else if (toDisarm == null || toDisarm is BaseShield || toDisarm is Spellbook && !Core.ML )
+			else if ( toDisarm == null )
 			{
 				attacker.SendLocalizedMessage( 1060849 ); // Your target is already unarmed!
 			}
@@ -78,7 +67,7 @@ namespace Server.Items
 				pack.DropItem( toDisarm );
 
 				BaseWeapon.BlockEquip( defender, BlockEquipDuration );
-			}
+			}*/
 		}
 	}
 }

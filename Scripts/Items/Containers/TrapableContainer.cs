@@ -1,4 +1,7 @@
 using System;
+using Server.Network;
+using Server.Mobiles;
+using System.Collections; using System.Collections.Generic;
 
 namespace Server.Items
 {
@@ -7,15 +10,16 @@ namespace Server.Items
 		None,
 		MagicTrap,
 		ExplosionTrap,
+		PoisonTrap,
 		DartTrap,
-		PoisonTrap
 	}
 
 	public abstract class TrapableContainer : BaseContainer, ITelekinesisable
 	{
 		private TrapType m_TrapType;
 		private int m_TrapPower;
-		private int m_TrapLevel;
+		private Mobile m_Trapper;
+		private bool m_Trapped;
 
 		[CommandProperty( AccessLevel.GameMaster )]
 		public TrapType TrapType
@@ -44,19 +48,24 @@ namespace Server.Items
 		}
 
 		[CommandProperty( AccessLevel.GameMaster )]
-		public int TrapLevel
+		public bool Trapped
+		{
+			get{ return m_Trapped && m_TrapType != TrapType.None; }
+			set{ m_Trapped = value; }
+		}
+
+		[CommandProperty( AccessLevel.GameMaster )]
+		public Mobile Trapper
 		{
 			get
 			{
-				return m_TrapLevel;
+				return m_Trapper;
 			}
 			set
 			{
-				m_TrapLevel = value;
+				m_Trapper = value;
 			}
 		}
-
-		public virtual bool TrapOnOpen{ get{ return true; } }
 
 		public TrapableContainer( int itemID ) : base( itemID )
 		{
@@ -66,66 +75,100 @@ namespace Server.Items
 		{
 		}
 
-		private void SendMessageTo( Mobile to, int number, int hue )
-		{
-			if ( Deleted || !to.CanSee( this ) )
-				return;
-
-			to.Send( new Network.MessageLocalized( Serial, ItemID, Network.MessageType.Regular, hue, 3, number, "", "" ) );
-		}
-
-		private void SendMessageTo( Mobile to, string text, int hue )
-		{
-			if ( Deleted || !to.CanSee( this ) )
-				return;
-
-			to.Send( new Network.UnicodeMessage( Serial, ItemID, Network.MessageType.Regular, hue, 3, "ENU", "", text ) );
-		}
-
 		public virtual bool ExecuteTrap( Mobile from )
 		{
-			if ( m_TrapType != TrapType.None )
+			if ( m_TrapType != TrapType.None && m_Trapped )
 			{
-				Point3D loc = this.GetWorldLocation();
-				Map facet = this.Map;
-
-				if ( from.AccessLevel >= AccessLevel.GameMaster )
+				if ( from.AccessLevel != AccessLevel.Player )
 				{
-					SendMessageTo( from, "That is trapped, but you open it with your godly powers.", 0x3B2 );
+					if ( from.AccessLevel >= AccessLevel.GameMaster )
+						from.SendAsciiMessage( "Note: This container is trapped." );
 					return false;
 				}
 
+				if ( m_Trapper != null && !m_Trapper.Deleted )
+					m_Trapper.Attack( from );
+				//	from.AggressiveAction( m_Trapper, false );
+				// should m_Trapper be flagged for their trap being opened?
+
 				switch ( m_TrapType )
 				{
-					case TrapType.ExplosionTrap:
+					case TrapType.DartTrap:
 					{
-						SendMessageTo( from, 502999, 0x3B2 ); // You set off a trap!
+						from.SendLocalizedMessage( 502999 ); // You set off a trap!
+						from.SendAsciiMessage( "A dart embeds itself in your flesh!" );
 
-						if ( from.InRange( loc, 3 ) )
+						if ( from != m_Trapper && m_Trapper != null && !m_Trapper.Deleted )
+							from.AggressiveAction( m_Trapper );//AggressiveActionNoRegion( m_Trapper, from, Notoriety.Compute( m_Trapper, from ) == Notoriety.Innocent );
+
+						AOS.Damage( from, Utility.Random( 1, 15 ) + m_TrapPower, 100, 0, 0, 0, 0 );
+						Effects.SendMovingEffect( this, from, 0x1BFE, 18, 1, false, false );
+						break;
+					}
+					case TrapType.PoisonTrap:
+					{
+						from.SendLocalizedMessage( 502999 ); // You set off a trap!
+						
+						if ( from.InRange( GetWorldLocation(), 2 ) )
 						{
-							int damage;
+							from.Poison = Poison.GetPoison( m_TrapPower - 1 );
+							from.SendAsciiMessage( "A cloud of green gas engulfs your body!" );
 
-							if ( m_TrapLevel > 0 )
-								damage = Utility.RandomMinMax( 10, 30 ) * m_TrapLevel;
-							else
-								damage = m_TrapPower;
-
-							AOS.Damage( from, damage, 0, 100, 0, 0, 0 );
-
-							// Your skin blisters from the heat!
-							from.LocalOverheadMessage( Network.MessageType.Regular, 0x2A, 503000 );
+							if ( from != m_Trapper && m_Trapper != null && !m_Trapper.Deleted )
+								from.AggressiveAction( m_Trapper );
 						}
 
-						Effects.SendLocationEffect( loc, facet, 0x36BD, 15, 10 );
-						Effects.PlaySound( loc, facet, 0x307 );
+						Point3D loc = GetWorldLocation();
+						Effects.SendLocationEffect( new Point3D( loc.X + 1, loc.Y + 1, loc.Z ), Map, 0x11a6, 15 );
+						break;
+					}
+					case TrapType.ExplosionTrap:
+					{
+						from.SendLocalizedMessage( 502999 ); // You set off a trap!
 
+						int damage = 20*( m_TrapPower - 1 ) + Utility.Random( 25 );
+						if ( this.RootParent is Mobile && this.RootParent != from )
+						{
+							Mobile mob = (Mobile)this.RootParent;
+							AOS.Damage( mob, damage / 3, 0, 100, 0, 0, 0 );
+							damage -= damage/3;
+							mob.SendLocalizedMessage( 503000 ); // Your skin blisters from the heat!
+
+							if ( mob != m_Trapper && m_Trapper != null && !m_Trapper.Deleted )
+								from.AggressiveAction( m_Trapper );
+						}
+
+						if ( from.InRange( GetWorldLocation(), 2 ) )
+						{
+							AOS.Damage( from, damage, 0, 100, 0, 0, 0 );
+							from.SendLocalizedMessage( 503000 ); // Your skin blisters from the heat!
+
+							if ( from != m_Trapper && m_Trapper != null && !m_Trapper.Deleted )
+								from.AggressiveAction( m_Trapper );
+						}
+
+						Point3D loc = GetWorldLocation();
+						Effects.PlaySound( loc, Map, 0x307 );
+						Effects.SendLocationEffect( new Point3D( loc.X + 1, loc.Y + 1, loc.Z - 11 ), Map, 0x36BD, 15 );
 						break;
 					}
 					case TrapType.MagicTrap:
 					{
-						if ( from.InRange( loc, 1 ) )
-							from.Damage( m_TrapPower );
+						if ( from.InRange( GetWorldLocation(), 1 ) )
+						{
+							double damage = Spells.Spell.GetPreUORDamage( Spells.SpellCircle.Second ) * 0.75;
+							if ( from.CheckSkill( SkillName.MagicResist, damage * 2.5 - 25.0, damage * 2.5 + 25.0 ) )
+							{
+								damage *= 0.5;
+								from.SendLocalizedMessage( 501783 ); // You feel yourself resisting magical energy.
+							}
+							if ( damage < 1 )
+								damage = 1;
+							from.Damage( (int)damage );
 							//AOS.Damage( from, m_TrapPower, 0, 100, 0, 0, 0 );
+						}
+
+						Point3D loc = GetWorldLocation();
 
 						Effects.PlaySound( loc, Map, 0x307 );
 
@@ -139,63 +182,9 @@ namespace Server.Items
 
 						break;
 					}
-					case TrapType.DartTrap:
-					{
-						SendMessageTo( from, 502999, 0x3B2 ); // You set off a trap!
-
-						if ( from.InRange( loc, 3 ) )
-						{
-							int damage;
-
-							if ( m_TrapLevel > 0 )
-								damage = Utility.RandomMinMax( 5, 15 ) * m_TrapLevel;
-							else
-								damage = m_TrapPower;
-
-							AOS.Damage( from, damage, 100, 0, 0, 0, 0 );
-
-							// A dart imbeds itself in your flesh!
-							from.LocalOverheadMessage( Network.MessageType.Regular, 0x62, 502998 );
-						}
-
-						Effects.PlaySound( loc, facet, 0x223 );
-
-						break;
-					}
-					case TrapType.PoisonTrap:
-					{
-						SendMessageTo( from, 502999, 0x3B2 ); // You set off a trap!
-
-						if ( from.InRange( loc, 3 ) )
-						{
-							Poison poison;
-
-							if ( m_TrapLevel > 0 )
-							{
-								poison = Poison.GetPoison( Math.Max( 0, Math.Min( 4, m_TrapLevel - 1 ) ) );
-							}
-							else
-							{
-								AOS.Damage( from, m_TrapPower, 0, 0, 0, 100, 0 );
-								poison = Poison.Greater;
-							}
-
-							from.ApplyPoison( from, poison );
-
-							// You are enveloped in a noxious green cloud!
-							from.LocalOverheadMessage( Network.MessageType.Regular, 0x44, 503004 );
-						}
-
-						Effects.SendLocationEffect( loc, facet, 0x113A, 10, 20 );
-						Effects.PlaySound( loc, facet, 0x231 );
-
-						break;
-					}
 				}
 
-				m_TrapType = TrapType.None;
-				m_TrapPower = 0;
-				m_TrapLevel = 0;
+				m_Trapped = false;
 				return true;
 			}
 
@@ -207,24 +196,32 @@ namespace Server.Items
 			Effects.SendLocationParticles( EffectItem.Create( Location, Map, EffectItem.DefaultDuration ), 0x376A, 9, 32, 5022 );
 			Effects.PlaySound( Location, Map, 0x1F5 );
 
-			if ( !this.TrapOnOpen || !ExecuteTrap( from ) )
+			if ( !ExecuteTrap( from ) )
 				base.DisplayTo( from );
 		}
 
-		public override void Open( Mobile from )
+		public override void DisplayTo(Mobile to)
 		{
-			if ( !this.TrapOnOpen || !ExecuteTrap( from ) )
-				base.Open( from );
+			if ( !ExecuteTrap( to ) )
+				base.DisplayTo (to);
+		}
+
+		public override void OnDoubleClickSecureTrade( Mobile from )
+		{
+			if ( Trapped )
+				from.Send( new MessageLocalized( Serial, ItemID, MessageType.Regular, 0x3B2, 3, 502503, "", "" ) ); // That is locked.
+			else
+				base.OnDoubleClickSecureTrade( from );
 		}
 
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
 
-			writer.Write( (int) 2 ); // version
+			writer.Write( (int) 3 ); // version
 
-			writer.Write( (int) m_TrapLevel );
-
+			writer.Write( (bool)m_Trapped );
+			writer.Write( (int)(m_Trapper == null || m_Trapper.Deleted ? Serial.Zero : m_Trapper.Serial) );
 			writer.Write( (int) m_TrapPower );
 			writer.Write( (int) m_TrapType );
 		}
@@ -237,22 +234,35 @@ namespace Server.Items
 
 			switch ( version )
 			{
+				case 3:
+				{
+					m_Trapped = reader.ReadBool();
+
+					goto case 2;
+				}
 				case 2:
 				{
-					m_TrapLevel = reader.ReadInt();
+					m_Trapper = World.FindMobile( (Serial)reader.ReadInt() );
+
 					goto case 1;
 				}
 				case 1:
 				{
 					m_TrapPower = reader.ReadInt();
+
 					goto case 0;
 				}
+
 				case 0:
 				{
 					m_TrapType = (TrapType)reader.ReadInt();
+
 					break;
 				}
 			}
+
+			if ( version < 3 )
+				m_Trapped = m_TrapType != TrapType.None;
 		}
 	}
 }

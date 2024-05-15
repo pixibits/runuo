@@ -43,7 +43,7 @@ namespace Server.Items
 
 			BasePotion.PlayDrinkEffect( from );
 
-			this.Consume();
+			this.Delete();
 		}
 	}
 }

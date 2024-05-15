@@ -2,28 +2,13 @@ using System;
 
 namespace Server.Items
 {
-	public abstract class Beard : Item
+	public abstract class Beard : BaseItem
 	{
-		/*public static Beard CreateByID( int id, int hue )
-		{
-			switch ( id )
-			{
-				case 0x203E: return new LongBeard( hue );
-				case 0x203F: return new ShortBeard( hue );
-				case 0x2040: return new Goatee( hue );
-				case 0x2041: return new Mustache( hue );
-				case 0x204B: return new MediumShortBeard( hue );
-				case 0x204C: return new MediumLongBeard( hue );
-				case 0x204D: return new Vandyke( hue );
-				default: return new GenericBeard( id, hue );
-			}
-		}*/
-
-		protected Beard( int itemID ) : this( itemID, 0 )
+		public Beard( int itemID ) : this( itemID, 0 )
 		{
 		}
 
-		protected Beard( int itemID, int hue ) : base( itemID )
+		public Beard( int itemID, int hue ) : base( itemID )
 		{
 			LootType = LootType.Blessed;
 			Layer = Layer.FacialHair;
@@ -43,10 +28,7 @@ namespace Server.Items
 
 		public override DeathMoveResult OnParentDeath( Mobile parent )
 		{
-			//Dupe( Amount );
-
-			parent.FacialHairItemID = this.ItemID;
-			parent.FacialHairHue = this.Hue;
+			Dupe( Amount );
 
 			return DeathMoveResult.MoveToCorpse;
 		}
@@ -69,18 +51,23 @@ namespace Server.Items
 
 	public class GenericBeard : Beard
 	{
-		
-		private GenericBeard( int itemID ) : this( itemID, 0 )
+		[Constructable]
+		public GenericBeard( int itemID ) : this( itemID, 0 )
 		{
 		}
 
-		
-		private GenericBeard( int itemID, int hue ) : base( itemID, hue )
+		[Constructable]
+		public GenericBeard( int itemID, int hue ) : base( itemID, hue )
 		{
 		}
 
 		public GenericBeard( Serial serial ) : base( serial )
 		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new GenericBeard( ItemID, Hue ), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )
@@ -100,19 +87,23 @@ namespace Server.Items
 
 	public class LongBeard : Beard
 	{
-
-		private LongBeard()
-			: this( 0 )
+		[Constructable]
+		public LongBeard() : this( 0 )
 		{
 		}
 
-		private LongBeard( int hue )
-			: base( 0x203E, hue )
+		[Constructable]
+		public LongBeard( int hue ) : base( 0x203E, hue )
 		{
 		}
 
 		public LongBeard( Serial serial ) : base( serial )
 		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new LongBeard(), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )
@@ -132,20 +123,23 @@ namespace Server.Items
 
 	public class ShortBeard : Beard
 	{
-
-		private ShortBeard()
-			: this( 0 )
+		[Constructable]
+		public ShortBeard() : this( 0 )
 		{
 		}
 
-
-		private ShortBeard( int hue )
-			: base( 0x203f, hue )
+		[Constructable]
+		public ShortBeard( int hue ) : base( 0x203f, hue )
 		{
 		}
 
 		public ShortBeard( Serial serial ) : base( serial )
 		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new ShortBeard(), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )
@@ -165,20 +159,23 @@ namespace Server.Items
 
 	public class Goatee : Beard
 	{
-
-		private Goatee()
-			: this( 0 )
+		[Constructable]
+		public Goatee() : this( 0 )
 		{
 		}
 
-
-		private Goatee( int hue )
-			: base( 0x2040, hue )
+		[Constructable]
+		public Goatee( int hue ) : base( 0x2040, hue )
 		{
 		}
 
 		public Goatee( Serial serial ) : base( serial )
 		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Goatee(), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )
@@ -198,20 +195,23 @@ namespace Server.Items
 
 	public class Mustache : Beard
 	{
-
-		private Mustache()
-			: this( 0 )
+		[Constructable]
+		public Mustache() : this( 0 )
 		{
 		}
 
-
-		private Mustache( int hue )
-			: base( 0x2041, hue )
+		[Constructable]
+		public Mustache( int hue ) : base( 0x2041, hue )
 		{
 		}
 
 		public Mustache( Serial serial ) : base( serial )
 		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Mustache(), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )
@@ -231,20 +231,23 @@ namespace Server.Items
 
 	public class MediumShortBeard : Beard
 	{
-
-		private MediumShortBeard()
-			: this( 0 )
+		[Constructable]
+		public MediumShortBeard() : this( 0 )
 		{
 		}
 
-
-		private MediumShortBeard( int hue )
-			: base( 0x204B, hue )
+		[Constructable]
+		public MediumShortBeard( int hue ) : base( 0x204B, hue )
 		{
 		}
 
 		public MediumShortBeard( Serial serial ) : base( serial )
 		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new MediumShortBeard(), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )
@@ -264,20 +267,23 @@ namespace Server.Items
 
 	public class MediumLongBeard : Beard
 	{
-
-		private MediumLongBeard()
-			: this( 0 )
+		[Constructable]
+		public MediumLongBeard() : this( 0 )
 		{
 		}
 
-
-		private MediumLongBeard( int hue )
-			: base( 0x204C, hue )
+		[Constructable]
+		public MediumLongBeard( int hue ) : base( 0x204C, hue )
 		{
 		}
 
 		public MediumLongBeard( Serial serial ) : base( serial )
 		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new MediumLongBeard(), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )
@@ -297,20 +303,23 @@ namespace Server.Items
 
 	public class Vandyke : Beard
 	{
-
-		private Vandyke()
-			: this( 0 )
+		[Constructable]
+		public Vandyke() : this( 0 )
 		{
 		}
 
-
-		private Vandyke( int hue )
-			: base( 0x204D, hue )
+		[Constructable]
+		public Vandyke( int hue ) : base( 0x204D, hue )
 		{
 		}
 
 		public Vandyke( Serial serial ) : base( serial )
 		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Vandyke(), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )

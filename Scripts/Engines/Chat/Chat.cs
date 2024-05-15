@@ -8,7 +8,7 @@ namespace Server.Engines.Chat
 {
 	public class ChatSystem
 	{
-		private static bool m_Enabled = true;
+		private static bool m_Enabled = false;
 
 		public static bool Enabled
 		{
@@ -40,11 +40,16 @@ namespace Server.Engines.Chat
 
 		public static void OpenChatWindowRequest( NetState state, PacketReader pvSrc )
 		{
+			if ( state == null )
+				return;
+
 			Mobile from = state.Mobile;
+			if ( from == null )
+				return;
 
 			if ( !m_Enabled )
 			{
-				from.SendMessage( "The chat system has been disabled." );
+				from.SendAsciiMessage( "The chat system has been disabled." );
 				return;
 			}
 
@@ -64,7 +69,7 @@ namespace Server.Engines.Chat
 			if ( accountChatName != null && accountChatName.Length > 0 )
 			{
 				if ( chatName.Length > 0 && chatName != accountChatName )
-					from.SendMessage( "You cannot change chat nickname once it has been set." );
+					from.SendAsciiMessage( "You cannot change chat nickname once it has been set." );
 			}
 			else
 			{
@@ -78,7 +83,7 @@ namespace Server.Engines.Chat
 				{
 					// TODO: Optimize this search
 
-					foreach ( Account checkAccount in Accounts.GetAccounts() )
+					foreach ( Account checkAccount in Accounts.Table.Values )
 					{
 						string existingName = checkAccount.GetTag( "ChatName" );
 
@@ -88,7 +93,7 @@ namespace Server.Engines.Chat
 
 							if ( Insensitive.Equals( existingName, chatName ) )
 							{
-								from.SendMessage( "Nickname already in use." );
+								from.SendAsciiMessage( "Nickname already in use." );
 								SendCommandTo( from, ChatCommand.AskNewNickname );
 								return;
 							}
@@ -117,7 +122,7 @@ namespace Server.Engines.Chat
 			ChatUser user = ChatUser.GetChatUser( name );
 
 			if ( user == null )
-				from.SendMessage( 32, name ); // There is no player named '%1'.
+				from.SendAsciiMessage( 32, name ); // There is no player named '%1'.
 
 			return user;
 		}
@@ -147,13 +152,13 @@ namespace Server.Engines.Chat
 
 					if ( handler.RequireConference && channel == null )
 					{
-						user.SendMessage( 31 ); /* You must be in a conference to do this.
+						user.SendAsciiMessage( 31 ); /* You must be in a conference to do this.
 												 * To join a conference, select one from the Conference menu.
 												 */
 					}
 					else if ( handler.RequireModerator && !user.IsModerator )
 					{
-						user.SendMessage( 29 ); // You must have operator status to do this.
+						user.SendAsciiMessage( 29 ); // You must have operator status to do this.
 					}
 					else
 					{

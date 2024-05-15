@@ -1,51 +1,27 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Items;
 using Server.Mobiles;
-using System.Collections.Generic;
 
 namespace Server.Multis
 {
 	public abstract class BaseCamp : BaseMulti
 	{
-		private List<Item> m_Items;
-		private List<Mobile> m_Mobiles;
+		private ArrayList m_Items, m_Mobiles;
 		private DateTime m_DecayTime;
 		private Timer m_DecayTimer;
-		private TimeSpan m_DecayDelay;
 
 		public virtual int EventRange{ get{ return 10; } }
+		public virtual TimeSpan DecayDelay{ get{ return TimeSpan.FromHours( 24 ); } }
 
-		public virtual TimeSpan DecayDelay
+		public BaseCamp( int multiID ) : base( multiID | 0x4000 )
 		{
-			get
-			{
-				return m_DecayDelay;
-			} 
-			set
-			{
-				m_DecayDelay = value;
-				RefreshDecay( true );
-			} 
-		}
-
-		public BaseCamp( int multiID ) : base( multiID )
-		{
-			m_Items = new List<Item>();
-			m_Mobiles = new List<Mobile>();
-			m_DecayDelay = TimeSpan.FromMinutes( 30.0 );
+			m_Items = new ArrayList();
+			m_Mobiles = new ArrayList();
 			RefreshDecay( true );
 
-			Timer.DelayCall( TimeSpan.Zero, new TimerCallback( CheckAddComponents ) );
-		}
-
-		public void CheckAddComponents()
-		{
-			if ( Deleted )
-				return;
-			
-			AddComponents();
+			Timer.DelayCall( TimeSpan.Zero, new TimerCallback( AddComponents ) );
 		}
 
 		public virtual void AddComponents()
@@ -70,16 +46,14 @@ namespace Server.Multis
 		{
 			m_Items.Add( item );
 
-			int zavg = Map.GetAverageZ(X + xOffset, Y + yOffset);
-			item.MoveToWorld( new Point3D( X + xOffset, Y + yOffset, zavg + zOffset ), Map );
+			item.MoveToWorld( new Point3D( X + xOffset, Y + yOffset, Z + zOffset ), Map );
 		}
 
 		public virtual void AddMobile( Mobile m, int wanderRange, int xOffset, int yOffset, int zOffset )
 		{
-			m_Mobiles.Add(m);
+			m_Mobiles.Add( m );
 
-			int zavg = Map.GetAverageZ(X + xOffset, Y + yOffset);
-			Point3D loc = new Point3D(X + xOffset, Y + yOffset, zavg + zOffset);
+			Point3D loc = new Point3D( X + xOffset, Y + yOffset, Z + zOffset );
 			BaseCreature bc = m as BaseCreature;
 
 			if ( bc != null )
@@ -91,7 +65,8 @@ namespace Server.Multis
 			if ( m is BaseVendor || m is Banker )
 				m.Direction = Direction.South;
 
-			m.MoveToWorld( loc, this.Map );
+			m.Location = loc;
+			m.Map = this.Map;
 		}
 
 		public virtual void OnEnter( Mobile m )
@@ -122,17 +97,10 @@ namespace Server.Multis
 			base.OnAfterDelete();
 
 			for ( int i = 0; i < m_Items.Count; ++i )
-				m_Items[i].Delete();
+				((Item)m_Items[i]).Delete();
 
 			for ( int i = 0; i < m_Mobiles.Count; ++i )
-			{
-				BaseCreature bc = (BaseCreature)m_Mobiles[i];
-
-				if ( bc.IsPrisoner == false )
-					m_Mobiles[i].Delete();
-				else if ( m_Mobiles[i].CantWalk == true )
-					m_Mobiles[i].Delete();
-			}
+				((Mobile)m_Mobiles[i]).Delete();
 
 			m_Items.Clear();
 			m_Mobiles.Clear();
@@ -148,8 +116,8 @@ namespace Server.Multis
 
 			writer.Write( (int) 0 ); // version
 
-			writer.Write( m_Items, true );
-			writer.Write( m_Mobiles, true );
+			writer.WriteItemList( m_Items, true );
+			writer.WriteMobileList( m_Mobiles, true );
 			writer.WriteDeltaTime( m_DecayTime );
 		}
 
@@ -163,8 +131,8 @@ namespace Server.Multis
 			{
 				case 0:
 				{
-					m_Items = reader.ReadStrongItemList();
-					m_Mobiles = reader.ReadStrongMobileList();
+					m_Items = reader.ReadItemList();
+					m_Mobiles = reader.ReadMobileList();
 					m_DecayTime = reader.ReadDeltaTime();
 
 					RefreshDecay( false );
@@ -172,36 +140,6 @@ namespace Server.Multis
 					break;
 				}
 			}
-		}
-	}
-
-	public class LockableBarrel : LockableContainer
-	{
-		[Constructable]
-		public LockableBarrel() : base(0xE77)
-		{
-			Weight = 1.0;
-		}
-
-		public LockableBarrel(Serial serial) : base(serial)
-		{
-		}
-
-		public override void Serialize(GenericWriter writer)
-		{
-			base.Serialize(writer);
-
-			writer.Write((int)0); // version
-		}
-
-		public override void Deserialize(GenericReader reader)
-		{
-			base.Deserialize(reader);
-
-			int version = reader.ReadInt();
-
-			if (Weight == 8.0)
-				Weight = 1.0;
 		}
 	}
 }

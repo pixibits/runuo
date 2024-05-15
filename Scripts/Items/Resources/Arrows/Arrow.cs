@@ -2,16 +2,8 @@ using System;
 
 namespace Server.Items
 {
-	public class Arrow : Item, ICommodity
+	public class Arrow : BaseItem
 	{
-		int ICommodity.DescriptionNumber { get { return LabelNumber; } }
-		bool ICommodity.IsDeedable { get { return true; } }
-
-		public override double DefaultWeight
-		{
-			get { return 0.1; }
-		}
-
 		[Constructable]
 		public Arrow() : this( 1 )
 		{
@@ -21,6 +13,7 @@ namespace Server.Items
 		public Arrow( int amount ) : base( 0xF3F )
 		{
 			Stackable = true;
+			Weight = 0.1;
 			Amount = amount;
 		}
 
@@ -28,7 +21,10 @@ namespace Server.Items
 		{
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Arrow( amount ), amount );
+		}
 
 		public override void Serialize( GenericWriter writer )
 		{

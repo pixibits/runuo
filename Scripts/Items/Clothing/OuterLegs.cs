@@ -2,6 +2,7 @@ using System;
 
 namespace Server.Items
 {
+
 	public abstract class BaseOuterLegs : BaseClothing
 	{
 		public BaseOuterLegs( int itemID ) : this( itemID, 0 )
@@ -31,7 +32,7 @@ namespace Server.Items
 		}
 	}
 
-	[Flipable( 0x230C, 0x230B )]
+	[FlipableAttribute( 0x230B, 0x230C )]
 	public class FurSarong : BaseOuterLegs
 	{
 		[Constructable]
@@ -40,7 +41,7 @@ namespace Server.Items
 		}
 
 		[Constructable]
-		public FurSarong( int hue ) : base( 0x230C, hue )
+		public FurSarong( int hue ) : base( 0x230B, hue )
 		{
 			Weight = 3.0;
 		}
@@ -67,7 +68,7 @@ namespace Server.Items
 		}
 	}
 
-	[Flipable( 0x1516, 0x1531 )]
+	[FlipableAttribute( 0x1516, 0x1531 )]
 	public class Skirt : BaseOuterLegs
 	{
 		[Constructable]
@@ -100,7 +101,7 @@ namespace Server.Items
 		}
 	}
 
-	[Flipable( 0x1537, 0x1538 )]
+	[FlipableAttribute( 0x1537, 0x1538 )]
 	public class Kilt : BaseOuterLegs
 	{
 		[Constructable]
@@ -115,39 +116,6 @@ namespace Server.Items
 		}
 
 		public Kilt( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-	}
-
-	[Flipable( 0x279A, 0x27E5 )]
-	public class Hakama : BaseOuterLegs
-	{
-		[Constructable]
-		public Hakama() : this( 0 )
-		{
-		}
-
-		[Constructable]
-		public Hakama( int hue ) : base( 0x279A, hue )
-		{
-			Weight = 2.0;
-		}
-
-		public Hakama( Serial serial ) : base( serial )
 		{
 		}
 

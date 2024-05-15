@@ -4,7 +4,7 @@ using Server;
 namespace Server.Items
 {
 	[Flipable( 0x104F, 0x1050 )]
-	public class ClockParts : Item
+	public class ClockParts : BaseItem
 	{
 		[Constructable]
 		public ClockParts() : this( 1 )
@@ -22,6 +22,12 @@ namespace Server.Items
 		public ClockParts( Serial serial ) : base( serial )
 		{
 		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new ClockParts(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );

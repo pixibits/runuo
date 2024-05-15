@@ -18,12 +18,9 @@ namespace Server.Items
 		public override int AosStrReq{ get{ return 55; } }
 		public override int OldStrReq{ get{ return 40; } }
 
-		public override int OldDexBonus{ get{ return -1; } }
-
 		public override int ArmorBase{ get{ return 46; } }
 
 		public override ArmorMaterialType MaterialType{ get{ return ArmorMaterialType.Bone; } }
-		public override CraftResource DefaultResource{ get{ return CraftResource.RegularLeather; } }
 
 		public override int LabelNumber{ get{ return 1041373; } } // daemon bone gloves
 
@@ -32,8 +29,6 @@ namespace Server.Items
 		{
 			Weight = 2.0;
 			Hue = 0x648;
-
-			ArmorAttributes.SelfRepair = 1;
 		}
 
 		public DaemonGloves( Serial serial ) : base( serial )
@@ -43,21 +38,16 @@ namespace Server.Items
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
-
 			writer.Write( (int) 0 );
+
+			if ( Weight == 1.0 )
+				Weight = 2.0;
 		}
 		
 		public override void Deserialize(GenericReader reader)
 		{
 			base.Deserialize( reader );
-
 			int version = reader.ReadInt();
-
-			if ( Weight == 1.0 )
-				Weight = 2.0;
-
-			if ( ArmorAttributes.SelfRepair == 0 )
-				ArmorAttributes.SelfRepair = 1;
 		}
 	}
 }

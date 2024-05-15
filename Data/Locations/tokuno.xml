@@ -31,7 +31,7 @@
 			</parent>
 			<parent name="Homare-Jima">
 				<child name="Moongate" x="270" y="628" z="15" />
-				<child name="Shrine" x="295" y="712" z="55" />
+				<child name="Shrine" x="295" y="712" z="15" />
 				<child name="Field of Echoes" x="160" y="654" z="36" />
 				<child name="Crane Marsh" x="232" y="1107" z="10" />
 				<child name="Bushido Dojo" x="334" y="407" z="32" />

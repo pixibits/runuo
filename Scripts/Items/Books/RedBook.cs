@@ -5,6 +5,8 @@ namespace Server.Items
 {
 	public class RedBook : BaseBook
 	{
+		public override double BookWeight{ get{ return 2.0; } }
+
 		[Constructable]
 		public RedBook() : base( 0xFF1 )
 		{
@@ -17,11 +19,6 @@ namespace Server.Items
 
 		[Constructable]
 		public RedBook( string title, string author, int pageCount, bool writable ) : base( 0xFF1, title, author, pageCount, writable )
-		{
-		}
-
-		// Intended for defined books only
-		public RedBook( bool writable ) : base( 0xFF1, writable )
 		{
 		}
 

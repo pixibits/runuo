@@ -5,17 +5,16 @@ using Server.Items;
 
 namespace Server.Spells.Second
 {
-	public class RemoveTrapSpell : MagerySpell
+	public class RemoveTrapSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Remove Trap", "An Jux",
+				SpellCircle.Second,
 				212,
 				9001,
 				Reagent.Bloodmoss,
 				Reagent.SulfurousAsh
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Second; } }
 
 		public RemoveTrapSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -24,7 +23,7 @@ namespace Server.Spells.Second
 		public override void OnCast()
 		{
 			Caster.Target = new InternalTarget( this );
-			Caster.SendMessage( "What do you wish to untrap?" );
+			Caster.SendAsciiMessage( "What do you wish to untrap?" );
 		}
 
 		public void Target( TrapableContainer item )
@@ -33,7 +32,7 @@ namespace Server.Spells.Second
 			{
 				Caster.SendLocalizedMessage( 500237 ); // Target can not be seen.
 			}
-			else if ( item.TrapType != TrapType.None && item.TrapType != TrapType.MagicTrap )
+			else if ( item.Trapped && item.TrapType != TrapType.MagicTrap )
 			{
 				base.DoFizzle();
 			}
@@ -47,8 +46,8 @@ namespace Server.Spells.Second
 				Effects.PlaySound( loc, item.Map, 0x1F0 );
 
 				item.TrapType = TrapType.None;
+				item.Trapped = false;
 				item.TrapPower = 0;
-				item.TrapLevel = 0;
 			}
 
 			FinishSequence();
@@ -58,7 +57,7 @@ namespace Server.Spells.Second
 		{
 			private RemoveTrapSpell m_Owner;
 
-			public InternalTarget( RemoveTrapSpell owner ) : base( Core.ML ? 10 : 12, false, TargetFlags.None )
+			public InternalTarget( RemoveTrapSpell owner ) : base( 12, false, TargetFlags.None )
 			{
 				m_Owner = owner;
 			}
@@ -71,7 +70,7 @@ namespace Server.Spells.Second
 				}
 				else
 				{
-					from.SendMessage( "You can't disarm that" );
+					from.SendAsciiMessage( "You can't disarm that" );
 				}
 			}
 

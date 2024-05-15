@@ -7,7 +7,10 @@ namespace Server.Items
 	[FlipableAttribute( 0xfbb, 0xfbc )]
 	public class Tongs : BaseTool
 	{
-		public override CraftSystem CraftSystem{ get{ return DefBlacksmithy.CraftSystem; } }
+		public override CraftSystem GetCraftInstance()
+		{
+			return new BlacksmithSystem();
+		}
 
 		[Constructable]
 		public Tongs() : base( 0xFBB )

@@ -16,7 +16,7 @@ namespace Server.Items
 	}
 
 	[Flipable( 0x104B, 0x104C )]
-	public class Clock : Item
+	public class Clock : BaseItem
 	{
 		private static DateTime m_ServerStart;
 
@@ -200,6 +200,35 @@ namespace Server.Items
 		}
 
 		public ClockLeft( Serial serial ) : base( serial )
+		{
+		}
+
+		public override void Serialize( GenericWriter writer )
+		{
+			base.Serialize( writer );
+
+			writer.Write( (int) 0 ); // version
+		}
+
+		public override void Deserialize( GenericReader reader )
+		{
+			base.Deserialize( reader );
+
+			int version = reader.ReadInt();
+		}
+	}
+
+	public class WristWatch : Clock
+	{
+		[Constructable]
+		public WristWatch() : base( 4230 )
+		{
+			Weight = 1.0;
+			Layer = Layer.Bracelet;
+			Name = "a wrist watch";
+		}
+
+		public WristWatch( Serial serial ) : base( serial )
 		{
 		}
 

@@ -31,7 +31,7 @@ namespace Server.Items
 		}
 	}
 
-	[Flipable( 0x1541, 0x1542 )]
+	[FlipableAttribute( 0x1541, 0x1542 )]
 	public class BodySash : BaseMiddleTorso
 	{
 		[Constructable]
@@ -64,7 +64,7 @@ namespace Server.Items
 		}
 	}
 
-	[Flipable( 0x153d, 0x153e )]
+	[FlipableAttribute( 0x153d, 0x153e )]
 	public class FullApron : BaseMiddleTorso
 	{
 		[Constructable]
@@ -97,7 +97,7 @@ namespace Server.Items
 		}
 	}
 
-	[Flipable( 0x1f7b, 0x1f7c )]
+	[FlipableAttribute( 0x1f7b, 0x1f7c )]
 	public class Doublet : BaseMiddleTorso
 	{
 		[Constructable]
@@ -130,7 +130,7 @@ namespace Server.Items
 		}
 	}
 
-	[Flipable( 0x1ffd, 0x1ffe )]
+	[FlipableAttribute( 0x1ffd, 0x1ffe )]
 	public class Surcoat : BaseMiddleTorso
 	{
 		[Constructable]
@@ -166,7 +166,7 @@ namespace Server.Items
 		}
 	}
 
-	[Flipable( 0x1fa1, 0x1fa2 )]
+	[FlipableAttribute( 0x1fa1, 0x1fa2 )]
 	public class Tunic : BaseMiddleTorso
 	{
 		[Constructable]
@@ -199,7 +199,7 @@ namespace Server.Items
 		}
 	}
 
-	[Flipable( 0x2310, 0x230F )]
+	[Flipable( 0x230F, 0x2310 )]
 	public class FormalShirt : BaseMiddleTorso
 	{
 		[Constructable]
@@ -208,7 +208,7 @@ namespace Server.Items
 		}
 
 		[Constructable]
-		public FormalShirt( int hue ) : base( 0x2310, hue )
+		public FormalShirt( int hue ) : base( 0x230F, hue )
 		{
 			Weight = 1.0;
 		}
@@ -235,7 +235,7 @@ namespace Server.Items
 		}
 	}
 
-	[Flipable( 0x1f9f, 0x1fa0 )]
+	[FlipableAttribute( 0x1f9f, 0x1fa0 )]
 	public class JesterSuit : BaseMiddleTorso
 	{
 		[Constructable]
@@ -268,36 +268,4 @@ namespace Server.Items
 		}
 	}
 
-	[Flipable( 0x27A1, 0x27EC )]
-	public class JinBaori : BaseMiddleTorso
-	{
-		[Constructable]
-		public JinBaori() : this( 0 )
-		{
-		}
-
-		[Constructable]
-		public JinBaori( int hue ) : base( 0x27A1, hue )
-		{
-			Weight = 3.0;
-		}
-
-		public JinBaori( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-	}
 }

@@ -7,7 +7,7 @@ using Server.Gumps;
 
 namespace Server.Items
 {
-	public class NewPlayerTicket : Item
+	public class NewPlayerTicket : BaseItem
 	{
 		private Mobile m_Owner;
 
@@ -18,23 +18,15 @@ namespace Server.Items
 			set{ m_Owner = value; }
 		}
 
-		public override int LabelNumber{ get{ return 1062094; } } // a young player ticket
+		// What a disgustingly long name
+		public override int LabelNumber{ get{ return 1041492; } } // This is half a prize ticket! Double-click this ticket and target any other ticket marked NEW PLAYER and get a prize! This ticket will only work for YOU, so don't give it away!
 
 		[Constructable]
-		public NewPlayerTicket() : base( 0x14EF )
+		public NewPlayerTicket() : base( 0x14F0 )
 		{
 			Weight = 1.0;
 			LootType = LootType.Blessed;
 		}
-
-		public override void GetProperties( ObjectPropertyList list )
-		{
-			base.GetProperties( list );
-
-			list.Add( 1041492 ); // This is half a prize ticket! Double-click this ticket and target any other ticket marked NEW PLAYER and get a prize! This ticket will only work for YOU, so don't give it away!
-		}
-
-		public override bool DisplayLootType{ get{ return false; } }
 
 		public NewPlayerTicket( Serial serial ) : base( serial )
 		{
@@ -45,27 +37,12 @@ namespace Server.Items
 			base.Serialize( writer );
 
 			writer.Write( (int) 0 ); // version
-
-			writer.Write( (Mobile) m_Owner );
 		}
 
 		public override void Deserialize( GenericReader reader )
 		{
 			base.Deserialize( reader );
-
 			int version = reader.ReadInt();
-
-			switch ( version )
-			{
-				case 0:
-				{
-					m_Owner = reader.ReadMobile();
-					break;
-				}
-			}
-
-			if ( Name == "a young player ticket" )
-				Name = null;
 		}
 
 		public override void OnDoubleClick( Mobile from )

@@ -20,7 +20,7 @@ namespace Server.Items
 		Arcanist
 	}
 
-	public class Spellbook : Item, ICraftable, ISlayer
+	public class Spellbook : BaseItem
 	{
 		public static void Initialize()
 		{
@@ -51,7 +51,7 @@ namespace Server.Items
 
 				from.SendMessage( "The spellbook has been filled." );
 
-				CommandLogging.WriteLine( from, "{0} {1} filling spellbook {2}", from.AccessLevel, CommandLogging.Format( from ), CommandLogging.Format( book ) );
+				//CommandLogging.WriteLine( from, "{0} {1} filling spellbook {2}", from.AccessLevel, CommandLogging.Format( from ), CommandLogging.Format( book ) );
 			}
 			else
 			{
@@ -64,8 +64,8 @@ namespace Server.Items
 		{
 			Mobile from = e.Mobile;
 
-			if ( !Multis.DesignContext.Check( from ) )
-				return; // They are customizing
+			//if ( !Multis.DesignContext.Check( from ) )
+			//	return; // They are customizing
 
 			SpellbookType type;
 
@@ -90,8 +90,8 @@ namespace Server.Items
 		{
 			Mobile from = e.Mobile;
 
-			if ( !Multis.DesignContext.Check( from ) )
-				return; // They are customizing
+			//if ( !Multis.DesignContext.Check( from ) )
+			//	return; // They are customizing
 
 			Spellbook book = e.Spellbook as Spellbook;
 			int spellID = e.SpellID;
@@ -101,13 +101,6 @@ namespace Server.Items
 
 			if ( book != null && book.HasSpell( spellID ) )
 			{
-				SpecialMove move = SpellRegistry.GetSpecialMove( spellID );
-
-				if ( move != null )
-				{
-					SpecialMove.SetCurrentMove( from, move );
-				}
-				else
 				{
 					Spell spell = SpellRegistry.NewSpell( spellID, from, null );
 	
@@ -293,21 +286,9 @@ namespace Server.Items
 		private ulong m_Content;
 		private int m_Count;
 
-		public override bool AllowSecureTrade( Mobile from, Mobile to, Mobile newOwner, bool accepted )
-		{
-			if ( !Ethics.Ethic.CheckTrade( from, to, newOwner, this ) )
-				return false;
-
-			return base.AllowSecureTrade( from, to, newOwner, accepted );
-		}
-
 		public override bool CanEquip( Mobile from )
 		{
-			if ( !Ethics.Ethic.CheckEquip( from, this ) )
-			{
-				return false;
-			}
-			else if ( !from.CanBeginAction( typeof( BaseWeapon ) ) )
+			if ( !from.CanBeginAction( typeof( BaseWeapon ) ) )
 			{
 				return false;
 			}
@@ -427,8 +408,8 @@ namespace Server.Items
 			if ( book == null )
 				return;
 
-			book.m_AosAttributes = new AosAttributes( newItem, m_AosAttributes );
-			book.m_AosSkillBonuses = new AosSkillBonuses( newItem, m_AosSkillBonuses );
+			//book.m_AosAttributes = new AosAttributes( newItem, m_AosAttributes );
+			//book.m_AosSkillBonuses = new AosSkillBonuses( newItem, m_AosSkillBonuses );
 		}
 
 		public override void OnAdded( object parent )
@@ -558,7 +539,7 @@ namespace Server.Items
 				
 			m_AosSkillBonuses.GetProperties( list );
 
-			if( m_Slayer != SlayerName.None )
+			/*if( m_Slayer != SlayerName.None )
 			{
 				SlayerEntry entry = SlayerGroup.GetEntryByName( m_Slayer );
 				if( entry != null )
@@ -570,7 +551,7 @@ namespace Server.Items
 				SlayerEntry entry = SlayerGroup.GetEntryByName( m_Slayer2 );
 				if( entry != null )
 					list.Add( entry.Title );
-			}
+			}*/
 
 			int prop;
 
@@ -616,8 +597,8 @@ namespace Server.Items
 			if ( (prop = m_AosAttributes.RegenMana) != 0 )
 				list.Add( 1060440, prop.ToString() ); // mana regeneration ~1_val~
 
-			if ( (prop = m_AosAttributes.NightSight) != 0 )
-				list.Add( 1060441 ); // night sight
+			//if ( (prop = m_AosAttributes.NightSight) != 0 )
+			//	list.Add( 1060441 ); // night sight
 
 			if ( (prop = m_AosAttributes.ReflectPhysical) != 0 )
 				list.Add( 1060442, prop.ToString() ); // reflect physical damage ~1_val~%
@@ -808,7 +789,7 @@ namespace Server.Items
 				1								// 1 property   : 1/4 : 25%
 			};
 
-		public int OnCraft( int quality, bool makersMark, Mobile from, CraftSystem craftSystem, Type typeRes, BaseTool tool, CraftItem craftItem, int resHue )
+		/*public int OnCraft( int quality, bool makersMark, Mobile from, CraftSystem craftSystem, Type typeRes, BaseTool tool, CraftItem craftItem, int resHue )
 		{
 			int magery = from.Skills.Magery.BaseFixedPoint;
 
@@ -852,6 +833,6 @@ namespace Server.Items
 				Crafter = from;
 
 			return quality;
-		}
+		}*/
 	}
 }

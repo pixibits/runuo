@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Accounting;
 
@@ -11,13 +11,13 @@ namespace Server.Engines.Chat
 		private Channel m_Channel;
 		private bool m_Anonymous;
 		private bool m_IgnorePrivateMessage;
-		private List<ChatUser> m_Ignored, m_Ignoring;
+		private ArrayList m_Ignored, m_Ignoring;
 
 		public ChatUser( Mobile m )
 		{
 			m_Mobile = m;
-			m_Ignored = new List<ChatUser>();
-			m_Ignoring = new List<ChatUser>();
+			m_Ignored = new ArrayList();
+			m_Ignoring = new ArrayList();
 		}
 
 		public Mobile Mobile
@@ -28,7 +28,7 @@ namespace Server.Engines.Chat
 			}
 		}
 
-		public List<ChatUser> Ignored
+		public ArrayList Ignored
 		{
 			get
 			{
@@ -36,7 +36,7 @@ namespace Server.Engines.Chat
 			}
 		}
 
-		public List<ChatUser> Ignoring
+		public ArrayList Ignoring
 		{
 			get
 			{
@@ -132,23 +132,23 @@ namespace Server.Engines.Chat
 			return false;
 		}
 
-		public void SendMessage( int number )
+		public void SendAsciiMessage( int number )
 		{
-			SendMessage( number, null, null );
+			SendAsciiMessage( number, null, null );
 		}
 
-		public void SendMessage( int number, string param1 )
+		public void SendAsciiMessage( int number, string param1 )
 		{
-			SendMessage( number, param1, null );
+			SendAsciiMessage( number, param1, null );
 		}
 
-		public void SendMessage( int number, string param1, string param2 )
+		public void SendAsciiMessage( int number, string param1, string param2 )
 		{
 			if ( m_Mobile.NetState != null )
 				m_Mobile.Send( new ChatMessagePacket( m_Mobile, number, param1, param2 ) );
 		}
 
-		public void SendMessage( int number, Mobile from, string param1, string param2 )
+		public void SendAsciiMessage( int number, Mobile from, string param1, string param2 )
 		{
 			if ( m_Mobile.NetState != null )
 				m_Mobile.Send( new ChatMessagePacket( from, number, param1, param2 ) );
@@ -171,14 +171,14 @@ namespace Server.Engines.Chat
 		{
 			if ( IsIgnored( user ) )
 			{
-				SendMessage( 22, user.Username ); // You are already ignoring %1.
+				SendAsciiMessage( 22, user.Username ); // You are already ignoring %1.
 			}
 			else
 			{
 				m_Ignored.Add( user );
 				user.m_Ignoring.Add( this );
 
-				SendMessage( 23, user.Username ); // You are now ignoring %1.
+				SendAsciiMessage( 23, user.Username ); // You are now ignoring %1.
 			}
 		}
 
@@ -189,19 +189,19 @@ namespace Server.Engines.Chat
 				m_Ignored.Remove( user );
 				user.m_Ignoring.Remove( this );
 
-				SendMessage( 24, user.Username ); // You are no longer ignoring %1.
+				SendAsciiMessage( 24, user.Username ); // You are no longer ignoring %1.
 
 				if ( m_Ignored.Count == 0 )
-					SendMessage( 26 ); // You are no longer ignoring anyone.
+					SendAsciiMessage( 26 ); // You are no longer ignoring anyone.
 			}
 			else
 			{
-				SendMessage( 25, user.Username ); // You are not ignoring %1.
+				SendAsciiMessage( 25, user.Username ); // You are not ignoring %1.
 			}
 		}
 
-		private static List<ChatUser> m_Users = new List<ChatUser>();
-		private static Dictionary<Mobile, ChatUser> m_Table = new Dictionary<Mobile, ChatUser>();
+		private static ArrayList m_Users = new ArrayList();
+		private static Hashtable m_Table = new Hashtable();
 
 		public static ChatUser AddChatUser( Mobile from )
 		{
@@ -216,11 +216,11 @@ namespace Server.Engines.Chat
 
 				Channel.SendChannelsTo( user );
 
-				List<Channel> list = Channel.Channels;
+				ArrayList list = Channel.Channels;
 
 				for ( int i = 0; i < list.Count; ++i )
 				{
-					Channel c = list[i];
+					Channel c = (Channel)list[i];
 
 					if ( c.AddUser( user ) )
 						break;
@@ -238,7 +238,7 @@ namespace Server.Engines.Chat
 				return;
 
 			for ( int i = 0; i < user.m_Ignoring.Count; ++i )
-				user.m_Ignoring[i].RemoveIgnored( user );
+				((ChatUser)user.m_Ignoring[i]).RemoveIgnored( user );
 
 			if ( m_Users.Contains( user ) )
 			{
@@ -261,16 +261,14 @@ namespace Server.Engines.Chat
 
 		public static ChatUser GetChatUser( Mobile from )
 		{
-			ChatUser c;
-			m_Table.TryGetValue( from, out c );
-			return c;
+			return (ChatUser)m_Table[from];
 		}
 
 		public static ChatUser GetChatUser( string username )
 		{
 			for ( int i = 0; i < m_Users.Count; ++i )
 			{
-				ChatUser user = m_Users[i];
+				ChatUser user = (ChatUser)m_Users[i];
 
 				if ( user.Username == username )
 					return user;
@@ -308,13 +306,15 @@ namespace Server.Engines.Chat
 		{
 			for ( int i = 0; i < m_Users.Count; ++i )
 			{
-				ChatUser user = m_Users[i];
+				ChatUser user = (ChatUser)m_Users[i];
 
 				if ( user == initiator )
 					continue;
 
 				if ( user.CheckOnline() )
 					ChatSystem.SendCommandTo( user.m_Mobile, command, param1, param2 );
+				else if ( !m_Users.Contains( i ) )
+					--i;
 			}
 		}
 	}

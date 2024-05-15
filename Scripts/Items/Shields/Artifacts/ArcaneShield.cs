@@ -14,9 +14,8 @@ namespace Server.Items
 		[Constructable]
 		public ArcaneShield()
 		{
-			ItemID = 0x1B78;
 			Hue = 0x556;
-			Attributes.NightSight = 1;
+			// TODO: Night Sight
 			Attributes.SpellChanneling = 1;
 			Attributes.DefendChance = 15;
 			Attributes.CastSpeed = 1;
@@ -38,9 +37,6 @@ namespace Server.Items
 			base.Deserialize( reader );
 
 			int version = reader.ReadInt();
-
-			if ( Attributes.NightSight == 0 )
-				Attributes.NightSight = 1;
 		}
 	}
 }

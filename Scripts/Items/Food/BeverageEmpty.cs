@@ -3,7 +3,7 @@ using System;
 namespace Server.Items
 {
 	[FlipableAttribute( 0x1f81, 0x1f82, 0x1f83, 0x1f84 )]
-	public class Glass : Item
+	public class Glass : BaseItem
 	{
 		[Constructable]
 		public Glass() : base( 0x1f81 )
@@ -30,7 +30,7 @@ namespace Server.Items
 		}
 	}
 
-	public class GlassBottle : Item
+	public class GlassBottle : BaseItem
 	{
 		[Constructable]
 		public GlassBottle() : base( 0xe2b )

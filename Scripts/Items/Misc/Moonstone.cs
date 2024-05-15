@@ -1,7 +1,6 @@
 using System;
 using Server;
 using Server.Network;
-using Server.Mobiles;
 
 namespace Server.Items
 {
@@ -10,7 +9,7 @@ namespace Server.Items
 		Felucca, Trammel
 	}
 
-	public class Moonstone : Item
+	public class Moonstone : BaseItem
 	{
 		private MoonstoneType m_Type;
 
@@ -67,17 +66,9 @@ namespace Server.Items
 			{
 				from.SendLocalizedMessage( 1005400 ); // You can not bury a stone in this form.
 			}
-			else if ( Factions.Sigil.ExistsOn( from ) )
-			{
-				from.SendLocalizedMessage( 1061632 ); // You can't do that while carrying the sigil.
-			}
-			else if ( from.Map == GetTargetMap() || ( from.Map != Map.Trammel && from.Map != Map.Felucca ) )
+			else if ( from.Map == GetTargetMap() || from.Map == Map.Ilshenar )
 			{
 				from.SendLocalizedMessage( 1005401 ); // You cannot bury the stone here.
-			}
-			else if ( from is PlayerMobile && ((PlayerMobile)from).Young )
-			{
-				from.SendLocalizedMessage( 1049543 ); // You decide against traveling to Felucca while you are still young.
 			}
 			else if ( from.Kills >= 5 )
 			{
@@ -87,7 +78,7 @@ namespace Server.Items
 			{
 				from.SendLocalizedMessage( 1005403 ); // The magic of the stone cannot be evoked by the lawless.
 			}
-			else if ( !Region.Find( from.Location, from.Map ).IsDefault || !Region.Find( from.Location, GetTargetMap() ).IsDefault )
+			else if ( Region.Find( from.Location, from.Map ).Area != null || Region.Find( from.Location, GetTargetMap() ).Area != null ) // Wilderness coordinates==null
 			{
 				from.SendLocalizedMessage( 1005401 ); // You cannot bury the stone here.
 			}
@@ -144,7 +135,7 @@ namespace Server.Items
 
 					if ( m_Count == 16 )
 					{
-						if ( !Region.Find( m_Location, m_Map ).IsDefault || !Region.Find( m_Location, m_TargetMap ).IsDefault )
+						if ( Region.Find( m_Location, m_Map ).Area != null || Region.Find( m_Location, m_TargetMap ).Area != null ) // Wilderness coordinates==null
 						{
 							m_Stone.Movable = true;
 							m_Caster.AddToBackpack( m_Stone );

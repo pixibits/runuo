@@ -5,12 +5,7 @@ namespace Server.Items
 {
 	public class PieceWhiteChecker : BasePiece
 	{
-		public override string DefaultName
-		{
-			get { return "white checker"; }
-		}
-
-		public PieceWhiteChecker( BaseBoard board ) : base( 0x3584, board )
+		public PieceWhiteChecker( BaseBoard board ) : base( 0x3584, "white checker", board )
 		{
 		}
 
@@ -33,12 +28,7 @@ namespace Server.Items
 
 	public class PieceBlackChecker : BasePiece
 	{
-		public override string DefaultName
-		{
-			get { return "black checker"; }
-		}
-
-		public PieceBlackChecker( BaseBoard board ) : base( 0x358B, board )
+		public PieceBlackChecker( BaseBoard board ) : base( 0x358B, "black checker", board )
 		{
 		}
 

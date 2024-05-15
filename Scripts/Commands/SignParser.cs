@@ -1,10 +1,10 @@
 using System;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using System.IO;
 using Server;
 using Server.Items;
 
-namespace Server.Commands
+namespace Server.Scripts.Commands
 {
 	public class SignParser
 	{
@@ -26,12 +26,12 @@ namespace Server.Commands
 
 		public static void Initialize()
 		{
-			CommandSystem.Register( "SignGen", AccessLevel.Administrator, new CommandEventHandler( SignGen_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "SignGen", AccessLevel.Administrator, new Server.Commands.CommandEventHandler( SignGen_OnCommand ) );
 		}
 
 		[Usage( "SignGen" )]
 		[Description( "Generates world/shop signs on all facets." )]
-		public static void SignGen_OnCommand( CommandEventArgs c )
+		public static void SignGen_OnCommand( Server.Commands.CommandEventArgs c )
 		{
 			Parse( c.Mobile );
 		}
@@ -42,7 +42,7 @@ namespace Server.Commands
 
 			if ( File.Exists( cfg ) )
 			{
-				List<SignEntry> list = new List<SignEntry>();
+				ArrayList list = new ArrayList();
 				from.SendMessage( "Generating signs, please wait." );
 
 				using ( StreamReader ip = new StreamReader( cfg ) )
@@ -71,7 +71,7 @@ namespace Server.Commands
 
 				for ( int i = 0; i < list.Count; ++i )
 				{
-					SignEntry e = list[i];
+					SignEntry e = (SignEntry)list[i];
 					Map[] maps = null;
 
 					switch ( e.m_Map )
@@ -96,7 +96,7 @@ namespace Server.Commands
 			}
 		}
 
-		private static Queue<Item> m_ToDelete = new Queue<Item>();
+		private static Queue m_ToDelete = new Queue();
 
 		public static void Add_Static( int itemID, Point3D location, Map map, string name )
 		{
@@ -111,7 +111,7 @@ namespace Server.Commands
 			eable.Free();
 
 			while ( m_ToDelete.Count > 0 )
-				m_ToDelete.Dequeue().Delete();
+				((Item)m_ToDelete.Dequeue()).Delete();
 
 			Item sign;
 

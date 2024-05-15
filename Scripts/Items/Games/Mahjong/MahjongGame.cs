@@ -1,14 +1,11 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server;
-using Server.Gumps;
-using Server.Multis;
 using Server.ContextMenus;
 
 namespace Server.Engines.Mahjong
 {
-	public class MahjongGame : Item, ISecurable
+	public class MahjongGame : BaseItem
 	{
 		public const int MaxPlayers = 4;
 		public const int BaseScore = 30000;
@@ -27,15 +24,6 @@ namespace Server.Engines.Mahjong
 		public MahjongWallBreakIndicator WallBreakIndicator { get { return m_WallBreakIndicator; } }
 		public MahjongDices Dices { get { return m_Dices; } }
 		public MahjongPlayers Players { get { return m_Players; } }
-
-		private SecureLevel m_Level;
-
-		[CommandProperty( AccessLevel.GameMaster )]
-		public SecureLevel Level
-		{
-			get{ return m_Level; }
-			set{ m_Level = value; }
-		}
 
 		[CommandProperty( AccessLevel.GameMaster )]
 		public bool ShowScores
@@ -90,7 +78,6 @@ namespace Server.Engines.Mahjong
 			m_Dices = new MahjongDices( this );
 			m_Players = new MahjongPlayers( this, MaxPlayers, BaseScore );
 			m_LastReset = DateTime.Now;
-			m_Level = SecureLevel.CoOwners;
 		}
 
 		public MahjongGame( Serial serial ) : base( serial )
@@ -158,8 +145,6 @@ namespace Server.Engines.Mahjong
 
 			if ( from.Alive && IsAccessibleTo( from ) && m_Players.GetInGameMobiles( true, false ).Count == 0 )
 				list.Add( new ResetGameEntry( this ) );
-
-			SetSecureLevelEntry.AddTo( from, this, list );
 		}
 
 		private class ResetGameEntry : ContextMenuEntry
@@ -235,14 +220,14 @@ namespace Server.Engines.Mahjong
 		{
 			base.Serialize( writer );
 
-			writer.Write( (int) 1 ); // version
-
-			writer.Write( (int) m_Level );
+			writer.Write( (int) 0 ); // version
 
 			writer.Write( m_Tiles.Length );
 
 			for ( int i = 0; i < m_Tiles.Length; i++ )
+			{
 				m_Tiles[i].Save( writer );
+			}
 
 			m_DealerIndicator.Save( writer );
 
@@ -262,41 +247,26 @@ namespace Server.Engines.Mahjong
 
 			int version = reader.ReadInt();
 
-			switch ( version )
+			int length = reader.ReadInt();
+			m_Tiles = new MahjongTile[length];
+
+			for ( int i = 0; i < length; i++ )
 			{
-				case 1:
-				{
-					m_Level = (SecureLevel)reader.ReadInt();
-
-					goto case 0;
-				}
-				case 0:
-				{
-					if ( version < 1 )
-						m_Level = SecureLevel.CoOwners;
-
-					int length = reader.ReadInt();
-					m_Tiles = new MahjongTile[length];
-
-					for ( int i = 0; i < length; i++ )
-						m_Tiles[i] = new MahjongTile( this, reader );
-
-					m_DealerIndicator = new MahjongDealerIndicator( this, reader );
-
-					m_WallBreakIndicator = new MahjongWallBreakIndicator( this, reader );
-
-					m_Dices = new MahjongDices( this, reader );
-
-					m_Players = new MahjongPlayers( this, reader );
-
-					m_ShowScores = reader.ReadBool();
-					m_SpectatorVision = reader.ReadBool();
-
-					m_LastReset = DateTime.Now;
-
-					break;
-				}
+				m_Tiles[i] = new MahjongTile( this, reader );
 			}
+
+			m_DealerIndicator = new MahjongDealerIndicator( this, reader );
+
+			m_WallBreakIndicator = new MahjongWallBreakIndicator( this, reader );
+
+			m_Dices = new MahjongDices( this, reader );
+
+			m_Players = new MahjongPlayers( this, reader );
+
+			m_ShowScores = reader.ReadBool();
+			m_SpectatorVision = reader.ReadBool();
+
+			m_LastReset = DateTime.Now;
 		}
 	}
 }

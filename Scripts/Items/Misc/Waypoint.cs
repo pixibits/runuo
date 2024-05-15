@@ -1,36 +1,31 @@
 using System;
 using Server;
 using Server.Targeting;
-using Server.Commands;
 
 namespace Server.Items
 {
 	[FlipableAttribute( 0x1f14, 0x1f15, 0x1f16, 0x1f17 )]
-	public class WayPoint : Item
+	public class WayPoint : BaseItem
 	{
 		public static void Initialize()
 		{
-			CommandSystem.Register( "WayPointSeq", AccessLevel.GameMaster, new CommandEventHandler( WayPointSeq_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "WayPointSeq", AccessLevel.GameMaster, new Server.Commands.CommandEventHandler( WayPointSeq_OnCommand ) );
 		}
 
-		public static void WayPointSeq_OnCommand( CommandEventArgs arg )
+		public static void WayPointSeq_OnCommand( Server.Commands.CommandEventArgs arg )
 		{
-			arg.Mobile.SendMessage( "Target the position of the first way point." );
+			arg.Mobile.SendAsciiMessage( "Target the position of the first way point." );
 			arg.Mobile.Target = new WayPointSeqTarget( null );
 		}
 
 		private WayPoint m_Next;
-
-		public override string DefaultName
-		{
-			get { return "AI Way Point"; }
-		}
 
 		[Constructable]
 		public WayPoint() : base( 0x1f14 )
 		{
 			this.Hue = 0x498;
 			this.Visible = false;
+			this.Name = "AI Way Point";
 			//this.Movable = false;
 		}
 
@@ -58,7 +53,7 @@ namespace Server.Items
 		{
 			if ( from.AccessLevel >= AccessLevel.GameMaster )
 			{
-				from.SendMessage( "Target the next way point in the sequence." );
+				from.SendAsciiMessage( "Target the next way point in the sequence." );
 
 				from.Target = new NextPointTarget( this );
 			}
@@ -121,7 +116,7 @@ namespace Server.Items
 			}
 			else
 			{
-				from.SendMessage( "Target a way point." );
+				from.SendAsciiMessage( "Target a way point." );
 			}
 		}
 	}
@@ -150,11 +145,11 @@ namespace Server.Items
 				point.MoveToWorld( p, from.Map );
 
 				from.Target = new WayPointSeqTarget( point );
-				from.SendMessage( "Target the position of the next way point in the sequence, or target a way point link the newest way point to." );
+				from.SendAsciiMessage( "Target the position of the next way point in the sequence, or target a way point link the newest way point to." );
 			}
 			else
 			{
-				from.SendMessage( "Target a position, or another way point." );
+				from.SendAsciiMessage( "Target a position, or another way point." );
 			}
 		}
 	}

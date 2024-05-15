@@ -3,13 +3,8 @@ using Server;
 
 namespace Server.Items
 {
-	public class Static : Item
+	public class Static : BaseItem
 	{
-		public Static() : base( 0x80 )
-		{
-			Movable = false;
-		}
-
 		[Constructable]
 		public Static( int itemID ) : base( itemID )
 		{
@@ -29,7 +24,7 @@ namespace Server.Items
 		{
 			base.Serialize( writer );
 
-			writer.Write( (int) 1 ); // version
+			writer.Write( (int) 0 ); // version
 		}
 
 		public override void Deserialize( GenericReader reader )
@@ -37,9 +32,6 @@ namespace Server.Items
 			base.Deserialize( reader );
 
 			int version = reader.ReadInt();
-
-			if ( version == 0 && Weight == 0 )
-				Weight = -1;
 		}
 	}
 
@@ -57,7 +49,7 @@ namespace Server.Items
 		public override int LabelNumber{ get{ return m_LabelNumber; } }
 
 		[Constructable]
-		public LocalizedStatic( int itemID ) : this( itemID, itemID < 0x4000 ? 1020000 + itemID : 1078872 + itemID )
+		public LocalizedStatic( int itemID ) : this( itemID, 1020000 + itemID )
 		{
 		}
 

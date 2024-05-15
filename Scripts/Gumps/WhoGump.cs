@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
-using Server.Commands;
-using Server.Mobiles;
+using System.Collections; using System.Collections.Generic;
 using Server.Network;
 
 namespace Server.Gumps
@@ -10,100 +8,117 @@ namespace Server.Gumps
 	{
 		public static void Initialize()
 		{
-			CommandSystem.Register( "Who", AccessLevel.Counselor, new CommandEventHandler( WhoList_OnCommand ) );
-			CommandSystem.Register( "WhoList", AccessLevel.Counselor, new CommandEventHandler( WhoList_OnCommand ) );
+			Commands.CommandSystem.Register( "Who", AccessLevel.Counselor, new Server.Commands.CommandEventHandler( WhoList_OnCommand ) );
+			Commands.CommandSystem.Register( "WhoList", AccessLevel.Counselor, new Server.Commands.CommandEventHandler( WhoList_OnCommand ) );
 		}
 
 		[Usage( "WhoList [filter]" )]
 		[Aliases( "Who" )]
 		[Description( "Lists all connected clients. Optionally filters results by name." )]
-		private static void WhoList_OnCommand( CommandEventArgs e )
+		private static void WhoList_OnCommand( Server.Commands.CommandEventArgs e )
 		{
-			e.Mobile.SendGump( new WhoGump( e.Mobile, e.ArgString ) );
+			try
+			{
+				ArrayList list = BuildList( e.Mobile, e.ArgString );
+				if ( list == null || list.Count != 1 )
+					e.Mobile.SendGump( new WhoGump( e.Mobile, list, 0 ) );
+				else 
+					e.Mobile.SendGump( new ClientGump( e.Mobile, ((Mobile)list[0]).NetState ) );
+			}
+			catch ( Exception ex )
+			{
+				e.Mobile.SendMessage( ex.Message );
+			}
 		}
 
 		public static bool OldStyle = PropsConfig.OldStyle;
 
-		public static readonly int GumpOffsetX = PropsConfig.GumpOffsetX;
-		public static readonly int GumpOffsetY = PropsConfig.GumpOffsetY;
+		public const int GumpOffsetX = PropsConfig.GumpOffsetX;
+		public const int GumpOffsetY = PropsConfig.GumpOffsetY;
 
-		public static readonly int TextHue = PropsConfig.TextHue;
-		public static readonly int TextOffsetX = PropsConfig.TextOffsetX;
+		public const int TextHue = PropsConfig.TextHue;
+		public const int TextOffsetX = PropsConfig.TextOffsetX;
 
-		public static readonly int OffsetGumpID = PropsConfig.OffsetGumpID;
-		public static readonly int HeaderGumpID = PropsConfig.HeaderGumpID;
-		public static readonly int  EntryGumpID = PropsConfig.EntryGumpID;
-		public static readonly int   BackGumpID = PropsConfig.BackGumpID;
-		public static readonly int    SetGumpID = PropsConfig.SetGumpID;
+		public const int OffsetGumpID = PropsConfig.OffsetGumpID;
+		public const int HeaderGumpID = PropsConfig.HeaderGumpID;
+		public const int  EntryGumpID = PropsConfig.EntryGumpID;
+		public const int   BackGumpID = PropsConfig.BackGumpID;
+		public const int    SetGumpID = PropsConfig.SetGumpID;
 
-		public static readonly int SetWidth = PropsConfig.SetWidth;
-		public static readonly int SetOffsetX = PropsConfig.SetOffsetX, SetOffsetY = PropsConfig.SetOffsetY;
-		public static readonly int SetButtonID1 = PropsConfig.SetButtonID1;
-		public static readonly int SetButtonID2 = PropsConfig.SetButtonID2;
+		public const int SetWidth = PropsConfig.SetWidth;
+		public const int SetOffsetX = PropsConfig.SetOffsetX, SetOffsetY = PropsConfig.SetOffsetY;
+		public const int SetButtonID1 = PropsConfig.SetButtonID1;
+		public const int SetButtonID2 = PropsConfig.SetButtonID2;
 
-		public static readonly int PrevWidth = PropsConfig.PrevWidth;
-		public static readonly int PrevOffsetX = PropsConfig.PrevOffsetX, PrevOffsetY = PropsConfig.PrevOffsetY;
-		public static readonly int PrevButtonID1 = PropsConfig.PrevButtonID1;
-		public static readonly int PrevButtonID2 = PropsConfig.PrevButtonID2;
+		public const int PrevWidth = PropsConfig.PrevWidth;
+		public const int PrevOffsetX = PropsConfig.PrevOffsetX, PrevOffsetY = PropsConfig.PrevOffsetY;
+		public const int PrevButtonID1 = PropsConfig.PrevButtonID1;
+		public const int PrevButtonID2 = PropsConfig.PrevButtonID2;
 
-		public static readonly int NextWidth = PropsConfig.NextWidth;
-		public static readonly int NextOffsetX = PropsConfig.NextOffsetX, NextOffsetY = PropsConfig.NextOffsetY;
-		public static readonly int NextButtonID1 = PropsConfig.NextButtonID1;
-		public static readonly int NextButtonID2 = PropsConfig.NextButtonID2;
+		public const int NextWidth = PropsConfig.NextWidth;
+		public const int NextOffsetX = PropsConfig.NextOffsetX, NextOffsetY = PropsConfig.NextOffsetY;
+		public const int NextButtonID1 = PropsConfig.NextButtonID1;
+		public const int NextButtonID2 = PropsConfig.NextButtonID2;
 
-		public static readonly int OffsetSize = PropsConfig.OffsetSize;
+		public const int OffsetSize = PropsConfig.OffsetSize;
 
-		public static readonly int EntryHeight = PropsConfig.EntryHeight;
-		public static readonly int BorderSize = PropsConfig.BorderSize;
+		public const int EntryHeight = PropsConfig.EntryHeight;
+		public const int BorderSize = PropsConfig.BorderSize;
 
 		private static bool PrevLabel = false, NextLabel = false;
 
-		private static readonly int PrevLabelOffsetX = PrevWidth + 1;
-		private static readonly int PrevLabelOffsetY = 0;
+		private const int PrevLabelOffsetX = PrevWidth + 1;
+		private const int PrevLabelOffsetY = 0;
 
-		private static readonly int NextLabelOffsetX = -29;
-		private static readonly int NextLabelOffsetY = 0;
+		private const int NextLabelOffsetX = -29;
+		private const int NextLabelOffsetY = 0;
 
-		private static readonly int EntryWidth = 180;
-		private static readonly int EntryCount = 15;
+		private const int EntryWidth = 180;
+		private const int EntryCount = 15;
 
-		private static readonly int TotalWidth = OffsetSize + EntryWidth + OffsetSize + SetWidth + OffsetSize;
-		private static readonly int TotalHeight = OffsetSize + ((EntryHeight + OffsetSize) * (EntryCount + 1));
+		private const int TotalWidth = OffsetSize + EntryWidth + OffsetSize + SetWidth + OffsetSize;
+		private const int TotalHeight = OffsetSize + ((EntryHeight + OffsetSize) * (EntryCount + 1));
 
-		private static readonly int BackWidth = BorderSize + TotalWidth + BorderSize;
-		private static readonly int BackHeight = BorderSize + TotalHeight + BorderSize;
+		private const int BackWidth = BorderSize + TotalWidth + BorderSize;
+		private const int BackHeight = BorderSize + TotalHeight + BorderSize;
 
 		private Mobile m_Owner;
-		private List<Mobile> m_Mobiles;
+		private ArrayList m_Mobiles;
 		private int m_Page;
 
-		private class InternalComparer : IComparer<Mobile>
+		private class InternalComparer : IComparer
 		{
-			public static readonly IComparer<Mobile> Instance = new InternalComparer();
+			public static readonly IComparer Instance = new InternalComparer();
 
 			public InternalComparer()
 			{
 			}
 
-			public int Compare( Mobile x, Mobile y )
+			public int Compare( object x, object y )
 			{
-				if ( x == null || y == null )
+				if ( x == null && y == null )
+					return 0;
+				else if ( x == null )
+					return -1;
+				else if ( y == null )
+					return 1;
+
+				Mobile a = x as Mobile;
+				Mobile b = y as Mobile;
+
+				if ( a == null || b == null )
 					throw new ArgumentException();
 
-				if ( x.AccessLevel > y.AccessLevel )
+				if ( a.AccessLevel > b.AccessLevel )
 					return -1;
-				else if ( x.AccessLevel < y.AccessLevel )
+				else if ( a.AccessLevel < b.AccessLevel )
 					return 1;
 				else
-					return Insensitive.Compare( x.Name, y.Name );
+					return Insensitive.Compare( a.Name, b.Name );
 			}
 		}
 
-		public WhoGump( Mobile owner, string filter ) : this( owner, BuildList( owner, filter ), 0 )
-		{
-		}
-
-		public WhoGump( Mobile owner, List<Mobile> list, int page ) : base( GumpOffsetX, GumpOffsetY )
+		public WhoGump( Mobile owner, ArrayList list, int page ) : base( GumpOffsetX, GumpOffsetY )
 		{
 			owner.CloseGump( typeof( WhoGump ) );
 
@@ -113,21 +128,29 @@ namespace Server.Gumps
 			Initialize( page );
 		}
 
-		public static List<Mobile> BuildList( Mobile owner, string filter )
+		public static bool CanSee( Mobile from, Mobile to )
+		{
+			if ( from == null || to == null )
+				return false;
+			else 
+				return ( from.AccessLevel >= to.AccessLevel || !to.Hidden );
+		}
+
+		public static ArrayList BuildList( Mobile owner, string filter )
 		{
 			if ( filter != null && (filter = filter.Trim()).Length == 0 )
 				filter = null;
 			else
 				filter = filter.ToLower();
 
-			List<Mobile> list = new List<Mobile>();
+			ArrayList list = new ArrayList();
 			List<NetState> states = NetState.Instances;
 
 			for ( int i = 0; i < states.Count; ++i )
 			{
-				Mobile m = states[i].Mobile;
+				Mobile m = ((NetState)states[i]).Mobile;
 
-				if ( m != null && (m == owner || !m.Hidden || owner.AccessLevel > m.AccessLevel || (m is PlayerMobile && ((PlayerMobile)m).VisibilityList.Contains( owner ) ) ) )
+				if ( CanSee( owner, m ) )
 				{
 					if ( filter != null && ( m.Name == null || m.Name.ToLower().IndexOf( filter ) < 0 ) )
 						continue;
@@ -202,7 +225,7 @@ namespace Server.Gumps
 				x = BorderSize + OffsetSize;
 				y += EntryHeight + OffsetSize;
 
-				Mobile m = m_Mobiles[index];
+				Mobile m = (Mobile)m_Mobiles[index];
 
 				AddImageTiled( x, y, EntryWidth, EntryHeight, EntryGumpID );
 				AddLabelCropped( x + TextOffsetX, y, EntryWidth - TextOffsetX, EntryHeight, GetHueFor( m ), m.Deleted ? "(deleted)" : m.Name );
@@ -221,17 +244,15 @@ namespace Server.Gumps
 		{
 			switch ( m.AccessLevel )
 			{
-				case AccessLevel.Owner:
-				case AccessLevel.Developer:
 				case AccessLevel.Administrator: return 0x516;
 				case AccessLevel.Seer: return 0x144;
 				case AccessLevel.GameMaster: return 0x21;
 				case AccessLevel.Counselor: return 0x2;
 				case AccessLevel.Player: default:
 				{
-					if ( m.Kills >= 5 )
+					if ( m.Karma <= (int)Noto.Dastardly )
 						return 0x21;
-					else if ( m.Criminal )
+					else if ( m.Criminal || m.Karma <= (int)Noto.Dishonorable )
 						return 0x3B1;
 
 					return 0x58;
@@ -269,7 +290,7 @@ namespace Server.Gumps
 
 					if ( index >= 0 && index < m_Mobiles.Count )
 					{
-						Mobile m = m_Mobiles[index];
+						Mobile m = (Mobile)m_Mobiles[index];
 
 						if ( m.Deleted )
 						{
@@ -281,7 +302,7 @@ namespace Server.Gumps
 							from.SendMessage( "That player is no longer online." );
 							from.SendGump( new WhoGump( from, m_Mobiles, m_Page ) );
 						}
-						else if ( m == from || !m.Hidden || from.AccessLevel > m.AccessLevel || (m is PlayerMobile && ((PlayerMobile)m).VisibilityList.Contains( from ))) 
+						else if ( CanSee( m_Owner, m ) )
 						{
 							from.SendGump( new ClientGump( from, m.NetState ) );
 						}

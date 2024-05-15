@@ -98,7 +98,7 @@ namespace Server.Items
 
 		public override void OnTrigger( Mobile from )
 		{
-			if ( !from.Alive || from.AccessLevel > AccessLevel.Player )
+			if ( !from.Alive )
 				return;
 
 			Effects.SendLocationEffect( Location, Map, GetBaseID( this.Type ) + 1, 18, 3, GetEffectHue(), 0 );

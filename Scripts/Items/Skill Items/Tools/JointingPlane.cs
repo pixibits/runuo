@@ -7,7 +7,10 @@ namespace Server.Items
 	[Flipable( 0x1030, 0x1031 )]
 	public class JointingPlane : BaseTool
 	{
-		public override CraftSystem CraftSystem{ get{ return DefCarpentry.CraftSystem; } }
+		public override CraftSystem GetCraftInstance()
+		{
+			return new CarpentrySystem();
+		}
 
 		[Constructable]
 		public JointingPlane() : base( 0x1030 )

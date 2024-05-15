@@ -61,7 +61,7 @@ namespace Server.Engines.Chat
 			if ( channel.CanTalk( from ) )
 				channel.SendIgnorableMessage( 57, from, from.GetColorCharacter() + from.Username, param ); // %1: %2
 			else
-				from.SendMessage( 36 ); // The moderator of this conference has not given you speaking priviledges.
+				from.SendAsciiMessage( 36 ); // The moderator of this conference has not given you speaking priviledges.
 		}
 
 		public static void EmoteMessage( ChatUser from, Channel channel, string param )
@@ -69,7 +69,7 @@ namespace Server.Engines.Chat
 			if ( channel.CanTalk( from ) )
 				channel.SendIgnorableMessage( 58, from, from.GetColorCharacter() + from.Username, param ); // %1 %2
 			else
-				from.SendMessage( 36 ); // The moderator of this conference has not given you speaking priviledges.
+				from.SendAsciiMessage( 36 ); // The moderator of this conference has not given you speaking priviledges.
 		}
 
 		public static void PrivateMessage( ChatUser from, Channel channel, string param )
@@ -85,11 +85,11 @@ namespace Server.Engines.Chat
 				return;
 
 			if ( target.IsIgnored( from ) )
-				from.SendMessage( 35, target.Username ); // %1 has chosen to ignore you. None of your messages to them will get through.
+				from.SendAsciiMessage( 35, target.Username ); // %1 has chosen to ignore you. None of your messages to them will get through.
 			else if ( target.IgnorePrivateMessage )
-				from.SendMessage( 42, target.Username ); // %1 has chosen to not receive private messages at the moment.
+				from.SendAsciiMessage( 42, target.Username ); // %1 has chosen to not receive private messages at the moment.
 			else
-				target.SendMessage( 59, from.Mobile, from.GetColorCharacter() + from.Username, text ); // [%1]: %2
+				target.SendAsciiMessage( 59, from.Mobile, from.GetColorCharacter() + from.Username, text ); // [%1]: %2
 		}
 
 		public static void LeaveChat( ChatUser from, Channel channel, string param )
@@ -100,19 +100,19 @@ namespace Server.Engines.Chat
 		public static void ChangeChannelPassword( ChatUser from, Channel channel, string param )
 		{
 			channel.Password = param;
-			from.SendMessage( 60 ); // The password to the conference has been changed.
+			from.SendAsciiMessage( 60 ); // The password to the conference has been changed.
 		}
 
 		public static void AllowPrivateMessages( ChatUser from, Channel channel, string param )
 		{
 			from.IgnorePrivateMessage = false;
-			from.SendMessage( 37 ); // You can now receive private messages.
+			from.SendAsciiMessage( 37 ); // You can now receive private messages.
 		}
 
 		public static void DisallowPrivateMessages( ChatUser from, Channel channel, string param )
 		{
 			from.IgnorePrivateMessage = true;
-			from.SendMessage( 38 ); /* You will no longer receive private messages.
+			from.SendAsciiMessage( 38 ); /* You will no longer receive private messages.
 									 * Those who send you a message will be notified that you are blocking incoming messages.
 									 */
 		}
@@ -120,25 +120,25 @@ namespace Server.Engines.Chat
 		public static void TogglePrivateMessages( ChatUser from, Channel channel, string param )
 		{
 			from.IgnorePrivateMessage = !from.IgnorePrivateMessage;
-			from.SendMessage( from.IgnorePrivateMessage ? 38 : 37 ); // See above for messages
+			from.SendAsciiMessage( from.IgnorePrivateMessage ? 38 : 37 ); // See above for messages
 		}
 
 		public static void ShowCharacterName( ChatUser from, Channel channel, string param )
 		{
 			from.Anonymous = false;
-			from.SendMessage( 39 ); // You are now showing your character name to any players who inquire with the whois command.
+			from.SendAsciiMessage( 39 ); // You are now showing your character name to any players who inquire with the whois command.
 		}
 
 		public static void HideCharacterName( ChatUser from, Channel channel, string param )
 		{
 			from.Anonymous = true;
-			from.SendMessage( 40 ); // You are no longer showing your character name to any players who inquire with the whois command.
+			from.SendAsciiMessage( 40 ); // You are no longer showing your character name to any players who inquire with the whois command.
 		}
 
 		public static void ToggleCharacterName( ChatUser from, Channel channel, string param )
 		{
 			from.Anonymous = !from.Anonymous;
-			from.SendMessage( from.Anonymous ? 40 : 39 ); // See above for messages
+			from.SendAsciiMessage( from.Anonymous ? 40 : 39 ); // See above for messages
 		}
 
 		public static void JoinChannel( ChatUser from, Channel channel, string param )
@@ -186,7 +186,7 @@ namespace Server.Engines.Chat
 			Channel joined = Channel.FindChannelByName( name );
 
 			if ( joined == null )
-				from.SendMessage( 33, name ); // There is no conference named '%1'.
+				from.SendAsciiMessage( 33, name ); // There is no conference named '%1'.
 			else
 				joined.AddUser( from, password );
 		}
@@ -328,9 +328,9 @@ namespace Server.Engines.Chat
 				return;
 
 			if ( target.Anonymous )
-				from.SendMessage( 41, target.Username ); // %1 is remaining anonymous.
+				from.SendAsciiMessage( 41, target.Username ); // %1 is remaining anonymous.
 			else
-				from.SendMessage( 43, target.Username, target.Mobile.Name ); // %2 is known in the lands of Britannia as %2.
+				from.SendAsciiMessage( 43, target.Username, target.Mobile.Name ); // %2 is known in the lands of Britannia as %2.
 		}
 
 		public static void Kick( ChatUser from, Channel channel, string param )

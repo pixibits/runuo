@@ -1,5 +1,5 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Guilds;
 using Server.Network;
@@ -96,7 +96,7 @@ namespace Server.Gumps
 			AddButton( 20, 280, 4005, 4007, 8, GumpButtonType.Reply, 0 );
 			AddHtmlLocalized( 55, 280, 470, 30, 1011095, false, false ); // View list of guilds you are at war with.
 
-			if ( beholder.AccessLevel >= AccessLevel.GameMaster || beholder == leader )
+			if ( guild.IsLeader( beholder ) )
 			{
 				AddButton( 20, 310, 4005, 4007, 9, GumpButtonType.Reply, 0 );
 				AddHtmlLocalized( 55, 310, 470, 30, 1011094, false, false ); // Access guildmaster functions.
@@ -128,7 +128,7 @@ namespace Server.Gumps
 
 		public static bool BadLeader( Mobile m, Guild g )
 		{
-			if ( m.Deleted || g.Disbanded || (m.AccessLevel < AccessLevel.GameMaster && g.Leader != m) )
+			if ( m.Deleted || g.Disbanded || !g.IsLeader( m ) )
 				return true;
 
 			Item stone = g.Guildstone;
@@ -138,7 +138,7 @@ namespace Server.Gumps
 
 		public static bool BadMember( Mobile m, Guild g )
 		{
-			if ( m.Deleted || g.Disbanded || (m.AccessLevel < AccessLevel.GameMaster && !g.IsMember( m )) )
+			if ( m.Deleted || g.Disbanded || !g.IsMember( m ) )
 				return true;
 
 			Item stone = g.Guildstone;
@@ -211,7 +211,7 @@ namespace Server.Gumps
 				}
 				case 9: // Guildmaster functions
 				{
-					if ( m_Mobile.AccessLevel >= AccessLevel.GameMaster || m_Guild.Leader == m_Mobile )
+					if ( !BadLeader( m_Mobile, m_Guild ) )
 					{
 						EnsureClosed( m_Mobile );
 						m_Mobile.SendGump( new GuildmasterGump( m_Mobile, m_Guild ) );

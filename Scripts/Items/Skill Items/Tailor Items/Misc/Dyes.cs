@@ -4,7 +4,7 @@ using Server.HuePickers;
 
 namespace Server.Items
 {
-	public class Dyes : Item
+	public class Dyes : BaseItem
 	{
 		[Constructable]
 		public Dyes() : base( 0xFA9 )
@@ -84,7 +84,7 @@ namespace Server.Items
 					}
 					else
 					{
-						from.SendMessage( "That dye tub may not be redyed." );
+						from.SendAsciiMessage( "That dye tub may not be redyed." );
 					}
 				}
 				else

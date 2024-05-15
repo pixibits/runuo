@@ -4,42 +4,32 @@ using Server.Targeting;
 
 namespace Server.Items
 {
-	public class BigFish : Item, ICarvable
+	public class BigFish : BaseItem, ICarvable
 	{
-		private Mobile m_Fisher;
-
-		[CommandProperty( AccessLevel.GameMaster )]
-		public Mobile Fisher
-		{
-			get{ return m_Fisher; }
-			set{ m_Fisher = value; InvalidateProperties(); }
-		}
-
 		public void Carve( Mobile from, Item item )
 		{
-			base.ScissorHelper( from, new RawFishSteak(), Math.Max( 16, (int)Weight ) / 4 , false );
+			base.ScissorHelper( from, new RawFishSteak(), 100, false );
 		}
 
 		public override int LabelNumber{ get{ return 1041112; } } // a big fish
 
 		[Constructable]
-		public BigFish() : base( 0x09CC )
+		public BigFish() : this( 1 )
 		{
-			Weight = Utility.RandomMinMax( 3, 200 );	//TODO: Find correct formula.  max on OSI currently 200, OSI dev says it's not 200 as max, and ~ 1/1,000,000 chance to get highest
-			Hue = Utility.RandomBool() ? 0x847 : 0x58C;
 		}
 
-		public override void GetProperties( ObjectPropertyList list )
+		[Constructable]
+		public BigFish( int amount ) : base( 0x09CC )
 		{
-			base.GetProperties( list );
+			Stackable = true;
+			Weight = 100.0;
+			Amount = amount;
+			Hue = 0x847;
+		}
 
-			if ( Weight >= 20 )
-			{
-				if ( m_Fisher != null )
-					list.Add( 1070857, m_Fisher.Name ); // Caught by ~1_fisherman~
-
-				list.Add( 1070858, ((int)Weight).ToString() ); // ~1_weight~ stones
-			}
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new BigFish( amount ), amount );
 		}
 
 		public BigFish( Serial serial ) : base( serial )
@@ -50,9 +40,7 @@ namespace Server.Items
 		{
 			base.Serialize( writer );
 
-			writer.Write( (int) 1 ); // version
-
-			writer.Write( (Mobile) m_Fisher );
+			writer.Write( (int) 0 ); // version
 		}
 
 		public override void Deserialize( GenericReader reader )
@@ -60,20 +48,6 @@ namespace Server.Items
 			base.Deserialize( reader );
 
 			int version = reader.ReadInt();
-
-			switch ( version )
-			{
-				case 1:
-				{
-					m_Fisher = reader.ReadMobile();
-					break;
-				}
-				case 0:
-				{
-					Weight = Utility.RandomMinMax( 3, 200 );
-					break;
-				}
-			}
 		}
 	}
 }

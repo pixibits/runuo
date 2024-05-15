@@ -3,10 +3,10 @@ using Server;
 
 namespace Server.Items
 {
-	public class Blood : Item
+	public class Blood : BaseItem
 	{
 		[Constructable]
-		public Blood() : this( Utility.RandomList( 0x1645, 0x122A, 0x122B, 0x122C, 0x122D, 0x122E, 0x122F ))
+		public Blood() : this( 0x1645 )
 		{
 		}
 
@@ -41,9 +41,9 @@ namespace Server.Items
 		{
 			private Item m_Blood;
 
-			public InternalTimer( Item blood ) : base( TimeSpan.FromSeconds( 5.0 ) )
+			public InternalTimer( Item blood ) : base( TimeSpan.FromSeconds( 3.0 + (Utility.RandomDouble() * 3.0) ) )
 			{
-				Priority = TimerPriority.OneSecond;
+				Priority = TimerPriority.FiftyMS;
 
 				m_Blood = blood;
 			}

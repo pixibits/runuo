@@ -4,7 +4,7 @@ using Server.Targeting;
 
 namespace Server.Items
 {
-	public class Fish : Item, ICarvable
+	public class Fish : BaseItem, ICarvable
 	{
 		public void Carve( Mobile from, Item item )
 		{
@@ -12,19 +12,10 @@ namespace Server.Items
 		}
 
 		[Constructable]
-		public Fish() : this( 1 )
+		public Fish() : base( Utility.Random( 0x09CC, 4 ) )
 		{
-		}
-
-		[Constructable]
-		public Fish( int amount ) : base( Utility.Random( 0x09CC, 4 ) )
-		{
-			Stackable = true;
 			Weight = 1.0;
-			Amount = amount;
 		}
-
-		
 
 		public Fish( Serial serial ) : base( serial )
 		{

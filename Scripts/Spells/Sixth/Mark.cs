@@ -6,18 +6,17 @@ using Server.Regions;
 
 namespace Server.Spells.Sixth
 {
-	public class MarkSpell : MagerySpell
+	public class MarkSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Mark", "Kal Por Ylem",
+				SpellCircle.Sixth,
 				218,
 				9002,
 				Reagent.BlackPearl,
 				Reagent.Bloodmoss,
 				Reagent.MandrakeRoot
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Sixth; } }
 
 		public MarkSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -28,30 +27,19 @@ namespace Server.Spells.Sixth
 			Caster.Target = new InternalTarget( this );
 		}
 
-		public override bool CheckCast()
-		{
-			if ( !base.CheckCast() )
-				return false;
-
-			return SpellHelper.CheckTravel( Caster, TravelCheckType.Mark );
-		}
-
 		public void Target( RecallRune rune )
 		{
 			if ( !Caster.CanSee( rune ) )
 			{
 				Caster.SendLocalizedMessage( 500237 ); // Target can not be seen.
 			}
-			else if ( !SpellHelper.CheckTravel( Caster, TravelCheckType.Mark ) )
+			else if ( !SpellHelper.CheckTravel( Caster, Caster.Location, Caster.Map, TravelType.Mark ) && Caster.AccessLevel == AccessLevel.Player )
 			{
+				Caster.PlaySound( 0x5C );
 			}
 			else if ( SpellHelper.CheckMulti( Caster.Location, Caster.Map, !Core.AOS ) )
 			{
 				Caster.SendLocalizedMessage( 501942 ); // That location is blocked.
-			}
-			else if ( !rune.IsChildOf( Caster.Backpack ) )
-			{
-				Caster.LocalOverheadMessage( MessageType.Regular, 0x3B2, 1062422 ); // You must have this rune in your backpack in order to mark it.
 			}
 			else if ( CheckSequence() )
 			{
@@ -68,7 +56,7 @@ namespace Server.Spells.Sixth
 		{
 			private MarkSpell m_Owner;
 
-			public InternalTarget( MarkSpell owner ) : base( Core.ML ? 10 : 12, false, TargetFlags.None )
+			public InternalTarget( MarkSpell owner ) : base( 12, false, TargetFlags.None )
 			{
 				m_Owner = owner;
 			}

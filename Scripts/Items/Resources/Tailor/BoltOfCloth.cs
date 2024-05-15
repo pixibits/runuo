@@ -5,10 +5,15 @@ using Server.Network;
 namespace Server.Items
 {
 	[FlipableAttribute( 0xF95, 0xF96, 0xF97, 0xF98, 0xF99, 0xF9A, 0xF9B, 0xF9C )]
-	public class BoltOfCloth : Item, IScissorable, IDyable, ICommodity
+	public class BoltOfCloth : BaseItem, IScissorable, IDyable, ICommodity
 	{
-		int ICommodity.DescriptionNumber { get { return LabelNumber; } }
-		bool ICommodity.IsDeedable { get { return true; } }
+		string ICommodity.Description
+		{
+			get
+			{
+				return String.Format( Amount == 1 ? "{0} bolt of cloth" : "{0} bolts of cloth", Amount );
+			}
+		}
 
 		[Constructable]
 		public BoltOfCloth() : this( 1 )
@@ -35,6 +40,12 @@ namespace Server.Items
 
 			return true;
 		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new BoltOfCloth(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -53,7 +64,9 @@ namespace Server.Items
 		{
 			if ( Deleted || !from.CanSee( this ) ) return false;
 
-			base.ScissorHelper( from, new Cloth(), 50 );
+			Cloth c = new Cloth();
+			c.Hue = this.Hue;
+			base.ScissorHelper( from, c, 50 );
 
 			return true;
 		}

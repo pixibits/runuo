@@ -15,6 +15,7 @@ namespace Server.Items
 
 		public override int BaseMana{ get{ return 30; } }
 		public override double DamageScalar{ get{ return 0.9; } }
+		public override bool NoDamageAbsorb{ get{ return true; } }
 
 		public override void OnHit( Mobile attacker, Mobile defender, int damage )
 		{

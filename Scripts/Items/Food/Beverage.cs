@@ -2,12 +2,7 @@ using System;
 using Server;
 using Server.Network;
 using Server.Targeting;
-using Server.Engines.Plants;
-using System.Collections;
-using Server.Mobiles;
-using Server.Engines.Quests;
-using Server.Engines.Quests.Hag;
-using Server.Engines.Quests.Matriarch;
+using System.Collections; using System.Collections.Generic;
 
 namespace Server.Items
 {
@@ -18,7 +13,10 @@ namespace Server.Items
 		Liquor,
 		Milk,
 		Wine,
-		Water
+		Water,
+
+		Champagne,
+		EggNog,
 	}
 
 	public interface IHasQuantity
@@ -35,6 +33,8 @@ namespace Server.Items
 	[TypeAlias( "Server.Items.BottleAle", "Server.Items.BottleLiquor", "Server.Items.BottleWine" )]
 	public class BeverageBottle : BaseBeverage
 	{
+		public override string BaseName{ get{ return "bottle"; } }
+
 		public override int BaseLabelNumber{ get{ return 1042959; } } // a bottle of Ale
 		public override int MaxQuantity{ get{ return 5; } }
 		public override bool Fillable{ get{ return false; } }
@@ -45,9 +45,9 @@ namespace Server.Items
 			{
 				switch ( Content )
 				{
-					case BeverageType.Ale: return 0x99F;
+					case BeverageType.EggNog: case BeverageType.Ale: return 0x99F;
 					case BeverageType.Cider: return 0x99F;
-					case BeverageType.Liquor: return 0x99B;
+					case BeverageType.Champagne: case BeverageType.Liquor: return 0x99B;
 					case BeverageType.Milk: return 0x99B;
 					case BeverageType.Wine: return 0x9C7;
 					case BeverageType.Water: return 0x99B;
@@ -112,6 +112,7 @@ namespace Server.Items
 
 	public class Jug : BaseBeverage
 	{
+		public override string BaseName{ get{ return "jug"; } }
 		public override int BaseLabelNumber{ get{ return 1042965; } } // a jug of Ale
 		public override int MaxQuantity{ get{ return 10; } }
 		public override bool Fillable{ get{ return false; } }
@@ -151,6 +152,7 @@ namespace Server.Items
 
 	public class CeramicMug : BaseBeverage
 	{
+		public override string BaseName{ get{ return "ceramic mug"; } }
 		public override int BaseLabelNumber{ get{ return 1042982; } } // a ceramic mug of Ale
 		public override int MaxQuantity{ get{ return 1; } }
 
@@ -197,6 +199,7 @@ namespace Server.Items
 
 	public class PewterMug : BaseBeverage
 	{
+		public override string BaseName{ get{ return "pewter mug"; } }
 		public override int BaseLabelNumber{ get{ return 1042994; } } // a pewter mug with Ale
 		public override int MaxQuantity{ get{ return 1; } }
 
@@ -241,6 +244,7 @@ namespace Server.Items
 
 	public class Goblet : BaseBeverage
 	{
+		public override string BaseName{ get{ return "goblet"; } }
 		public override int BaseLabelNumber{ get{ return 1043000; } } // a goblet of Ale
 		public override int MaxQuantity{ get{ return 1; } }
 
@@ -287,6 +291,7 @@ namespace Server.Items
 		 "Server.Items.GlassMilk", "Server.Items.GlassWine", "Server.Items.GlassWater" )]
 	public class GlassMug : BaseBeverage
 	{
+		public override string BaseName{ get{ return "mug"; } }
 		public override int EmptyLabelNumber{ get{ return 1022456; } } // mug
 		public override int BaseLabelNumber{ get{ return 1042976; } } // a mug of Ale
 		public override int MaxQuantity{ get{ return 5; } }
@@ -298,8 +303,10 @@ namespace Server.Items
 
 			switch ( Content )
 			{
+				case BeverageType.EggNog:
 				case BeverageType.Ale: return (ItemID == 0x9EF ? 0x9EF : 0x9EE);
 				case BeverageType.Cider: return (ItemID >= 0x1F7D && ItemID <= 0x1F80 ? ItemID : 0x1F7D);
+				case BeverageType.Champagne:
 				case BeverageType.Liquor: return (ItemID >= 0x1F85 && ItemID <= 0x1F88 ? ItemID : 0x1F85);
 				case BeverageType.Milk: return (ItemID >= 0x1F89 && ItemID <= 0x1F8C ? ItemID : 0x1F89);
 				case BeverageType.Wine: return (ItemID >= 0x1F8D && ItemID <= 0x1F90 ? ItemID : 0x1F8D);
@@ -388,6 +395,7 @@ namespace Server.Items
 		"Server.Items.GlassPitcher" )]
 	public class Pitcher : BaseBeverage
 	{
+		public override string BaseName{ get{ return "pitcher"; } }
 		public override int BaseLabelNumber{ get{ return 1048128; } } // a Pitcher of Ale
 		public override int MaxQuantity{ get{ return 5; } }
 
@@ -403,6 +411,7 @@ namespace Server.Items
 
 			switch ( Content )
 			{
+				case BeverageType.EggNog:
 				case BeverageType.Ale:
 				{
 					if ( ItemID == 0x1F96 )
@@ -417,6 +426,7 @@ namespace Server.Items
 
 					return 0x1F97;
 				}
+				case BeverageType.Champagne:
 				case BeverageType.Liquor:
 				{
 					if ( ItemID == 0x1F9A )
@@ -476,9 +486,9 @@ namespace Server.Items
 		public override void Deserialize( GenericReader reader )
 		{
 			if ( CheckType( "PitcherWater" ) || CheckType( "GlassPitcher" ) )
-				base.InternalDeserialize( reader, false );
+				base.Deserialize2( reader, false );
 			else
-				base.InternalDeserialize( reader, true );
+				base.Deserialize2( reader, true );
 
 			int version = reader.ReadInt();
 
@@ -532,14 +542,14 @@ namespace Server.Items
 		}
 	}
 
-	public abstract class BaseBeverage : Item, IHasQuantity
+	public abstract class BaseBeverage : BaseItem, IHasQuantity
 	{
 		private BeverageType m_Content;
 		private int m_Quantity;
 		private Mobile m_Poisoner;
 		private Poison m_Poison;
 
-		public override int LabelNumber
+		/*public override int LabelNumber
 		{
 			get
 			{
@@ -549,6 +559,34 @@ namespace Server.Items
 					return EmptyLabelNumber;
 
 				return BaseLabelNumber + (int)m_Content;
+			}
+		}*/
+
+		public abstract string BaseName { get; }
+
+		public override void AppendClickName(System.Text.StringBuilder sb)
+		{
+			if ( BaseName == null || ( Name != null && Name != "" ) )
+			{
+				base.AppendClickName( sb );
+			}
+			else
+			{
+				if ( IsEmpty )
+				{
+					sb.Append( "empty " );
+					sb.Append( BaseName );
+					if ( Amount != 1 )
+						sb.Append( 's' );
+				}
+				else
+				{
+					sb.Append( BaseName );
+					if ( Amount != 1 )
+						sb.Append( 's' );
+					sb.Append( " of " );
+					sb.Append( m_Content.ToString().ToLower() );
+				}
 			}
 		}
 
@@ -651,22 +689,6 @@ namespace Server.Items
 				return 1042972; // It's full.
 		}
 
-		public override void GetProperties( ObjectPropertyList list )
-		{
-			base.GetProperties( list );
-
-			if ( ShowQuantity )
-				list.Add( GetQuantityDescription() );
-		}
-
-		public override void OnSingleClick( Mobile from )
-		{
-			base.OnSingleClick( from );
-
-			if ( ShowQuantity )
-				LabelTo( from, GetQuantityDescription() );
-		}
-
 		public virtual bool ValidateUse( Mobile from, bool message )
 		{
 			if ( Deleted )
@@ -674,15 +696,7 @@ namespace Server.Items
 
 			if ( !Movable && !Fillable )
 			{
-				Multis.BaseHouse house = Multis.BaseHouse.FindHouseAt( this );
-
-				if ( house == null || !house.IsLockedDown( this ) )
-				{
-					if ( message )
-						from.SendLocalizedMessage( 502946, "", 0x59 ); // That belongs to someone else.
-
-					return false;
-				}
+				return false;
 			}
 
 			if ( from.Map != Map || !from.InRange( GetWorldLocation(), 2 ) || !from.InLOS( this ) )
@@ -759,61 +773,7 @@ namespace Server.Items
 
 				from.SendLocalizedMessage( 1010089 ); // You fill the container with water.
 			}
-			else if ( targ is Cow )
-			{
-				Cow cow = (Cow)targ;
-
-				if ( cow.TryMilk( from ) )
-				{
-					Content = BeverageType.Milk;
-					Quantity = MaxQuantity;
-					from.SendLocalizedMessage( 1080197 ); // You fill the container with milk.
-				}
-			}
-			else if ( targ is LandTarget )
-			{
-				int tileID = ((LandTarget)targ).TileID;
-
-				PlayerMobile player = from as PlayerMobile;
-
-				if ( player != null )
-				{
-					QuestSystem qs = player.Quest;
-
-					if ( qs is WitchApprenticeQuest )
-					{
-						FindIngredientObjective obj = qs.FindObjective( typeof( FindIngredientObjective ) ) as FindIngredientObjective;
-
-						if ( obj != null && !obj.Completed && obj.Ingredient == Ingredient.SwampWater )
-						{
-							bool contains = false;
-
-							for ( int i = 0; !contains && i < m_SwampTiles.Length; i += 2 )
-								contains = ( tileID >= m_SwampTiles[i] && tileID <= m_SwampTiles[i + 1] );
-
-							if ( contains )
-							{
-								Delete();
-
-								player.SendLocalizedMessage( 1055035 ); // You dip the container into the disgusting swamp water, collecting enough for the Hag's vile stew.
-								obj.Complete();
-							}
-						}
-					}
-				}
-			}
 		}
-
-		private static int[] m_SwampTiles = new int[]
-			{
-				0x9C4, 0x9EB,
-				0x3D65, 0x3D65,
-				0x3DC0, 0x3DD9,
-				0x3DDB, 0x3DDC,
-				0x3DDE, 0x3EF0,
-				0x3FF6, 0x3FF6,
-				0x3FFC, 0x3FFE,
-			};
 
 		#region Effects of achohol
 		private static Hashtable m_Table = new Hashtable();
@@ -826,6 +786,11 @@ namespace Server.Items
 		private static void EventSink_Login( LoginEventArgs e )
 		{
 			CheckHeaveTimer( e.Mobile );
+		}
+
+		public static TimeSpan GetHeaveInterval( int bac )
+		{
+			return TimeSpan.FromSeconds( 5 * Utility.Dice( 3, 3, 0 ) );
 		}
 
 		public static void CheckHeaveTimer( Mobile from )
@@ -862,6 +827,7 @@ namespace Server.Items
 		private class HeaveTimer : Timer
 		{
 			private Mobile m_Drunk;
+			private DateTime m_NextHeave;
 
 			public HeaveTimer( Mobile drunk ) : base( TimeSpan.FromSeconds( 5.0 ), TimeSpan.FromSeconds( 5.0 ) )
 			{
@@ -877,41 +843,41 @@ namespace Server.Items
 					Stop();
 					m_Table.Remove( m_Drunk );
 				}
-				else if ( m_Drunk.Alive )
+				else if ( !m_Drunk.Alive )
+				{
+				}
+				else if ( DateTime.Now >= m_NextHeave )
 				{
 					if ( m_Drunk.BAC > 60 )
 						m_Drunk.BAC = 60;
 
-					// chance to get sober
-					if ( 10 > Utility.Random( 100 ) )
-						--m_Drunk.BAC;
+					--m_Drunk.BAC;
 
-					// lose some stats
-					m_Drunk.Stam -= 1;
-					m_Drunk.Mana -= 1;
-
-					if ( Utility.Random( 1, 4 ) == 1 )
+					if ( m_Drunk.BAC > 0 )
 					{
-						if ( !m_Drunk.Mounted )
-						{
-							// turn in a random direction
-							m_Drunk.Direction = (Direction)Utility.Random( 8 );
+						// Turn in a random direction
+						m_Drunk.Direction = (Direction)Utility.Random( 8 );
 
-							// heave
-							m_Drunk.Animate( 32, 5, 1, true, false, 0 );
-						}
+						// Heave
+						m_Drunk.Animate( 32, 5, Math.Max( 1, Math.Min( 3, Utility.Random( 5, m_Drunk.BAC ) / 10 ) ), true, true, 0 );
 
 						// *hic*
 						m_Drunk.PublicOverheadMessage( Network.MessageType.Regular, 0x3B2, 500849 );
-					}
 
-					if ( m_Drunk.BAC <= 0 )
+						m_NextHeave = DateTime.Now + GetHeaveInterval( m_Drunk.BAC );
+					}
+					else
 					{
 						Stop();
 						m_Table.Remove( m_Drunk );
 
 						m_Drunk.SendLocalizedMessage( 500850 ); // You feel sober.
 					}
+				}
+				else
+				{
+					m_Drunk.Mana -= 1;
+					m_Drunk.Stam -= 1;
 				}
 			}
 		}
@@ -964,17 +930,18 @@ namespace Server.Items
 
 				if ( ContainsAlchohol )
 				{
-					int bac = 0;
+					int heaves = 0;
 
 					switch ( this.Content )
 					{
-						case BeverageType.Ale: bac = 1; break;
-						case BeverageType.Wine: bac = 2; break;
-						case BeverageType.Cider: bac = 3; break;
-						case BeverageType.Liquor: bac = 4; break;
+						case BeverageType.Ale: heaves = 3; break;
+						case BeverageType.Wine: heaves = 5; break;
+						case BeverageType.Cider: heaves = 5; break;
+						case BeverageType.Liquor: heaves = 10; break;
+						default:				heaves = 5; break;
 					}
 
-					from.BAC += bac;
+					from.BAC += heaves;
 
 					if ( from.BAC > 60 )
 						from.BAC = 60;
@@ -989,47 +956,15 @@ namespace Server.Items
 
 				--Quantity;
 			}
-			else if ( targ is PlantItem )
+			else if ( targ is SackFlour )
 			{
-				((PlantItem)targ).Pour( from, this );
-			}
-			else if ( targ is AddonComponent &&
-				( ((AddonComponent)targ).Addon is WaterVatEast || ((AddonComponent)targ).Addon is WaterVatSouth ) &&
-				this.Content == BeverageType.Water )
-			{
-				PlayerMobile player = from as PlayerMobile;
-
-				if ( player != null )
-				{
-					SolenMatriarchQuest qs = player.Quest as SolenMatriarchQuest;
-
-					if ( qs != null )
-					{
-						QuestObjective obj = qs.FindObjective( typeof( GatherWaterObjective ) );
-
-						if ( obj != null && !obj.Completed )
-						{
-							BaseAddon vat = ((AddonComponent)targ).Addon;
-
-							if ( vat.X > 5784 && vat.X < 5814 && vat.Y > 1903 && vat.Y < 1934 &&
-								( (qs.RedSolen && vat.Map == Map.Trammel) || (!qs.RedSolen && vat.Map == Map.Felucca) ) )
-							{
-								if ( obj.CurProgress + Quantity > obj.MaxProgress )
-								{
-									int delta = obj.MaxProgress - obj.CurProgress;
-
-									Quantity -= delta;
-									obj.CurProgress = obj.MaxProgress;
-								}
-								else
-								{
-									obj.CurProgress += Quantity;
-									Quantity = 0;
-								}
-							}
-						}
-					}
-				}
+				SackFlour flour = (SackFlour)targ;
+				--Quantity;
+				flour.Quantity--;
+				if ( flour.Deleted )
+					from.SendAsciiMessage( "No flour left." );
+				from.SendAsciiMessage( "You make some dough and put it in your backpack" );
+				from.AddToBackpack( new Dough() );
 			}
 			else
 			{
@@ -1141,17 +1076,16 @@ namespace Server.Items
 
 		public override void Deserialize( GenericReader reader )
 		{
-			InternalDeserialize( reader, true );
+			Deserialize2( reader, true );
 		}
 
-		protected void InternalDeserialize( GenericReader reader, bool read )
+		public void Deserialize2( GenericReader reader, bool read )
 		{
 			base.Deserialize( reader );
 
-			if ( !read )
-				return;
-
 			int version = reader.ReadInt();
+
+            if (!read) return;
 
 			switch ( version )
 			{

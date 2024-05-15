@@ -3,13 +3,8 @@ using Server;
 
 namespace Server.Items
 {
-	public class Amethyst : Item
+	public class Amethyst : BaseItem
 	{
-		public override double DefaultWeight
-		{
-			get { return 0.1; }
-		}
-
 		[Constructable]
 		public Amethyst() : this( 1 )
 		{
@@ -19,6 +14,7 @@ namespace Server.Items
 		public Amethyst( int amount ) : base( 0xF16 )
 		{
 			Stackable = true;
+			Weight = 0.1;
 			Amount = amount;
 		}
 
@@ -26,7 +22,10 @@ namespace Server.Items
 		{
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Amethyst( amount ), amount );
+		}
 
 		public override void Serialize( GenericWriter writer )
 		{

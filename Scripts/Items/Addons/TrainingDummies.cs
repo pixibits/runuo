@@ -39,8 +39,8 @@ namespace Server.Items
 		[Constructable]
 		public TrainingDummy( int itemID ) : base( itemID )
 		{
-			m_MinSkill = -25.0;
-			m_MaxSkill = +25.0;
+			m_MinSkill = 0.0;
+			m_MaxSkill = 30.0;
 		}
 
 		public void UpdateItemID()
@@ -95,12 +95,15 @@ namespace Server.Items
 				SendLocalizedMessageTo( from, 501816 ); // You are too far away to do that.
 			else if ( Swinging )
 				SendLocalizedMessageTo( from, 501815 ); // You have to wait until it stops swinging.
-			else if ( from.Skills[weapon.Skill].Base >= m_MaxSkill )
-				SendLocalizedMessageTo( from, 501828 ); // Your skill cannot improve any further by simply practicing with a dummy.
 			else if ( from.Mounted )
 				SendLocalizedMessageTo( from, 501829 ); // You can't practice on this while on a mount.
 			else
+			{
+				if ( from.Skills[weapon.Skill].Base >= m_MaxSkill )
+					SendLocalizedMessageTo( from, 501828 ); // Your skill cannot improve any further by simply practicing with a dummy.
+			
 				Use( from, weapon );
+			}
 		}
 
 		public TrainingDummy( Serial serial ) : base( serial )
@@ -129,12 +132,6 @@ namespace Server.Items
 				{
 					m_MinSkill = reader.ReadDouble();
 					m_MaxSkill = reader.ReadDouble();
-
-					if ( m_MinSkill == 0.0 && m_MaxSkill == 30.0 )
-					{
-						m_MinSkill = -25.0;
-						m_MaxSkill = +25.0;
-					}
 
 					break;
 				}

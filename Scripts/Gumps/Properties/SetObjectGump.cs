@@ -1,11 +1,9 @@
 using System;
 using System.Reflection;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
-using Server.Commands.Generic;
 using Server.Network;
 using Server.Prompts;
-using Server.Commands;
 
 namespace Server.Gumps
 {
@@ -19,47 +17,47 @@ namespace Server.Gumps
 		private int m_Page;
 		private ArrayList m_List;
 
-		public static readonly bool OldStyle = PropsConfig.OldStyle;
+		public const bool OldStyle = PropsConfig.OldStyle;
 
-		public static readonly int GumpOffsetX = PropsConfig.GumpOffsetX;
-		public static readonly int GumpOffsetY = PropsConfig.GumpOffsetY;
+		public const int GumpOffsetX = PropsConfig.GumpOffsetX;
+		public const int GumpOffsetY = PropsConfig.GumpOffsetY;
 
-		public static readonly int TextHue = PropsConfig.TextHue;
-		public static readonly int TextOffsetX = PropsConfig.TextOffsetX;
+		public const int TextHue = PropsConfig.TextHue;
+		public const int TextOffsetX = PropsConfig.TextOffsetX;
 
-		public static readonly int OffsetGumpID = PropsConfig.OffsetGumpID;
-		public static readonly int HeaderGumpID = PropsConfig.HeaderGumpID;
-		public static readonly int  EntryGumpID = PropsConfig.EntryGumpID;
-		public static readonly int   BackGumpID = PropsConfig.BackGumpID;
-		public static readonly int    SetGumpID = PropsConfig.SetGumpID;
+		public const int OffsetGumpID = PropsConfig.OffsetGumpID;
+		public const int HeaderGumpID = PropsConfig.HeaderGumpID;
+		public const int  EntryGumpID = PropsConfig.EntryGumpID;
+		public const int   BackGumpID = PropsConfig.BackGumpID;
+		public const int    SetGumpID = PropsConfig.SetGumpID;
 
-		public static readonly int SetWidth = PropsConfig.SetWidth;
-		public static readonly int SetOffsetX = PropsConfig.SetOffsetX, SetOffsetY = PropsConfig.SetOffsetY;
-		public static readonly int SetButtonID1 = PropsConfig.SetButtonID1;
-		public static readonly int SetButtonID2 = PropsConfig.SetButtonID2;
+		public const int SetWidth = PropsConfig.SetWidth;
+		public const int SetOffsetX = PropsConfig.SetOffsetX, SetOffsetY = PropsConfig.SetOffsetY;
+		public const int SetButtonID1 = PropsConfig.SetButtonID1;
+		public const int SetButtonID2 = PropsConfig.SetButtonID2;
 
-		public static readonly int PrevWidth = PropsConfig.PrevWidth;
-		public static readonly int PrevOffsetX = PropsConfig.PrevOffsetX, PrevOffsetY = PropsConfig.PrevOffsetY;
-		public static readonly int PrevButtonID1 = PropsConfig.PrevButtonID1;
-		public static readonly int PrevButtonID2 = PropsConfig.PrevButtonID2;
+		public const int PrevWidth = PropsConfig.PrevWidth;
+		public const int PrevOffsetX = PropsConfig.PrevOffsetX, PrevOffsetY = PropsConfig.PrevOffsetY;
+		public const int PrevButtonID1 = PropsConfig.PrevButtonID1;
+		public const int PrevButtonID2 = PropsConfig.PrevButtonID2;
 
-		public static readonly int NextWidth = PropsConfig.NextWidth;
-		public static readonly int NextOffsetX = PropsConfig.NextOffsetX, NextOffsetY = PropsConfig.NextOffsetY;
-		public static readonly int NextButtonID1 = PropsConfig.NextButtonID1;
-		public static readonly int NextButtonID2 = PropsConfig.NextButtonID2;
+		public const int NextWidth = PropsConfig.NextWidth;
+		public const int NextOffsetX = PropsConfig.NextOffsetX, NextOffsetY = PropsConfig.NextOffsetY;
+		public const int NextButtonID1 = PropsConfig.NextButtonID1;
+		public const int NextButtonID2 = PropsConfig.NextButtonID2;
 
-		public static readonly int OffsetSize = PropsConfig.OffsetSize;
+		public const int OffsetSize = PropsConfig.OffsetSize;
 
-		public static readonly int EntryHeight = PropsConfig.EntryHeight;
-		public static readonly int BorderSize = PropsConfig.BorderSize;
+		public const int EntryHeight = PropsConfig.EntryHeight;
+		public const int BorderSize = PropsConfig.BorderSize;
 
-		private static readonly int EntryWidth = 212;
+		private const int EntryWidth = 212;
 
-		private static readonly int TotalWidth = OffsetSize + EntryWidth + OffsetSize + SetWidth + OffsetSize;
-		private static readonly int TotalHeight = OffsetSize + (5 * (EntryHeight + OffsetSize));
+		private const int TotalWidth = OffsetSize + EntryWidth + OffsetSize + SetWidth + OffsetSize;
+		private const int TotalHeight = OffsetSize + (5 * (EntryHeight + OffsetSize));
 
-		private static readonly int BackWidth = BorderSize + TotalWidth + BorderSize;
-		private static readonly int BackHeight = BorderSize + TotalHeight + BorderSize;
+		private const int BackWidth = BorderSize + TotalWidth + BorderSize;
+		private const int BackHeight = BorderSize + TotalHeight + BorderSize;
 
 		public SetObjectGump( PropertyInfo prop, Mobile mobile, object o, Stack stack, Type type, int page, ArrayList list ) : base( GumpOffsetX, GumpOffsetY )
 		{
@@ -201,7 +199,7 @@ namespace Server.Gumps
 				{
 					try
 					{
-						CommandLogging.LogChangeProperty( m_Mobile, m_Object, m_Property.Name, toSet==null?"(null)":toSet.ToString() );
+						Server.Scripts.Commands.CommandLogging.LogChangeProperty( m_Mobile, m_Object, m_Property.Name, toSet==null?"(null)":toSet.ToString() );
 						m_Property.SetValue( m_Object, toSet, null );
 						PropertiesGump.OnValueChanged( m_Object, m_Property, m_Stack );
 					}
@@ -268,7 +266,7 @@ namespace Server.Gumps
 
 					if ( obj == null )
 						m_Mobile.SendMessage( "The property is null and so you cannot view its properties." );
-					else if ( !BaseCommand.IsAccessible( m_Mobile, obj ) )
+					else if ( !Scripts.Commands.BaseCommand.IsAccessible( m_Mobile, obj ) )
 						m_Mobile.SendMessage( "You may not view their properties." );
 					else
 						viewProps = obj;
@@ -288,7 +286,7 @@ namespace Server.Gumps
 			{
 				try
 				{
-					CommandLogging.LogChangeProperty( m_Mobile, m_Object, m_Property.Name, toSet==null?"(null)":toSet.ToString() );
+					Server.Scripts.Commands.CommandLogging.LogChangeProperty( m_Mobile, m_Object, m_Property.Name, toSet==null?"(null)":toSet.ToString() );
 					m_Property.SetValue( m_Object, toSet, null );
 					PropertiesGump.OnValueChanged( m_Object, m_Property, m_Stack );
 				}

@@ -5,17 +5,13 @@ using Server.Items;
 
 namespace Server.Items
 {
-	public class NameChangeDeed : Item
+	public class NameChangeDeed : BaseItem
 	{
-		public override string DefaultName
-		{
-			get { return "a name change deed"; }
-		}
-
 		[Constructable]
 		public NameChangeDeed() : base( 0x14F0 )
 		{
 			base.Weight = 1.0;
+			base.Name = "a name change deed";
 		}
 
 		public NameChangeDeed( Serial serial ) : base( serial )

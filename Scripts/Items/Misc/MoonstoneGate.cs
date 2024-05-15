@@ -1,7 +1,7 @@
 using System;
 using Server;
 using Server.Network;
-using Server.Engines.PartySystem;
+//using Server.Engines.PartySystem;
 
 namespace Server.Items
 {
@@ -24,30 +24,6 @@ namespace Server.Items
 
 		public MoonstoneGate( Serial serial ) : base( serial )
 		{
-		}
-
-		public override void CheckGate( Mobile m, int range )
-		{
-			if ( m.Kills >= 5 )
-				return;
-
-			Party casterParty = Party.Get( m_Caster );
-			Party userParty = Party.Get( m );
-
-			if ( m == m_Caster || (casterParty != null && userParty == casterParty) )
-				base.CheckGate( m, range );
-		}
-
-		public override void UseGate( Mobile m )
-		{
-			if ( m.Kills >= 5 )
-				return;
-
-			Party casterParty = Party.Get( m_Caster );
-			Party userParty = Party.Get( m );
-
-			if ( m == m_Caster || (casterParty != null && userParty == casterParty) )
-				base.UseGate( m );
 		}
 
 		public override void Serialize( GenericWriter writer )

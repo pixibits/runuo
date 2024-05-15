@@ -82,7 +82,7 @@ namespace Server.Items
 
 		public override void OnTrigger( Mobile from )
 		{
-			if ( m_Poison == null || !from.Player || !from.Alive || from.AccessLevel > AccessLevel.Player )
+			if ( m_Poison == null || !from.Player || !from.Alive )
 				return;
 
 			Effects.SendLocationEffect( Location, Map, GetBaseID( this.Type ) - 2, 16, 3, GetEffectHue(), 0 );

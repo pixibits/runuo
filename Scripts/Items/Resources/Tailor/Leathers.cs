@@ -4,7 +4,7 @@ using Server.Network;
 
 namespace Server.Items
 {
-	public abstract class BaseLeather : Item, ICommodity
+	public abstract class BaseLeather : BaseItem, ICommodity
 	{
 		private CraftResource m_Resource;
 
@@ -15,8 +15,13 @@ namespace Server.Items
 			set{ m_Resource = value; InvalidateProperties(); }
 		}
 		
-		int ICommodity.DescriptionNumber { get { return LabelNumber; } }
-		bool ICommodity.IsDeedable { get { return true; } }
+		string ICommodity.Description
+		{
+			get
+			{
+				return String.Format( Amount == 1 ? "{0} piece of leather" : "{0} pieces of leather", Amount );
+			}
+		}
 
 		public override void Serialize( GenericWriter writer )
 		{
@@ -134,7 +139,10 @@ namespace Server.Items
 			int version = reader.ReadInt();
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Leather( amount ), amount );
+		}
 	}
 
 	[FlipableAttribute( 0x1081, 0x1082 )]
@@ -168,7 +176,10 @@ namespace Server.Items
 			int version = reader.ReadInt();
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new SpinedLeather( amount ), amount );
+		}
 	}
 
 	[FlipableAttribute( 0x1081, 0x1082 )]
@@ -202,7 +213,10 @@ namespace Server.Items
 			int version = reader.ReadInt();
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new HornedLeather( amount ), amount );
+		}
 	}
 
 	[FlipableAttribute( 0x1081, 0x1082 )]
@@ -236,6 +250,9 @@ namespace Server.Items
 			int version = reader.ReadInt();
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new BarbedLeather( amount ), amount );
+		}
 	}
 }

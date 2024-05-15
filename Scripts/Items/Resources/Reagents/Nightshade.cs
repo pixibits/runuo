@@ -6,8 +6,13 @@ namespace Server.Items
 {
 	public class Nightshade : BaseReagent, ICommodity
 	{
-		int ICommodity.DescriptionNumber { get { return LabelNumber; } }
-		bool ICommodity.IsDeedable { get { return true; } }
+		string ICommodity.Description
+		{
+			get
+			{
+				return String.Format( "{0} nightshade", Amount );
+			}
+		}
 
 		[Constructable]
 		public Nightshade() : this( 1 )
@@ -23,7 +28,10 @@ namespace Server.Items
 		{
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Nightshade( amount ), amount );
+		}
 
 		public override void Serialize( GenericWriter writer )
 		{

@@ -1,21 +1,9 @@
 using System;
-using Server.Engines.Craft;
-using Server.Network;
-using System.Collections.Generic;
 
 namespace Server.Items
 {
-	public abstract class BaseHat : BaseClothing, IShipwreckedItem
+	public abstract class BaseHat : BaseClothing
 	{
-		private bool m_IsShipwreckedItem;
-
-		[CommandProperty( AccessLevel.GameMaster )]
-		public bool IsShipwreckedItem
-		{
-			get { return m_IsShipwreckedItem; }
-			set { m_IsShipwreckedItem = value; }
-		}
-
 		public BaseHat( int itemID ) : this( itemID, 0 )
 		{
 		}
@@ -32,85 +20,6 @@ namespace Server.Items
 		{
 			base.Serialize( writer );
 
-			writer.Write( (int) 1 ); // version
-
-			writer.Write( m_IsShipwreckedItem );
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-
-			switch ( version )
-			{
-				case 1:
-				{
-					m_IsShipwreckedItem = reader.ReadBool();
-					break;
-				}
-			}
-		}
-
-		public override void AddEquipInfoAttributes( Mobile from, List<EquipInfoAttribute> attrs )
-		{
-			base.AddEquipInfoAttributes( from, attrs );
-
-			if( m_IsShipwreckedItem )
-				attrs.Add( new EquipInfoAttribute( 1041645 ) );	// recovered from a shipwreck
-		}
-
-		public override void AddNameProperties( ObjectPropertyList list )
-		{
-			base.AddNameProperties( list );
-
-			if ( m_IsShipwreckedItem )
-				list.Add( 1041645 ); // recovered from a shipwreck
-		}
-
-		public override int OnCraft( int quality, bool makersMark, Mobile from, CraftSystem craftSystem, Type typeRes, BaseTool tool, CraftItem craftItem, int resHue )
-		{
-			Quality = (ClothingQuality)quality;
-
-			if( Quality == ClothingQuality.Exceptional )
-				DistributeBonuses( (tool is BaseRunicTool ? 6 : (Core.SE ? 15 : 14)) );	//BLAME OSI. (We can't confirm it's an OSI bug yet.)
-
-			return base.OnCraft( quality, makersMark, from, craftSystem, typeRes, tool, craftItem, resHue );
-		}
-
-	}
-	[Flipable( 0x2798, 0x27E3 )]
-	public class Kasa : BaseHat
-	{
-		public override int BasePhysicalResistance{ get{ return 0; } }
-		public override int BaseFireResistance{ get{ return 5; } }
-		public override int BaseColdResistance{ get{ return 9; } }
-		public override int BasePoisonResistance{ get{ return 5; } }
-		public override int BaseEnergyResistance{ get{ return 5; } }
-
-		public override int InitMinHits{ get{ return 20; } }
-		public override int InitMaxHits{ get{ return 30; } }
-
-		[Constructable]
-		public Kasa() : this( 0 )
-		{
-		}
-
-		[Constructable]
-		public Kasa( int hue ) : base( 0x2798, hue )
-		{
-			Weight = 3.0;
-		}
-
-		public Kasa( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
 			writer.Write( (int) 0 ); // version
 		}
 
@@ -122,59 +31,14 @@ namespace Server.Items
 		}
 	}
 
-	[Flipable( 0x278F, 0x27DA )]
-	public class ClothNinjaHood : BaseHat
-	{
-		public override int BasePhysicalResistance{ get{ return 3; } }
-		public override int BaseFireResistance{ get{ return 3; } }
-		public override int BaseColdResistance{ get{ return 6; } }
-		public override int BasePoisonResistance{ get{ return 9; } }
-		public override int BaseEnergyResistance{ get{ return 9; } }
-
-		public override int InitMinHits{ get{ return 20; } }
-		public override int InitMaxHits{ get{ return 30; } }
-
-		[Constructable]
-		public ClothNinjaHood() : this( 0 )
-		{
-		}
-
-		[Constructable]
-		public ClothNinjaHood( int hue ) : base( 0x278F, hue )
-		{
-			Weight = 2.0;
-		}
-
-		public ClothNinjaHood( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-	}
-
-	[Flipable( 0x2306, 0x2305 )]
+	[Flipable( 0x2305, 0x2306 )]
 	public class FlowerGarland : BaseHat
 	{
-		public override int BasePhysicalResistance{ get{ return 3; } }
-		public override int BaseFireResistance{ get{ return 3; } }
-		public override int BaseColdResistance{ get{ return 6; } }
-		public override int BasePoisonResistance{ get{ return 9; } }
-		public override int BaseEnergyResistance{ get{ return 9; } }
-
-		public override int InitMinHits{ get{ return 20; } }
-		public override int InitMaxHits{ get{ return 30; } }
+		public override int PhysicalResistance{ get{ return 3; } }
+		public override int FireResistance{ get{ return 3; } }
+		public override int ColdResistance{ get{ return 6; } }
+		public override int PoisonResistance{ get{ return 9; } }
+		public override int EnergyResistance{ get{ return 9; } }
 
 		[Constructable]
 		public FlowerGarland() : this( 0 )
@@ -182,7 +46,7 @@ namespace Server.Items
 		}
 
 		[Constructable]
-		public FlowerGarland( int hue ) : base( 0x2306, hue )
+		public FlowerGarland( int hue ) : base( 0x2305, hue )
 		{
 			Weight = 1.0;
 		}
@@ -208,14 +72,11 @@ namespace Server.Items
 
 	public class FloppyHat : BaseHat
 	{
-		public override int BasePhysicalResistance{ get{ return 0; } }
-		public override int BaseFireResistance{ get{ return 5; } }
-		public override int BaseColdResistance{ get{ return 9; } }
-		public override int BasePoisonResistance{ get{ return 5; } }
-		public override int BaseEnergyResistance{ get{ return 5; } }
-
-		public override int InitMinHits{ get{ return 20; } }
-		public override int InitMaxHits{ get{ return 30; } }
+		public override int PhysicalResistance{ get{ return 0; } }
+		public override int FireResistance{ get{ return 5; } }
+		public override int ColdResistance{ get{ return 9; } }
+		public override int PoisonResistance{ get{ return 5; } }
+		public override int EnergyResistance{ get{ return 5; } }
 
 		[Constructable]
 		public FloppyHat() : this( 0 )
@@ -249,14 +110,11 @@ namespace Server.Items
 
 	public class WideBrimHat : BaseHat
 	{
-		public override int BasePhysicalResistance{ get{ return 0; } }
-		public override int BaseFireResistance{ get{ return 5; } }
-		public override int BaseColdResistance{ get{ return 9; } }
-		public override int BasePoisonResistance{ get{ return 5; } }
-		public override int BaseEnergyResistance{ get{ return 5; } }
-
-		public override int InitMinHits{ get{ return 20; } }
-		public override int InitMaxHits{ get{ return 30; } }
+		public override int PhysicalResistance{ get{ return 0; } }
+		public override int FireResistance{ get{ return 5; } }
+		public override int ColdResistance{ get{ return 9; } }
+		public override int PoisonResistance{ get{ return 5; } }
+		public override int EnergyResistance{ get{ return 5; } }
 
 		[Constructable]
 		public WideBrimHat() : this( 0 )
@@ -290,14 +148,11 @@ namespace Server.Items
 
 	public class Cap : BaseHat
 	{
-		public override int BasePhysicalResistance{ get{ return 0; } }
-		public override int BaseFireResistance{ get{ return 5; } }
-		public override int BaseColdResistance{ get{ return 9; } }
-		public override int BasePoisonResistance{ get{ return 5; } }
-		public override int BaseEnergyResistance{ get{ return 5; } }
-
-		public override int InitMinHits{ get{ return 20; } }
-		public override int InitMaxHits{ get{ return 30; } }
+		public override int PhysicalResistance{ get{ return 0; } }
+		public override int FireResistance{ get{ return 5; } }
+		public override int ColdResistance{ get{ return 9; } }
+		public override int PoisonResistance{ get{ return 5; } }
+		public override int EnergyResistance{ get{ return 5; } }
 
 		[Constructable]
 		public Cap() : this( 0 )
@@ -331,14 +186,11 @@ namespace Server.Items
 
 	public class SkullCap : BaseHat
 	{
-		public override int BasePhysicalResistance{ get{ return 0; } }
-		public override int BaseFireResistance{ get{ return 3; } }
-		public override int BaseColdResistance{ get{ return 5; } }
-		public override int BasePoisonResistance{ get{ return 8; } }
-		public override int BaseEnergyResistance{ get{ return 8; } }
-
-		public override int InitMinHits{ get{ return 7; } }
-		public override int InitMaxHits{ get{ return 12; } }
+		public override int PhysicalResistance{ get{ return 0; } }
+		public override int FireResistance{ get{ return 3; } }
+		public override int ColdResistance{ get{ return 5; } }
+		public override int PoisonResistance{ get{ return 8; } }
+		public override int EnergyResistance{ get{ return 8; } }
 
 		[Constructable]
 		public SkullCap() : this( 0 )
@@ -372,14 +224,11 @@ namespace Server.Items
 
 	public class Bandana : BaseHat
 	{
-		public override int BasePhysicalResistance{ get{ return 0; } }
-		public override int BaseFireResistance{ get{ return 3; } }
-		public override int BaseColdResistance{ get{ return 5; } }
-		public override int BasePoisonResistance{ get{ return 8; } }
-		public override int BaseEnergyResistance{ get{ return 8; } }
-
-		public override int InitMinHits{ get{ return 20; } }
-		public override int InitMaxHits{ get{ return 30; } }
+		public override int PhysicalResistance{ get{ return 0; } }
+		public override int FireResistance{ get{ return 3; } }
+		public override int ColdResistance{ get{ return 5; } }
+		public override int PoisonResistance{ get{ return 8; } }
+		public override int EnergyResistance{ get{ return 8; } }
 
 		[Constructable]
 		public Bandana() : this( 0 )
@@ -411,204 +260,13 @@ namespace Server.Items
 		}
 	}
 
-	public class BearMask : BaseHat
-	{
-		public override int BasePhysicalResistance{ get{ return 5; } }
-		public override int BaseFireResistance{ get{ return 3; } }
-		public override int BaseColdResistance{ get{ return 8; } }
-		public override int BasePoisonResistance{ get{ return 4; } }
-		public override int BaseEnergyResistance{ get{ return 4; } }
-
-		public override int InitMinHits{ get{ return 20; } }
-		public override int InitMaxHits{ get{ return 30; } }
-
-		[Constructable]
-		public BearMask() : this( 0 )
-		{
-		}
-
-		[Constructable]
-		public BearMask( int hue ) : base( 0x1545, hue )
-		{
-			Weight = 5.0;
-		}
-
-		public override bool Dye( Mobile from, DyeTub sender )
-		{
-			from.SendLocalizedMessage( sender.FailMessage );
-			return false;
-		}
-
-		public BearMask( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-	}
-
-	public class DeerMask : BaseHat
-	{
-		public override int BasePhysicalResistance{ get{ return 2; } }
-		public override int BaseFireResistance{ get{ return 6; } }
-		public override int BaseColdResistance{ get{ return 8; } }
-		public override int BasePoisonResistance{ get{ return 1; } }
-		public override int BaseEnergyResistance{ get{ return 7; } }
-
-		public override int InitMinHits{ get{ return 20; } }
-		public override int InitMaxHits{ get{ return 30; } }
-
-		[Constructable]
-		public DeerMask() : this( 0 )
-		{
-		}
-
-		[Constructable]
-		public DeerMask( int hue ) : base( 0x1547, hue )
-		{
-			Weight = 4.0;
-		}
-
-		public override bool Dye( Mobile from, DyeTub sender )
-		{
-			from.SendLocalizedMessage( sender.FailMessage );
-			return false;
-		}
-
-		public DeerMask( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-	}
-
-	public class HornedTribalMask : BaseHat
-	{
-		public override int BasePhysicalResistance{ get{ return 6; } }
-		public override int BaseFireResistance{ get{ return 9; } }
-		public override int BaseColdResistance{ get{ return 0; } }
-		public override int BasePoisonResistance{ get{ return 4; } }
-		public override int BaseEnergyResistance{ get{ return 5; } }
-
-		public override int InitMinHits{ get{ return 20; } }
-		public override int InitMaxHits{ get{ return 30; } }
-
-		[Constructable]
-		public HornedTribalMask() : this( 0 )
-		{
-		}
-
-		[Constructable]
-		public HornedTribalMask( int hue ) : base( 0x1549, hue )
-		{
-			Weight = 2.0;
-		}
-
-		public override bool Dye( Mobile from, DyeTub sender )
-		{
-			from.SendLocalizedMessage( sender.FailMessage );
-			return false;
-		}
-
-		public HornedTribalMask( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-	}
-
-	public class TribalMask : BaseHat
-	{
-		public override int BasePhysicalResistance{ get{ return 3; } }
-		public override int BaseFireResistance{ get{ return 0; } }
-		public override int BaseColdResistance{ get{ return 6; } }
-		public override int BasePoisonResistance{ get{ return 10; } }
-		public override int BaseEnergyResistance{ get{ return 5; } }
-
-		public override int InitMinHits{ get{ return 20; } }
-		public override int InitMaxHits{ get{ return 30; } }
-
-		[Constructable]
-		public TribalMask() : this( 0 )
-		{
-		}
-
-		[Constructable]
-		public TribalMask( int hue ) : base( 0x154B, hue )
-		{
-			Weight = 2.0;
-		}
-
-		public override bool Dye( Mobile from, DyeTub sender )
-		{
-			from.SendLocalizedMessage( sender.FailMessage );
-			return false;
-		}
-
-		public TribalMask( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-	}
-
 	public class TallStrawHat : BaseHat
 	{
-		public override int BasePhysicalResistance{ get{ return 0; } }
-		public override int BaseFireResistance{ get{ return 5; } }
-		public override int BaseColdResistance{ get{ return 9; } }
-		public override int BasePoisonResistance{ get{ return 5; } }
-		public override int BaseEnergyResistance{ get{ return 5; } }
-
-		public override int InitMinHits{ get{ return 20; } }
-		public override int InitMaxHits{ get{ return 30; } }
+		public override int PhysicalResistance{ get{ return 0; } }
+		public override int FireResistance{ get{ return 5; } }
+		public override int ColdResistance{ get{ return 9; } }
+		public override int PoisonResistance{ get{ return 5; } }
+		public override int EnergyResistance{ get{ return 5; } }
 
 		[Constructable]
 		public TallStrawHat() : this( 0 )
@@ -642,14 +300,11 @@ namespace Server.Items
 
 	public class StrawHat : BaseHat
 	{
-		public override int BasePhysicalResistance{ get{ return 0; } }
-		public override int BaseFireResistance{ get{ return 5; } }
-		public override int BaseColdResistance{ get{ return 9; } }
-		public override int BasePoisonResistance{ get{ return 5; } }
-		public override int BaseEnergyResistance{ get{ return 5; } }
-
-		public override int InitMinHits{ get{ return 20; } }
-		public override int InitMaxHits{ get{ return 30; } }
+		public override int PhysicalResistance{ get{ return 0; } }
+		public override int FireResistance{ get{ return 5; } }
+		public override int ColdResistance{ get{ return 9; } }
+		public override int PoisonResistance{ get{ return 5; } }
+		public override int EnergyResistance{ get{ return 5; } }
 
 		[Constructable]
 		public StrawHat() : this( 0 )
@@ -683,24 +338,16 @@ namespace Server.Items
 
 	public class OrcishKinMask : BaseHat
 	{
-		public override int BasePhysicalResistance{ get{ return 1; } }
-		public override int BaseFireResistance{ get{ return 1; } }
-		public override int BaseColdResistance{ get{ return 7; } }
-		public override int BasePoisonResistance{ get{ return 7; } }
-		public override int BaseEnergyResistance{ get{ return 8; } }
-
-		public override int InitMinHits{ get{ return 20; } }
-		public override int InitMaxHits{ get{ return 30; } }
+		public override int PhysicalResistance{ get{ return 1; } }
+		public override int FireResistance{ get{ return 1; } }
+		public override int ColdResistance{ get{ return 7; } }
+		public override int PoisonResistance{ get{ return 7; } }
+		public override int EnergyResistance{ get{ return 8; } }
 
 		public override bool Dye( Mobile from, DyeTub sender )
 		{
 			from.SendLocalizedMessage( sender.FailMessage );
 			return false;
-		}
-
-		public override string DefaultName
-		{
-			get { return "a mask of orcish kin"; }
 		}
 
 		[Constructable]
@@ -712,6 +359,7 @@ namespace Server.Items
 		public OrcishKinMask( int hue ) : base( 0x141B, hue )
 		{
 			Weight = 2.0;
+			Name = "a mask of orcish kin";
 		}
 
 		public override bool CanEquip( Mobile m )
@@ -732,8 +380,8 @@ namespace Server.Items
 		{
 			base.OnAdded( parent );
 
-			if ( parent is Mobile )
-				Misc.Titles.AwardKarma( (Mobile)parent, -20, true );
+			//if ( parent is Mobile )
+			//	Misc.Titles.AwardKarma( (Mobile)parent, -20, true );
 		}
 
 		public OrcishKinMask( Serial serial ) : base( serial )
@@ -760,14 +408,11 @@ namespace Server.Items
 
 	public class SavageMask : BaseHat
 	{
-		public override int BasePhysicalResistance{ get{ return 3; } }
-		public override int BaseFireResistance{ get{ return 0; } }
-		public override int BaseColdResistance{ get{ return 6; } }
-		public override int BasePoisonResistance{ get{ return 10; } }
-		public override int BaseEnergyResistance{ get{ return 5; } }
-
-		public override int InitMinHits{ get{ return 20; } }
-		public override int InitMaxHits{ get{ return 30; } }
+		public override int PhysicalResistance{ get{ return 3; } }
+		public override int FireResistance{ get{ return 0; } }
+		public override int ColdResistance{ get{ return 6; } }
+		public override int PoisonResistance{ get{ return 10; } }
+		public override int EnergyResistance{ get{ return 5; } }
 
 		public static int GetRandomHue()
 		{
@@ -820,14 +465,11 @@ namespace Server.Items
 
 	public class WizardsHat : BaseHat
 	{
-		public override int BasePhysicalResistance{ get{ return 0; } }
-		public override int BaseFireResistance{ get{ return 5; } }
-		public override int BaseColdResistance{ get{ return 9; } }
-		public override int BasePoisonResistance{ get{ return 5; } }
-		public override int BaseEnergyResistance{ get{ return 5; } }
-
-		public override int InitMinHits{ get{ return 20; } }
-		public override int InitMaxHits{ get{ return 30; } }
+		public override int PhysicalResistance{ get{ return 0; } }
+		public override int FireResistance{ get{ return 5; } }
+		public override int ColdResistance{ get{ return 9; } }
+		public override int PoisonResistance{ get{ return 5; } }
+		public override int EnergyResistance{ get{ return 5; } }
 
 		[Constructable]
 		public WizardsHat() : this( 0 )
@@ -861,20 +503,55 @@ namespace Server.Items
 
 	public class MagicWizardsHat : BaseHat
 	{
-		public override int BasePhysicalResistance{ get{ return 0; } }
-		public override int BaseFireResistance{ get{ return 5; } }
-		public override int BaseColdResistance{ get{ return 9; } }
-		public override int BasePoisonResistance{ get{ return 5; } }
-		public override int BaseEnergyResistance{ get{ return 5; } }
-
-		public override int InitMinHits{ get{ return 20; } }
-		public override int InitMaxHits{ get{ return 30; } }
+		public override int PhysicalResistance{ get{ return 0; } }
+		public override int FireResistance{ get{ return 5; } }
+		public override int ColdResistance{ get{ return 9; } }
+		public override int PoisonResistance{ get{ return 5; } }
+		public override int EnergyResistance{ get{ return 5; } }
 
 		public override int LabelNumber{ get{ return 1041072; } } // a magical wizard's hat
 
-		public override int BaseStrBonus{ get{ return -5; } }
-		public override int BaseDexBonus{ get{ return -5; } }
-		public override int BaseIntBonus{ get{ return +5; } }
+		#region Stat Mods
+		public void AddStatMods( Mobile m )
+		{
+			if ( m == null )
+				return;
+
+			string modName = this.Serial.ToString();
+
+			StatMod strMod = new StatMod( StatType.Str, String.Format( "[Magic Hat] -Str {0}", modName ), -5, TimeSpan.Zero );
+			StatMod dexMod = new StatMod( StatType.Dex, String.Format( "[Magic Hat] -Dex {0}", modName ), -5, TimeSpan.Zero );
+			StatMod intMod = new StatMod( StatType.Int, String.Format( "[Magic Hat] +Int {0}", modName ), +5, TimeSpan.Zero );
+
+			m.AddStatMod( strMod );
+			m.AddStatMod( dexMod );
+			m.AddStatMod( intMod );
+		}
+
+		public void RemoveStatMods( Mobile m )
+		{
+			if ( m == null )
+				return;
+
+			string modName = this.Serial.ToString();
+
+			m.RemoveStatMod( String.Format( "[Magic Hat] -Str {0}", modName ) );
+			m.RemoveStatMod( String.Format( "[Magic Hat] -Dex {0}", modName ) );
+			m.RemoveStatMod( String.Format( "[Magic Hat] +Int {0}", modName ) );
+		}
+
+		public override void OnAdded( object parent )
+		{
+			base.OnAdded( parent );
+			AddStatMods( parent as Mobile );
+		}
+
+		public override void OnRemoved( object parent )
+		{
+			base.OnRemoved( parent );
+			RemoveStatMods( parent as Mobile );
+		}
+		#endregion
 
 		[Constructable]
 		public MagicWizardsHat() : this( 0 )
@@ -903,19 +580,18 @@ namespace Server.Items
 			base.Deserialize( reader );
 
 			int version = reader.ReadInt();
+
+			AddStatMods( Parent as Mobile );
 		}
 	}
 
 	public class Bonnet : BaseHat
 	{
-		public override int BasePhysicalResistance{ get{ return 0; } }
-		public override int BaseFireResistance{ get{ return 5; } }
-		public override int BaseColdResistance{ get{ return 9; } }
-		public override int BasePoisonResistance{ get{ return 5; } }
-		public override int BaseEnergyResistance{ get{ return 5; } }
-
-		public override int InitMinHits{ get{ return 20; } }
-		public override int InitMaxHits{ get{ return 30; } }
+		public override int PhysicalResistance{ get{ return 0; } }
+		public override int FireResistance{ get{ return 5; } }
+		public override int ColdResistance{ get{ return 9; } }
+		public override int PoisonResistance{ get{ return 5; } }
+		public override int EnergyResistance{ get{ return 5; } }
 
 		[Constructable]
 		public Bonnet() : this( 0 )
@@ -949,14 +625,11 @@ namespace Server.Items
 
 	public class FeatheredHat : BaseHat
 	{
-		public override int BasePhysicalResistance{ get{ return 0; } }
-		public override int BaseFireResistance{ get{ return 5; } }
-		public override int BaseColdResistance{ get{ return 9; } }
-		public override int BasePoisonResistance{ get{ return 5; } }
-		public override int BaseEnergyResistance{ get{ return 5; } }
-
-		public override int InitMinHits{ get{ return 20; } }
-		public override int InitMaxHits{ get{ return 30; } }
+		public override int PhysicalResistance{ get{ return 0; } }
+		public override int FireResistance{ get{ return 5; } }
+		public override int ColdResistance{ get{ return 9; } }
+		public override int PoisonResistance{ get{ return 5; } }
+		public override int EnergyResistance{ get{ return 5; } }
 
 		[Constructable]
 		public FeatheredHat() : this( 0 )
@@ -990,14 +663,11 @@ namespace Server.Items
 
 	public class TricorneHat : BaseHat
 	{
-		public override int BasePhysicalResistance{ get{ return 0; } }
-		public override int BaseFireResistance{ get{ return 5; } }
-		public override int BaseColdResistance{ get{ return 9; } }
-		public override int BasePoisonResistance{ get{ return 5; } }
-		public override int BaseEnergyResistance{ get{ return 5; } }
-
-		public override int InitMinHits{ get{ return 20; } }
-		public override int InitMaxHits{ get{ return 30; } }
+		public override int PhysicalResistance{ get{ return 0; } }
+		public override int FireResistance{ get{ return 5; } }
+		public override int ColdResistance{ get{ return 9; } }
+		public override int PoisonResistance{ get{ return 5; } }
+		public override int EnergyResistance{ get{ return 5; } }
 
 		[Constructable]
 		public TricorneHat() : this( 0 )
@@ -1031,14 +701,11 @@ namespace Server.Items
 
 	public class JesterHat : BaseHat
 	{
-		public override int BasePhysicalResistance{ get{ return 0; } }
-		public override int BaseFireResistance{ get{ return 5; } }
-		public override int BaseColdResistance{ get{ return 9; } }
-		public override int BasePoisonResistance{ get{ return 5; } }
-		public override int BaseEnergyResistance{ get{ return 5; } }
-
-		public override int InitMinHits{ get{ return 20; } }
-		public override int InitMaxHits{ get{ return 30; } }
+		public override int PhysicalResistance{ get{ return 0; } }
+		public override int FireResistance{ get{ return 5; } }
+		public override int ColdResistance{ get{ return 9; } }
+		public override int PoisonResistance{ get{ return 5; } }
+		public override int EnergyResistance{ get{ return 5; } }
 
 		[Constructable]
 		public JesterHat() : this( 0 )
@@ -1052,6 +719,92 @@ namespace Server.Items
 		}
 
 		public JesterHat( Serial serial ) : base( serial )
+		{
+		}
+
+		public override void Serialize( GenericWriter writer )
+		{
+			base.Serialize( writer );
+
+			writer.Write( (int) 0 ); // version
+		}
+
+		public override void Deserialize( GenericReader reader )
+		{
+			base.Deserialize( reader );
+
+			int version = reader.ReadInt();
+		}
+	}
+
+	public class BearMask : BaseHat
+	{
+		public override int PhysicalResistance{ get{ return 0; } }
+		public override int FireResistance{ get{ return 3; } }
+		public override int ColdResistance{ get{ return 5; } }
+		public override int PoisonResistance{ get{ return 8; } }
+		public override int EnergyResistance{ get{ return 8; } }
+
+		public override bool Dye( Mobile from, DyeTub sender )
+		{
+			return false;
+		}
+
+		[Constructable]
+		public BearMask() : this( 0 )
+		{
+		}
+
+		[Constructable]
+		public BearMask( int hue ) : base( 0x1545, hue )
+		{
+			Weight = 1.0;
+		}
+
+		public BearMask( Serial serial ) : base( serial )
+		{
+		}
+
+		public override void Serialize( GenericWriter writer )
+		{
+			base.Serialize( writer );
+
+			writer.Write( (int) 0 ); // version
+		}
+
+		public override void Deserialize( GenericReader reader )
+		{
+			base.Deserialize( reader );
+
+			int version = reader.ReadInt();
+		}
+	}
+
+	public class DeerMask : BaseHat
+	{
+		public override int PhysicalResistance{ get{ return 0; } }
+		public override int FireResistance{ get{ return 3; } }
+		public override int ColdResistance{ get{ return 5; } }
+		public override int PoisonResistance{ get{ return 8; } }
+		public override int EnergyResistance{ get{ return 8; } }
+
+		public override bool Dye( Mobile from, DyeTub sender )
+		{
+			return false;
+		}
+
+		[Constructable]
+		public DeerMask() : this( 0 )
+		{
+		}
+
+		[Constructable]
+		public DeerMask( int hue ) : base( 0x1547, hue )
+		{
+			Weight = 1.0;
+		}
+
+		public DeerMask( Serial serial ) : base( serial )
 		{
 		}
 

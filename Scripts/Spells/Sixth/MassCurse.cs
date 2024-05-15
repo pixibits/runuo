@@ -1,16 +1,16 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server.Misc;
 using Server.Targeting;
 using Server.Network;
 
 namespace Server.Spells.Sixth
 {
-	public class MassCurseSpell : MagerySpell
+	public class MassCurseSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Mass Curse", "Vas Des Sanct",
+				SpellCircle.Sixth,
 				218,
 				9031,
 				false,
@@ -19,8 +19,6 @@ namespace Server.Spells.Sixth
 				Reagent.MandrakeRoot,
 				Reagent.SulfurousAsh
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Sixth; } }
 
 		public MassCurseSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -43,13 +41,13 @@ namespace Server.Spells.Sixth
 
 				SpellHelper.GetSurfaceTop( ref p );
 
-				List<Mobile> targets = new List<Mobile>();
+				ArrayList targets = new ArrayList();
 
 				Map map = Caster.Map;
 
 				if ( map != null )
 				{
-					IPooledEnumerable eable = map.GetMobilesInRange( new Point3D( p ), 2 );
+					IPooledEnumerable eable = map.GetMobilesInRange( new Point3D( p ), 3 );
 
 					foreach ( Mobile m in eable )
 					{
@@ -65,7 +63,9 @@ namespace Server.Spells.Sixth
 
 				for ( int i = 0; i < targets.Count; ++i )
 				{
-					Mobile m = targets[i];
+					Mobile m = (Mobile)targets[i];
+
+					SpellHelper.CheckReflect( (int)this.Circle, Caster, ref m );
 
 					Caster.DoHarmful( m );
 
@@ -85,7 +85,7 @@ namespace Server.Spells.Sixth
 		{
 			private MassCurseSpell m_Owner;
 
-			public InternalTarget( MassCurseSpell owner ) : base( Core.ML ? 10 : 12, true, TargetFlags.None )
+			public InternalTarget( MassCurseSpell owner ) : base( 12, true, TargetFlags.None )
 			{
 				m_Owner = owner;
 			}

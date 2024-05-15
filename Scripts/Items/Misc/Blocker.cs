@@ -4,7 +4,7 @@ using Server.Network;
 
 namespace Server.Items
 {
-	public class Blocker : Item
+	public class Blocker : BaseItem
 	{
 		public override int LabelNumber{ get{ return 503057; } } // Impassable!
 
@@ -18,13 +18,17 @@ namespace Server.Items
 		{
 		}
 
-		protected override Packet GetWorldPacketFor( NetState state ) {
+		public override void SendInfoTo( NetState state )
+		{
 			Mobile mob = state.Mobile;
 
 			if ( mob != null && mob.AccessLevel >= AccessLevel.GameMaster )
-				return new GMItemPacket( this );
+				state.Send( new GMItemPacket( this ) );
+			else
+				state.Send( WorldPacket );
 
-			return base.GetWorldPacketFor( state );
+			if ( ObjectPropertyList.Enabled )
+				state.Send( OPLPacket );
 		}
 
 		public override void Serialize( GenericWriter writer )

@@ -1,17 +1,18 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server.Targeting;
 using Server.Network;
 using Server.Misc;
 using Server.Items;
-using Server.Mobiles;
+using Server.Regions;
 
 namespace Server.Spells.Fifth
 {
-	public class PoisonFieldSpell : MagerySpell
+	public class PoisonFieldSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Poison Field", "In Nox Grav",
+				SpellCircle.Fifth,
 				230,
 				9052,
 				false,
@@ -19,8 +20,6 @@ namespace Server.Spells.Fifth
 				Reagent.Nightshade,
 				Reagent.SpidersSilk
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Fifth; } }
 
 		public PoisonFieldSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -71,7 +70,7 @@ namespace Server.Spells.Fifth
 
 				int itemID = eastToWest ? 0x3915 : 0x3922;
 
-				TimeSpan duration = TimeSpan.FromSeconds( 3 + (Caster.Skills.Magery.Fixed / 25) );
+				TimeSpan duration = TimeSpan.FromSeconds( 3.0 + (Caster.Skills[SkillName.Magery].Value * 0.4) );
 
 				for ( int i = -2; i <= 2; ++i )
 				{
@@ -85,7 +84,7 @@ namespace Server.Spells.Fifth
 		}
 
 		[DispellableField]
-		public class InternalItem : Item
+		private class InternalItem : BaseItem
 		{
 			private Timer m_Timer;
 			private DateTime m_End;
@@ -159,43 +158,18 @@ namespace Server.Spells.Fifth
 				}
 			}
 
-			public void ApplyPoisonTo( Mobile m )
-			{
-				if ( m_Caster == null )
-					return;
-
-				Poison p;
-
-				if ( Core.AOS )
-				{
-					int total = (m_Caster.Skills.Magery.Fixed + m_Caster.Skills.Poisoning.Fixed) / 2;
-
-					if ( total >= 1000 )
-						p = Poison.Deadly;
-					else if ( total > 850 )
-						p = Poison.Greater;
-					else if ( total > 650 )
-						p = Poison.Regular;
-					else
-						p = Poison.Lesser;
-				}
-				else
-				{
-					p = Poison.Regular;
-				}
-
-				if ( m.ApplyPoison( m_Caster, p ) == ApplyPoisonResult.Poisoned )
-					if ( SpellHelper.CanRevealCaster( m ) )
-						m_Caster.RevealingAction();
-			}
-
 			public override bool OnMoveOver( Mobile m )
 			{
-				if ( Visible && m_Caster != null && (!Core.AOS || m != m_Caster) && SpellHelper.ValidIndirectTarget( m_Caster, m ) && m_Caster.CanBeHarmful( m, false ) )
+				if ( Visible && m_Caster != null && SpellHelper.ValidIndirectTarget( m_Caster, m ) && m_Caster.CanBeHarmful( m, false ) )
 				{
 					m_Caster.DoHarmful( m );
 
-					ApplyPoisonTo( m );
+					bool guarded = ( m.Region is GuardedRegion && !((GuardedRegion)m.Region).IsDisabled() );
+
+					if ( !guarded && !m.CheckSkill( SkillName.MagicResist, 5.0, 45.0 ) ) // CheckResistedEasy
+						m.ApplyPoison( m_Caster, Poison.Regular );
+					else
+						m.SendLocalizedMessage( 501783 ); // You feel yourself resisting magical energy.
 					m.PlaySound( 0x474 );
 				}
 
@@ -249,11 +223,11 @@ namespace Server.Spells.Fifth
 						if ( map != null && caster != null )
 						{
 							bool eastToWest = ( m_Item.ItemID == 0x3915 );
-							IPooledEnumerable eable = map.GetMobilesInBounds( new Rectangle2D( m_Item.X - (eastToWest ? 0 : 1), m_Item.Y - (eastToWest ? 1 : 0), (eastToWest ? 1 : 2), (eastToWest ? 2 : 1) ) );
+							IPooledEnumerable eable = map.GetMobilesInBounds( new Rectangle2D( m_Item.X - (eastToWest ? 0 : 1), m_Item.Y - (eastToWest ? 1 : 0), (eastToWest ? 1 : 2), (eastToWest ? 2 : 1) ) );;
 
 							foreach ( Mobile m in eable )
 							{
-								if ( (m.Z + 16) > m_Item.Z && (m_Item.Z + 12) > m.Z && (!Core.AOS || m != caster) && SpellHelper.ValidIndirectTarget( caster, m ) && caster.CanBeHarmful( m, false ) )
+								if ( (m.Z + 16) > m_Item.Z && (m_Item.Z + 12) > m.Z && SpellHelper.ValidIndirectTarget( caster, m ) && caster.CanBeHarmful( m, false ) )
 									m_Queue.Enqueue( m );
 							}
 
@@ -265,7 +239,13 @@ namespace Server.Spells.Fifth
 
 								caster.DoHarmful( m );
 
-								m_Item.ApplyPoisonTo( m );
+								bool guarded = ( m.Region is GuardedRegion && !((GuardedRegion)m.Region).IsDisabled() );
+
+								if ( !guarded && !m.CheckSkill( SkillName.MagicResist, 5.0, 45.0 ) ) // CheckResistedEasy
+									m.ApplyPoison( caster, Poison.Regular );
+								else
+									m.SendLocalizedMessage( 501783 ); // You feel yourself resisting magical energy.
+
 								m.PlaySound( 0x474 );
 							}
 						}
@@ -278,7 +258,7 @@ namespace Server.Spells.Fifth
 		{
 			private PoisonFieldSpell m_Owner;
 
-			public InternalTarget( PoisonFieldSpell owner ) : base( Core.ML ? 10 : 12, true, TargetFlags.None )
+			public InternalTarget( PoisonFieldSpell owner ) : base( 12, true, TargetFlags.None )
 			{
 				m_Owner = owner;
 			}

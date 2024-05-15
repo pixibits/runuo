@@ -1,11 +1,10 @@
 using System;
 using Server;
 using Server.Mobiles;
-using Server.Spells;
 
 namespace Server.Items
 {
-	public class TribalPaint : Item
+	public class TribalPaint : BaseItem
 	{
 		public override int LabelNumber{ get{ return 1040000; } } // savage kin paint
 
@@ -14,7 +13,6 @@ namespace Server.Items
 		{
 			Hue = 2101;
 			Weight = 2.0;
-			Stackable = Core.ML;
 		}
 
 		public TribalPaint( Serial serial ) : base( serial )
@@ -25,25 +23,13 @@ namespace Server.Items
 		{
 			if ( IsChildOf( from.Backpack ) )
 			{
-				if ( Factions.Sigil.ExistsOn( from ) )
-				{
-					from.SendLocalizedMessage( 1010465 ); // You cannot disguise yourself while holding a sigil.
-				}
-				else if ( !from.CanBeginAction( typeof( Spells.Fifth.IncognitoSpell ) ) )
+				if ( !from.CanBeginAction( typeof( Spells.Fifth.IncognitoSpell ) ) )
 				{
 					from.SendLocalizedMessage( 501698 ); // You cannot disguise yourself while incognitoed.
 				}
 				else if ( !from.CanBeginAction( typeof( Spells.Seventh.PolymorphSpell ) ) )
 				{
 					from.SendLocalizedMessage( 501699 ); // You cannot disguise yourself while polymorphed.
-				}
-				else if( TransformationSpellHelper.UnderTransformation( from ) )
-				{
-					from.SendLocalizedMessage( 501699 ); // You cannot disguise yourself while polymorphed.
-				}
-				else if ( Spells.Ninjitsu.AnimalForm.UnderTransformation( from ) )
-				{
-					from.SendLocalizedMessage( 1061634 ); // You cannot disguise yourself while in that form.
 				}
 				else if ( from.IsBodyMod || from.FindItemOnLayer( Layer.Helm ) is OrcishKinMask )
 				{

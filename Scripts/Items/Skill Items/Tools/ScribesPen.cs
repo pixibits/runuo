@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using Server;
 using Server.Engines.Craft;
 
@@ -7,9 +7,13 @@ namespace Server.Items
 	[FlipableAttribute( 0x0FBF, 0x0FC0 )]
 	public class ScribesPen : BaseTool
 	{
-		public override CraftSystem CraftSystem{ get{ return DefInscription.CraftSystem; } }
-
 		public override int LabelNumber{ get{ return 1044168; } } // scribe's pen
+
+		public override CraftSystem GetCraftInstance()
+		{
+			return new InscribeSystem();
+		}
+
 
 		[Constructable]
 		public ScribesPen() : base( 0x0FBF )
@@ -45,3 +49,4 @@ namespace Server.Items
 		}
 	}
 }
+*/

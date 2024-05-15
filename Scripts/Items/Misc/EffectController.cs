@@ -2,7 +2,7 @@ using System;
 
 namespace Server.Items
 {
-	public enum ECEffectType
+	public enum EffectType
 	{
 		None,
 		Moving,
@@ -19,11 +19,11 @@ namespace Server.Items
 		InRange
 	}
 
-	public class EffectController : Item
+	public class EffectController : BaseItem
 	{
 		private TimeSpan m_EffectDelay;
 
-		private ECEffectType m_EffectType;
+		private EffectType m_EffectType;
 		private EffectTriggerType m_TriggerType;
 
 		private IEntity m_Source;
@@ -56,7 +56,7 @@ namespace Server.Items
 		private int m_TriggerRange;
 
 		[CommandProperty( AccessLevel.GameMaster )]
-		public ECEffectType EffectType{ get{ return m_EffectType; } set{ m_EffectType = value; } }
+		public EffectType EffectType{ get{ return m_EffectType; } set{ m_EffectType = value; } }
 
 		[CommandProperty( AccessLevel.GameMaster )]
 		public EffectTriggerType TriggerType{ get{ return m_TriggerType; } set{ m_TriggerType = value; } }
@@ -141,14 +141,10 @@ namespace Server.Items
 		[CommandProperty( AccessLevel.GameMaster )]
 		public int TriggerRange{ get{ return m_TriggerRange; } set{ m_TriggerRange = value; } }
 
-		public override string DefaultName
-		{
-			get { return "Effect Controller"; }
-		}
-
 		[Constructable]
 		public EffectController() : base( 0x1B72 )
 		{
+			Name = "Effect Controller";
 			Movable = false;
 			Visible = false;
 			m_TriggerType = EffectTriggerType.Sequenced;
@@ -243,7 +239,7 @@ namespace Server.Items
 					m_Explodes = reader.ReadBool();
 					m_PlaySoundAtTrigger = reader.ReadBool();
 
-					m_EffectType = (ECEffectType)reader.ReadEncodedInt();
+					m_EffectType = (EffectType)reader.ReadEncodedInt();
 					m_EffectLayer = (EffectLayer)reader.ReadEncodedInt();
 					m_TriggerType = (EffectTriggerType)reader.ReadEncodedInt();
 
@@ -282,16 +278,13 @@ namespace Server.Items
 			if ( Deleted || m_TriggerType == EffectTriggerType.None )
 				return;
 
-			if( trigger is Mobile && ((Mobile)trigger).Hidden && ((Mobile)trigger).AccessLevel > AccessLevel.Player )
-				return;
-
 			if ( m_SoundID > 0 )
 				Timer.DelayCall( m_SoundDelay, new TimerStateCallback( PlaySound ), trigger );
 
 			if ( m_Trigger != null )
 				Timer.DelayCall( m_TriggerDelay, new TimerStateCallback( m_Trigger.DoEffect ), trigger );
 
-			if ( m_EffectType != ECEffectType.None )
+			if ( m_EffectType != EffectType.None )
 				Timer.DelayCall( m_EffectDelay, new TimerStateCallback( InternalDoEffect ), trigger );
 		}
 
@@ -307,17 +300,17 @@ namespace Server.Items
 
 			switch ( m_EffectType )
 			{
-				case ECEffectType.Lightning:
+				case EffectType.Lightning:
 				{
 					Effects.SendBoltEffect( from, false, m_Hue );
 					break;
 				}
-				case ECEffectType.Location:
+				case EffectType.Location:
 				{
 					Effects.SendLocationParticles( EffectItem.Create( from.Location, from.Map, EffectItem.DefaultDuration ), m_ItemID, m_Speed, m_Duration, m_Hue, m_RenderMode, m_ParticleEffect, m_Unknown );
 					break;
 				}
-				case ECEffectType.Moving:
+				case EffectType.Moving:
 				{
 					if ( from == this )
 						from = EffectItem.Create( from.Location, from.Map, EffectItem.DefaultDuration );
@@ -328,7 +321,7 @@ namespace Server.Items
 					Effects.SendMovingParticles( from, to, m_ItemID, m_Speed, m_Duration, m_FixedDirection, m_Explodes, m_Hue, m_RenderMode, m_ParticleEffect, m_ExplodeParticleEffect, m_ExplodeSound, m_EffectLayer, m_Unknown );
 					break;
 				}
-				case ECEffectType.Target:
+				case EffectType.Target:
 				{
 					Effects.SendTargetParticles( from, m_ItemID, m_Speed, m_Duration, m_Hue, m_RenderMode, m_ParticleEffect, m_EffectLayer, m_Unknown );
 					break;

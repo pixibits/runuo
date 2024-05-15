@@ -1,19 +1,12 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Items;
 using Server.Engines.Harvest;
-using Server.ContextMenus;
 
 namespace Server.Items
 {
-	public interface IAxe
-	{
-		bool Axe( Mobile from, BaseAxe axe );
-	}
-
-	public abstract class BaseAxe : BaseMeleeWeapon
+	public abstract class BaseAxe : BaseMeleeWeapon, IUsesRemaining
 	{
 		public override int DefHitSound{ get{ return 0x232; } }
 		public override int DefMissSound{ get{ return 0x23A; } }
@@ -41,34 +34,6 @@ namespace Server.Items
 			set { m_ShowUsesRemaining = value; InvalidateProperties(); }
 		}
 
-		public virtual int GetUsesScalar()
-		{
-			if ( Quality == WeaponQuality.Exceptional )
-				return 200;
-
-			return 100;
-		}
-
-		public override void UnscaleDurability()
-		{
-			base.UnscaleDurability();
-
-			int scale = GetUsesScalar();
-
-			m_UsesRemaining = ((m_UsesRemaining * 100) + (scale - 1)) / scale;
-			InvalidateProperties();
-		}
-
-		public override void ScaleDurability()
-		{
-			base.ScaleDurability();
-
-			int scale = GetUsesScalar();
-
-			m_UsesRemaining = ((m_UsesRemaining * scale) + 99) / 100;
-			InvalidateProperties();
-		}
-
 		public BaseAxe( int itemID ) : base( itemID )
 		{
 			m_UsesRemaining = 150;
@@ -80,29 +45,16 @@ namespace Server.Items
 
 		public override void OnDoubleClick( Mobile from )
 		{
-			if ( HarvestSystem == null || Deleted )
+			if ( HarvestSystem == null )
 				return;
 
-			Point3D loc = this.GetWorldLocation();			
-
-			if ( !from.InLOS( loc ) || !from.InRange( loc, 2 ) )
-			{
-				from.LocalOverheadMessage( Server.Network.MessageType.Regular, 0x3E9, 1019045 ); // I can't reach that
-				return;
-			}
-			else if ( !this.IsAccessibleTo( from ) )
-			{
-				this.PublicOverheadMessage( Server.Network.MessageType.Regular, 0x3E9, 1061637 ); // You are not allowed to access this.
-				return;
-			}
-			
-			if ( !(this.HarvestSystem is Mining) )
-				from.SendLocalizedMessage( 1010018 ); // What do you want to use this item on?
-			
-			HarvestSystem.BeginHarvesting( from, this );
+			if ( IsChildOf( from.Backpack ) || Parent == from )
+				HarvestSystem.BeginHarvesting( from, this );
+			else
+				from.SendLocalizedMessage( 1042001 ); // That must be in your pack for you to use it.
 		}
 
-		public override void GetContextMenuEntries( Mobile from, List<ContextMenuEntry> list )
+		public override void GetContextMenuEntries( Mobile from, List<ContextMenus.ContextMenuEntry> list )
 		{
 			base.GetContextMenuEntries( from, list );
 
@@ -145,25 +97,6 @@ namespace Server.Items
 						m_UsesRemaining = 150;
 
 					break;
-				}
-			}
-		}
-
-		public override void OnHit( Mobile attacker, Mobile defender, double damageBonus )
-		{
-			base.OnHit( attacker, defender, damageBonus );
-
-			if ( !Core.AOS && (attacker.Player || attacker.Body.IsHuman) && Layer == Layer.TwoHanded && (attacker.Skills[SkillName.Anatomy].Value / 400.0) >= Utility.RandomDouble() )
-			{
-				StatMod mod = defender.GetStatMod( "Concussion" );
-
-				if ( mod == null )
-				{
-					defender.SendMessage( "You receive a concussion blow!" );
-					defender.AddStatMod( new StatMod( StatType.Int, "Concussion", -(defender.RawInt / 2), TimeSpan.FromSeconds( 30.0 ) ) );
-
-					attacker.SendMessage( "You deliver a concussion blow!" );
-					attacker.PlaySound( 0x308 );
 				}
 			}
 		}

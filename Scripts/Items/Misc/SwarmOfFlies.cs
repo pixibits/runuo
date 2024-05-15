@@ -2,17 +2,13 @@ using System;
 
 namespace Server.Items
 {
-	public class SwarmOfFlies : Item
+	public class SwarmOfFlies : BaseItem
 	{
-		public override string DefaultName
-		{
-			get { return "a swarm of flies"; }
-		}
-
 		[Constructable]
 		public SwarmOfFlies() : base( 0x91B )
 		{
 			Hue = 1;
+			Name = "a swarm of flies";
 			Movable = false;
 		}
 

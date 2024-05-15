@@ -1,10 +1,7 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using System.Reflection;
 using Server;
-using Server.Commands;
-using Server.Network;
 using Server.Targeting;
 
 namespace Server.Gumps
@@ -17,12 +14,12 @@ namespace Server.Gumps
 
 		public static void Initialize()
 		{
-			CommandSystem.Register( "AddMenu", AccessLevel.GameMaster, new CommandEventHandler( AddMenu_OnCommand ) );
+			Commands.CommandSystem.Register( "AddMenu", AccessLevel.GameMaster, new Server.Commands.CommandEventHandler( AddMenu_OnCommand ) );
 		}
 
 		[Usage( "AddMenu [searchString]" )]
 		[Description( "Opens an add menu, with an optional initial search string. This menu allows you to search for Items or Mobiles and add them interactively." )]
-		private static void AddMenu_OnCommand( CommandEventArgs e )
+		private static void AddMenu_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			string val = e.ArgString.Trim();
 			Type[] types;
@@ -34,12 +31,12 @@ namespace Server.Gumps
 			}
 			else if ( val.Length < 3 )
 			{
-				e.Mobile.SendMessage( "Invalid search string." );
+				e.Mobile.SendAsciiMessage( "Invalid search string." );
 				types = Type.EmptyTypes;
 			}
 			else
 			{
-				types = Match( val ).ToArray();
+				types = (Type[])Match( val ).ToArray( typeof( Type ) );
 				explicitSearch = true;
 			}
 
@@ -107,7 +104,7 @@ namespace Server.Gumps
 
 		private static Type typeofItem = typeof( Item ), typeofMobile = typeof( Mobile );
 
-		private static void Match( string match, Type[] types, List<Type> results )
+		private static void Match( string match, Type[] types, ArrayList results )
 		{
 			if ( match.Length == 0 )
 				return;
@@ -134,9 +131,9 @@ namespace Server.Gumps
 			}
 		}
 
-		public static List<Type> Match( string match )
+		public static ArrayList Match( string match )
 		{
-			List<Type> results = new List<Type>();
+			ArrayList results = new ArrayList();
 			Type[] types;
 
 			Assembly[] asms = ScriptCompiler.Assemblies;
@@ -155,11 +152,14 @@ namespace Server.Gumps
 			return results;
 		}
 
-		private class TypeNameComparer : IComparer<Type>
+		private class TypeNameComparer : IComparer
 		{
-			public int Compare( Type x, Type y )
+			public int Compare( object x, object y )
 			{
-				return x.Name.CompareTo( y.Name );
+				Type a = x as Type;
+				Type b = y as Type;
+
+				return a.Name.CompareTo( b.Name );
 			}
 		}
 
@@ -189,7 +189,7 @@ namespace Server.Gumps
 					else if ( p is Mobile )
 						p = ((Mobile)p).Location;
 
-					Server.Commands.Add.Invoke( from, new Point3D( p ), new Point3D( p ), new string[]{ m_Type.Name } );
+					Server.Scripts.Commands.Add.Invoke( from, new Point3D( p ), new Point3D( p ), new string[]{ m_Type.Name } );
 
 					from.Target = new InternalTarget( m_Type, m_SearchResults, m_SearchString, m_Page );
 				}
@@ -202,7 +202,7 @@ namespace Server.Gumps
 			}
 		}
 
-		public override void OnResponse( NetState sender, RelayInfo info )
+		public override void OnResponse( Server.Network.NetState sender, RelayInfo info )
 		{
 			Mobile from = sender.Mobile;
 
@@ -215,12 +215,12 @@ namespace Server.Gumps
 
 					if ( match.Length < 3 )
 					{
-						from.SendMessage( "Invalid search string." );
+						from.SendAsciiMessage( "Invalid search string." );
 						from.SendGump( new AddGump( from, match, m_Page, m_SearchResults, false ) );
 					}
 					else
 					{
-						from.SendGump( new AddGump( from, match, 0, Match( match ).ToArray(), true ) );
+						from.SendGump( new AddGump( from, match, 0, (Type[])Match( match ).ToArray( typeof( Type ) ), true ) );
 					}
 
 					break;
@@ -245,7 +245,7 @@ namespace Server.Gumps
 
 					if ( index >= 0 && index < m_SearchResults.Length )
 					{
-						from.SendMessage( "Where do you wish to place this object? <ESC> to cancel." );
+						from.SendAsciiMessage( "Where do you wish to place this object? <ESC> to cancel." );
 						from.Target = new InternalTarget( m_SearchResults[index], m_SearchResults, m_SearchString, m_Page );
 					}
 

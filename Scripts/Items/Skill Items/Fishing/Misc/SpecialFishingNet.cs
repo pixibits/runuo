@@ -5,7 +5,7 @@ using Server.Targeting;
 
 namespace Server.Items
 {
-	public class SpecialFishingNet : Item
+	public class SpecialFishingNet : BaseItem
 	{
 		public override int LabelNumber{ get{ return 1041079; } } // a special fishing net
 
@@ -134,7 +134,7 @@ namespace Server.Items
 
 				from.Animate( 12, 5, 1, true, false, 0 );
 
-				Timer.DelayCall( TimeSpan.FromSeconds( 1.5 ), TimeSpan.FromSeconds( 1.0 ), 20, new TimerStateCallback( DoEffect ), new object[]{ p, 0, from } );
+				Timer.DelayCall( TimeSpan.FromSeconds( 1.5 ), TimeSpan.FromSeconds( 1.0 ), 20, new TimerStateCallback( DoEffect ), new object[]{ p, 0 } );
 
 				from.SendLocalizedMessage( 1010487 ); // You plunge the net into the sea...
 			}
@@ -153,7 +153,6 @@ namespace Server.Items
 
 			Point3D p = (Point3D)states[0];
 			int index = (int)states[1];
-			Mobile from = (Mobile)states[2];
 
 			states[1] = ++index;
 
@@ -187,79 +186,61 @@ namespace Server.Items
 				Effects.PlaySound( p, Map, 0x364 );
 
 				if ( index == 20 )
-					FinishEffect( p, Map, from );
+					FinishEffect( p );
 				else
 					this.Z -= 1;
 			}
 		}
 
-		protected virtual int GetSpawnCount()
+		private void FinishEffect( Point3D p )
 		{
 			int count = Utility.RandomMinMax( 1, 3 );
 
 			if ( Hue != 0x8A0 )
 				count += Utility.RandomMinMax( 1, 2 );
 
-			return count;
-		}
-
-		protected void Spawn( Point3D p, Map map, BaseCreature spawn )
-		{
-			if ( map == null )
-			{
-				spawn.Delete();
-				return;
-			}
-
-			int x = p.X, y = p.Y;
-
-			for ( int j = 0; j < 20; ++j )
-			{
-				int tx = p.X - 2 + Utility.Random( 5 );
-				int ty = p.Y - 2 + Utility.Random( 5 );
-
-				LandTile t = map.Tiles.GetLandTile( tx, ty );
-
-				if ( t.Z == p.Z && ( (t.ID >= 0xA8 && t.ID <= 0xAB) || (t.ID >= 0x136 && t.ID <= 0x137) ) && !Spells.SpellHelper.CheckMulti( new Point3D( tx, ty, p.Z ), map ) )
-				{
-					x = tx;
-					y = ty;
-					break;
-				}
-			}
-
-			spawn.MoveToWorld( new Point3D( x, y, p.Z ), map );
-
-			if ( spawn is Kraken && 0.2 > Utility.RandomDouble() )
-				spawn.PackItem( new MessageInABottle( map == Map.Felucca ? Map.Felucca : Map.Trammel ) );
-		}
-
-		protected virtual void FinishEffect( Point3D p, Map map, Mobile from )
-		{
-			from.RevealingAction();
-
-			int count = GetSpawnCount();
+			Map map = this.Map;
 
 			for ( int i = 0; map != null && i < count; ++i )
 			{
 				BaseCreature spawn;
 
-				switch ( Utility.Random( 4 ) )
+				switch ( Utility.Random( 2 ) )
 				{
 					default:
 					case 0: spawn = new SeaSerpent(); break;
-					case 1: spawn = new DeepSeaSerpent(); break;
-					case 2: spawn = new WaterElemental(); break;
-					case 3: spawn = new Kraken(); break;
+					case 1: spawn = new WaterElemental(); break;
 				}
 
-				Spawn( p, map, spawn );
+				int x = p.X, y = p.Y;
 
-				spawn.Combatant = from;
+				for ( int j = 0; j < 20; ++j )
+				{
+					int tx = p.X - 5 + Utility.Random( 11 );
+					int ty = p.Y - 5 + Utility.Random( 11 );
+
+					LandTile t = map.Tiles.GetLandTile( tx, ty );
+
+					if ( t.Z == p.Z && ( (t.ID >= 0xA8 && t.ID <= 0xAB) || (t.ID >= 0x136 && t.ID <= 0x137) ) && !Spells.SpellHelper.CheckMulti( new Point3D( tx, ty, p.Z ), map ) )
+					{
+						x = tx;
+						y = ty;
+						break;
+					}
+				}
+
+				spawn.Map = map;
+				spawn.Location = new Point3D( x, y, p.Z );
 			}
 
 			Delete();
 		}
+
+		private static int[] m_WaterTiles = new int[]
+			{
+				0x00A8, 0x00AB,
+				0x0136, 0x0137
+			};
 
 		public static bool FullValidation( Map map, int x, int y )
 		{
@@ -280,62 +261,15 @@ namespace Server.Items
 			return valid;
 		}
 
-		private static int[] m_WaterTiles = new int[]
-			{
-				0x00A8, 0x00AB,
-				0x0136, 0x0137
-			};
-
 		private static bool ValidateDeepWater( Map map, int x, int y )
 		{
 			int tileID = map.Tiles.GetLandTile( x, y ).ID;
 			bool water = false;
 
-			for( int i = 0; !water && i < m_WaterTiles.Length; i += 2 )
-				water = (tileID >= m_WaterTiles[i] && tileID <= m_WaterTiles[i + 1]);
+			for ( int i = 0; !water && i < m_WaterTiles.Length; i += 2 )
+				water = ( tileID >= m_WaterTiles[i] && tileID <= m_WaterTiles[i + 1] );
 
 			return water;
-		}
-	}
-
-	public class FabledFishingNet : SpecialFishingNet
-	{
-		public override int LabelNumber{ get{ return 1063451; } } // a fabled fishing net
-
-		[Constructable]
-		public FabledFishingNet()
-		{
-			Hue = 0x481;
-		}
-
-		protected override int GetSpawnCount()
-		{
-			return base.GetSpawnCount() + 4;
-		}
-
-		protected override void FinishEffect( Point3D p, Map map, Mobile from )
-		{
-			Spawn( p, map, new Leviathan( from ) );
-
-			base.FinishEffect( p, map, from );
-		}
-
-		public FabledFishingNet( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
 		}
 	}
 }

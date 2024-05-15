@@ -1,23 +1,17 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Targeting;
 
 namespace Server.Items
 {
-	public class ArcaneGem : Item
+	public class ArcaneGem : BaseItem
 	{
-		public override string DefaultName
-		{
-			get { return "arcane gem"; }
-		}
-
 		[Constructable]
 		public ArcaneGem() : base( 0x1EA7 )
 		{
-			Stackable = Core.ML;
 			Weight = 1.0;
+			Name = "arcane gem";
 		}
 
 		public ArcaneGem( Serial serial ) : base( serial )
@@ -33,7 +27,7 @@ namespace Server.Items
 			else
 			{
 				from.BeginTarget( 2, false, TargetFlags.None, new TargetCallback( OnTarget ) );
-				from.SendMessage( "What do you wish to use the gem on?" );
+				from.SendAsciiMessage( "What do you wish to use the gem on?" );
 			}
 		}
 
@@ -43,8 +37,8 @@ namespace Server.Items
 
 			if ( v < 16 )
 				return 16;
-			else if ( v > 24 )
-				return 24;
+			else if ( v > 20 )
+				return 20;
 
 			return v;
 		}
@@ -62,30 +56,11 @@ namespace Server.Items
 			if ( obj is IArcaneEquip && obj is Item )
 			{
 				Item item = (Item)obj;
-				CraftResource resource = CraftResource.None;
-
-				if( item is BaseClothing )
-					resource = ((BaseClothing)item).Resource;
-				else if( item is BaseArmor )
-					resource = ((BaseArmor)item).Resource;
-				else if( item is BaseWeapon ) // Sanity, weapons cannot recieve gems...
-					resource = ((BaseWeapon)item).Resource;
-
 				IArcaneEquip eq = (IArcaneEquip)obj;
 
 				if ( !item.IsChildOf( from.Backpack ) )
 				{
 					from.SendLocalizedMessage( 1042001 ); // That must be in your pack for you to use it.
-					return;
-				}
-				else if ( item.LootType == LootType.Blessed )
-				{
-					from.SendMessage( "You can only use this on exceptionally crafted robes, thigh boots, cloaks, or leather gloves." );
-					return;
-				}
-				else if ( resource != CraftResource.None && resource != CraftResource.RegularLeather )
-				{
-					from.SendLocalizedMessage( 1049690 ); // Arcane gems can not be used on that type of leather.
 					return;
 				}
 
@@ -95,7 +70,7 @@ namespace Server.Items
 				{
 					if ( eq.CurArcaneCharges >= eq.MaxArcaneCharges )
 					{
-						from.SendMessage( "That item is already fully charged." );
+						from.SendAsciiMessage( "That item is already fully charged." );
 					}
 					else
 					{
@@ -107,10 +82,8 @@ namespace Server.Items
 						else
 							eq.CurArcaneCharges += charges;
 
-						from.SendMessage( "You recharge the item." );
-						if ( Amount <= 1 )
-							Delete();
-						else Amount--;
+						from.SendAsciiMessage( "You recharge the item." );
+						Delete();
 					}
 				}
 				else if ( from.Skills[SkillName.Tailoring].Value >= 80.0 )
@@ -118,53 +91,41 @@ namespace Server.Items
 					bool isExceptional = false;
 
 					if ( item is BaseClothing )
-						isExceptional = ( ((BaseClothing)item).Quality == ClothingQuality.Exceptional );
+						isExceptional = ( ((BaseClothing)item).Quality == CraftQuality.Exceptional );
 					else if ( item is BaseArmor )
-						isExceptional = ( ((BaseArmor)item).Quality == ArmorQuality.Exceptional );
+						isExceptional = ( ((BaseArmor)item).Quality == CraftQuality.Exceptional );
 					else if ( item is BaseWeapon )
-						isExceptional = ( ((BaseWeapon)item).Quality == WeaponQuality.Exceptional );
+						isExceptional = ( ((BaseWeapon)item).Quality == CraftQuality.Exceptional );
 
 					if ( isExceptional )
 					{
 						if ( item is BaseClothing )
-						{
-							((BaseClothing)item).Quality = ClothingQuality.Regular;
 							((BaseClothing)item).Crafter = from;
-						}
 						else if ( item is BaseArmor )
-						{
-							((BaseArmor)item).Quality = ArmorQuality.Regular;
 							((BaseArmor)item).Crafter = from;
-							((BaseArmor)item).PhysicalBonus = ((BaseArmor)item).FireBonus = ((BaseArmor)item).ColdBonus = ((BaseArmor)item).PoisonBonus = ((BaseArmor)item).EnergyBonus = 0; // Is there a method to remove bonuses?
-						}
-						else if ( item is BaseWeapon ) // Sanity, weapons cannot recieve gems...
-						{
-							((BaseWeapon)item).Quality = WeaponQuality.Regular;
+						else if ( item is BaseWeapon )
 							((BaseWeapon)item).Crafter = from;
-						}
 
 						eq.CurArcaneCharges = eq.MaxArcaneCharges = charges;
 
 						item.Hue = DefaultArcaneHue;
 
-						from.SendMessage( "You enhance the item with your gem." );
-						if ( Amount <= 1 )
-							Delete();
-						else Amount--;
+						from.SendAsciiMessage( "You enhance the item with your gem." );
+						Delete();
 					}
 					else
 					{
-						from.SendMessage( "Only exceptional items can be enhanced with the gem." );
+						from.SendAsciiMessage( "Only exceptional items can be enhanced with the gem." );
 					}
 				}
 				else
 				{
-					from.SendMessage( "You do not have enough skill in tailoring to enhance the item." );
+					from.SendAsciiMessage( "You do not have enough skill in tailoring to enhance the item." );
 				}
 			}
 			else
 			{
-				from.SendMessage( "You can only use this on exceptionally crafted robes, thigh boots, cloaks, or leather gloves." );
+				from.SendAsciiMessage( "You cannot use the gem on that." );
 			}
 		}
 
@@ -175,7 +136,7 @@ namespace Server.Items
 
 			for ( int i = 0; i < items.Count; ++i )
 			{
-				Item obj = items[i];
+				object obj = items[i];
 
 				if ( obj is IArcaneEquip )
 				{
@@ -191,7 +152,7 @@ namespace Server.Items
 
 			for ( int i = 0; i < items.Count; ++i )
 			{
-				Item obj = items[i];
+				object obj = items[i];
 
 				if ( obj is IArcaneEquip )
 				{
@@ -214,6 +175,11 @@ namespace Server.Items
 			}
 
 			return true;
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new ArcaneGem( amount ), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )

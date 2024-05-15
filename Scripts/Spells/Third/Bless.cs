@@ -4,17 +4,16 @@ using Server.Network;
 
 namespace Server.Spells.Third
 {
-	public class BlessSpell : MagerySpell
+	public class BlessSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Bless", "Rel Sanct",
+				SpellCircle.Third,
 				203,
 				9061,
 				Reagent.Garlic,
 				Reagent.MandrakeRoot
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Third; } }
 
 		public BlessSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -41,13 +40,6 @@ namespace Server.Spells.Third
 
 				m.FixedParticles( 0x373A, 10, 15, 5018, EffectLayer.Waist );
 				m.PlaySound( 0x1EA );
-
-				int percentage = (int)(SpellHelper.GetOffsetScalar(Caster, m, false) * 100);
-				TimeSpan length = SpellHelper.GetDuration(Caster, m);
-
-				string args = String.Format("{0}\t{1}\t{2}", percentage, percentage, percentage);
-
-				BuffInfo.AddBuff(m, new BuffInfo(BuffIcon.Bless, 1075847, 1075848, length, m, args.ToString()));
 			}
 
 			FinishSequence();
@@ -57,7 +49,7 @@ namespace Server.Spells.Third
 		{
 			private BlessSpell m_Owner;
 
-			public InternalTarget( BlessSpell owner ) : base( Core.ML ? 10 : 12, false, TargetFlags.Beneficial )
+			public InternalTarget( BlessSpell owner ) : base( 12, false, TargetFlags.Beneficial )
 			{
 				m_Owner = owner;
 			}

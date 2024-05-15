@@ -2,7 +2,7 @@ using System;
 
 namespace Server.Items
 {
-	public class MeltedWax : Item
+	public class MeltedWax : BaseItem
 	{
 		public override int LabelNumber{ get{ return 1016492; } } // melted wax
 

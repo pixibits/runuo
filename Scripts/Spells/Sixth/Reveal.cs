@@ -1,23 +1,21 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server.Misc;
 using Server.Targeting;
 using Server.Network;
 
 namespace Server.Spells.Sixth
 {
-	public class RevealSpell : MagerySpell
+	public class RevealSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Reveal", "Wis Quas",
+				SpellCircle.Sixth,
 				206,
 				9002,
 				Reagent.Bloodmoss,
 				Reagent.SulfurousAsh
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Sixth; } }
 
 		public RevealSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -40,20 +38,17 @@ namespace Server.Spells.Sixth
 
 				SpellHelper.GetSurfaceTop( ref p );
 
-				List<Mobile> targets = new List<Mobile>();
+				ArrayList targets = new ArrayList();
 
 				Map map = Caster.Map;
 
 				if ( map != null )
 				{
-					IPooledEnumerable eable = map.GetMobilesInRange( new Point3D( p ), 1 + (int)(Caster.Skills[SkillName.Magery].Value / 20.0) );
+					IPooledEnumerable eable = map.GetMobilesInRange( new Point3D( p ), 2 );
 
 					foreach ( Mobile m in eable )
 					{
-						if ( m is Mobiles.ShadowKnight && (m.X != p.X || m.Y != p.Y) )
-							continue;
-
-						if ( m.Hidden && (m.AccessLevel == AccessLevel.Player || Caster.AccessLevel > m.AccessLevel) && CheckDifficulty( Caster, m ) )
+						if ( m.Hidden && (m.AccessLevel == AccessLevel.Player || Caster.AccessLevel > m.AccessLevel) && Caster.CanBeHarmful( m, false, true ) )
 							targets.Add( m );
 					}
 
@@ -62,46 +57,25 @@ namespace Server.Spells.Sixth
 
 				for ( int i = 0; i < targets.Count; ++i )
 				{
-					Mobile m = targets[i];
+					Mobile m = (Mobile)targets[i];
 
 					m.RevealingAction();
 
 					m.FixedParticles( 0x375A, 9, 20, 5049, EffectLayer.Head );
 					m.PlaySound( 0x1FD );
+
+					m.SendLocalizedMessage( 500814 ); // You have been revealed!
 				}
 			}
 
 			FinishSequence();
 		}
 
-		// Reveal uses magery and detect hidden vs. hide and stealth 
-		private static bool CheckDifficulty( Mobile from, Mobile m )
-		{
-			// Reveal always reveals vs. invisibility spell 
-			if ( !Core.AOS || InvisibilitySpell.HasTimer( m ) )
-				return true;
-
-			int magery = from.Skills[SkillName.Magery].Fixed;
-			int detectHidden = from.Skills[SkillName.DetectHidden].Fixed;
-
-			int hiding = m.Skills[SkillName.Hiding].Fixed;
-			int stealth = m.Skills[SkillName.Stealth].Fixed;
-			int divisor = hiding + stealth;
-
-			int chance;
-			if ( divisor > 0 )
-				chance = 50 * (magery + detectHidden) / divisor;
-			else
-				chance = 100;
-
-			return chance > Utility.Random( 100 );
-		}
-
 		private class InternalTarget : Target
 		{
 			private RevealSpell m_Owner;
 
-			public InternalTarget( RevealSpell owner ) : base( Core.ML ? 10 : 12, true, TargetFlags.None )
+			public InternalTarget( RevealSpell owner ) : base( 12, true, TargetFlags.None )
 			{
 				m_Owner = owner;
 			}

@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using Server;
 using Server.Mobiles;
 using Server.Network;
@@ -7,7 +6,7 @@ using Server.Targeting;
 
 namespace Server.Items
 {
-	public class Bola : Item
+	public class Bola : BaseItem
 	{
 		[Constructable]
 		public Bola() : this( 1 )
@@ -36,7 +35,7 @@ namespace Server.Items
 			{
 				from.SendLocalizedMessage( 1049631 ); // This bola is already being used.
 			}
-			else if ( !Core.AOS && (from.FindItemOnLayer( Layer.OneHanded ) != null || from.FindItemOnLayer( Layer.TwoHanded ) != null) )
+			else if ( from.FindItemOnLayer( Layer.OneHanded ) != null || from.FindItemOnLayer( Layer.TwoHanded ) != null )
 			{
 				from.SendLocalizedMessage( 1040015 ); // Your hands must be free to use this
 			}
@@ -44,23 +43,8 @@ namespace Server.Items
 			{
 				from.SendLocalizedMessage( 1040016 ); // You cannot use this while riding a mount
 			}
-			else if ( Server.Spells.Ninjitsu.AnimalForm.UnderTransformation( from ) )
-			{
-				from.SendLocalizedMessage( 1070902 ); // You can't use this while in an animal form!
-			}
 			else
 			{
-				EtherealMount.StopMounting( from );
-
-				Item one = from.FindItemOnLayer( Layer.OneHanded );
-				Item two = from.FindItemOnLayer( Layer.TwoHanded );
-
-				if ( one != null )
-					from.AddToBackpack( one );
-
-				if ( two != null )
-					from.AddToBackpack( two );
-
 				from.Target = new BolaTarget( this );
 				from.LocalOverheadMessage( MessageType.Emote, 0x3B2, 1049632 ); // * You begin to swing the bola...*
 				from.NonlocalOverheadMessage( MessageType.Emote, 0x3B2, 1049633, from.Name ); // ~1_NAME~ begins to menacingly swing a bola...
@@ -70,6 +54,11 @@ namespace Server.Items
 		private static void ReleaseBolaLock( object state )
 		{
 			((Mobile)state).EndAction( typeof( Bola ) );
+		}
+
+		private static void ReleaseMountLock( object state )
+		{
+			((Mobile)state).EndAction( typeof( BaseMount ) );
 		}
 
 		private static void FinishThrow( object state )
@@ -84,17 +73,16 @@ namespace Server.Items
 
 			to.Damage( 1, from );
 
-			if ( to is ChaosDragoon || to is ChaosDragoonElite )
-				from.SendLocalizedMessage( 1042047 ); // You fail to knock the rider from its mount.
-
 			IMount mt = to.Mount;
-			if ( mt != null && !( to is ChaosDragoon || to is ChaosDragoonElite ) )
+
+			if ( mt != null )
 				mt.Rider = null;
+
+			to.BeginAction( typeof( BaseMount ) );
 
 			to.SendLocalizedMessage( 1040023 ); // You have been knocked off of your mount!
 
-			BaseMount.SetMountPrevention( to, BlockMountType.Dazed, TimeSpan.FromSeconds( 3.0 ) );
-
+			Timer.DelayCall( TimeSpan.FromSeconds( 3.0 ), new TimerStateCallback( ReleaseMountLock ), to );
 			Timer.DelayCall( TimeSpan.FromSeconds( 2.0 ), new TimerStateCallback( ReleaseBolaLock ), from );
 		}
 
@@ -120,17 +108,13 @@ namespace Server.Items
 					{
 						from.SendLocalizedMessage( 1040019 ); // The bola must be in your pack to use it.
 					}
-					else if ( !Core.AOS && (from.FindItemOnLayer( Layer.OneHanded ) != null || from.FindItemOnLayer( Layer.TwoHanded ) != null) )
+					else if ( from.FindItemOnLayer( Layer.OneHanded ) != null || from.FindItemOnLayer( Layer.TwoHanded ) != null )
 					{
 						from.SendLocalizedMessage( 1040015 ); // Your hands must be free to use this
 					}
 					else if ( from.Mounted )
 					{
 						from.SendLocalizedMessage( 1040016 ); // You cannot use this while riding a mount
-					}
-					else if ( Server.Spells.Ninjitsu.AnimalForm.UnderTransformation( from ) )
-					{
-						from.SendLocalizedMessage( 1070902 ); // You can't use this while in an animal form!
 					}
 					else if ( !to.Mounted )
 					{
@@ -141,21 +125,7 @@ namespace Server.Items
 					}
 					else if ( from.BeginAction( typeof( Bola ) ) )
 					{
-						EtherealMount.StopMounting( from );
-
-						Item one = from.FindItemOnLayer( Layer.OneHanded );
-						Item two = from.FindItemOnLayer( Layer.TwoHanded );
-
-						if ( one != null )
-							from.AddToBackpack( one );
-
-						if ( two != null )
-							from.AddToBackpack( two );
-
 						from.DoHarmful( to );
-
-						if ( Core.AOS )
-							BaseMount.SetMountPrevention( from, BlockMountType.BolaRecovery, TimeSpan.FromSeconds( 3.0 ) );
 
 						m_Bola.Consume();
 
@@ -179,6 +149,11 @@ namespace Server.Items
 
 		public Bola( Serial serial ) : base( serial )
 		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Bola( amount ), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )

@@ -1,10 +1,8 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Multis;
 using Server.Gumps;
-using System.Collections.Generic;
-using Server.ContextMenus;
 
 namespace Server.Items
 {
@@ -63,13 +61,7 @@ namespace Server.Items
 	public class GenericHouseDoor : BaseHouseDoor
 	{
 		[Constructable]
-		public GenericHouseDoor( DoorFacing facing, int baseItemID, int openedSound, int closedSound ) : this( facing, baseItemID, openedSound, closedSound, true )
-		{
-		}
-
-		[Constructable]
-		public GenericHouseDoor( DoorFacing facing, int baseItemID, int openedSound, int closedSound, bool autoAdjust )
-			: base( facing, baseItemID + (autoAdjust ? (2 * (int)facing) : 0), baseItemID + 1 + (autoAdjust ? (2 * (int)facing) : 0), openedSound, closedSound, BaseDoor.GetOffset( facing ) )
+		public GenericHouseDoor( DoorFacing facing, int baseItemID, int openedSound, int closedSound ) : base( facing, baseItemID + (2 * (int)facing), baseItemID + 1 + (2 * (int)facing), openedSound, closedSound, BaseDoor.GetOffset( facing ) )
 		{
 		}
 
@@ -92,11 +84,10 @@ namespace Server.Items
 		}
 	}
 
-	public abstract class BaseHouseDoor : BaseDoor, ISecurable
+	public abstract class BaseHouseDoor : BaseDoor
 	{
 		private DoorFacing m_Facing;
-		private SecureLevel m_Level;
-
+		
 		[CommandProperty( AccessLevel.GameMaster )]
 		public DoorFacing Facing
 		{
@@ -104,23 +95,9 @@ namespace Server.Items
 			set{ m_Facing = value; }
 		}
 
-		[CommandProperty( AccessLevel.GameMaster )]
-		public SecureLevel Level
-		{
-			get{ return m_Level; }
-			set{ m_Level = value; }
-		}
-
-		public override void GetContextMenuEntries( Mobile from, List<ContextMenuEntry> list )
-		{
-			base.GetContextMenuEntries( from, list );
-			SetSecureLevelEntry.AddTo( from, this, list );
-		}
-
 		public BaseHouseDoor( DoorFacing facing, int closedID, int openedID, int openedSound, int closedSound, Point3D offset ) : base( closedID, openedID, openedSound, closedSound, offset )
 		{
 			m_Facing = facing;
-			m_Level = SecureLevel.Anyone;
 		}
 
 		public BaseHouse FindHouse()
@@ -132,34 +109,39 @@ namespace Server.Items
 			else
 				loc = this.Location;
 
-			return BaseHouse.FindHouseAt( loc, Map, 20 );
-		}
-
-		public bool CheckAccess( Mobile m )
-		{
-			BaseHouse house = FindHouse();
-
-			if ( house == null )
-				return false;
-
-			if ( !house.IsAosRules )
-				return true;
-
-			if ( house.Public ? house.IsBanned( m ) : !house.HasAccess( m ) )
-				return false;
-
-			return house.HasSecureAccess( m, m_Level );
+			BaseHouse house = BaseHouse.FindHouseAt( loc, Map, 20 );
+			if ( house == null || ( this.KeyValue != 0 && house.KeyValue != this.KeyValue ) )
+			{
+				Regions.HouseRegion hr = Region.Find( loc, this.Map ) as Regions.HouseRegion;
+				if ( hr != null && hr.House != null && ( this.KeyValue == 0 || hr.House.KeyValue == this.KeyValue ) && hr.House.IsInside( loc, 20 ) )
+					house = hr.House;
+				else
+					house = null;
+			}
+			return house;
 		}
 
 		public override void OnOpened( Mobile from )
 		{
 			BaseHouse house = FindHouse();
 
-			if ( house != null && house.IsFriend( from ) && from.AccessLevel == AccessLevel.Player && house.RefreshDecay() )
-				from.SendLocalizedMessage( 1043293 ); // Your house's age and contents have been refreshed.
+			if ( house == null )
+			{
+				house = BaseHouse.FindHouseAt( from );
+				if ( house != null && this.KeyValue != 0 && house.KeyValue != this.KeyValue )
+					house = null;
+			}
 
-			if ( house != null && house.Public && !house.IsFriend( from ) )
+			if( house != null )
+			{
 				house.Visits++;
+				if ( house.Sign != null && house.IsOwner( from ) && from.AccessLevel == AccessLevel.Player )
+					house.Sign.RefreshHouse( from );
+			}
+			else
+			{
+				from.SendAsciiMessage( "There seems to be some problem with this house door.  It's house could not be found.  Contact a Game Master." );
+			}
 		}
 
 		public override bool UseLocks()
@@ -167,14 +149,6 @@ namespace Server.Items
 			BaseHouse house = FindHouse();
 
 			return ( house == null || !house.IsAosRules );
-		}
-
-		public override void Use( Mobile from )
-		{
-			if ( !CheckAccess( from ) )
-				from.SendLocalizedMessage( 1061637 ); // You are not allowed to access this.
-			else
-				base.Use( from );
 		}
 
 		public BaseHouseDoor( Serial serial ) : base( serial )
@@ -185,9 +159,7 @@ namespace Server.Items
 		{
 			base.Serialize( writer );
 
-			writer.Write( (int) 1 ); // version
-
-			writer.Write( (int) m_Level );
+			writer.Write( (int) 0 ); // version
 
 			writer.Write( (int) m_Facing );
 		}
@@ -200,16 +172,8 @@ namespace Server.Items
 
 			switch ( version )
 			{
-				case 1:
-				{
-					m_Level = (SecureLevel)reader.ReadInt();
-					goto case 0;
-				}
 				case 0:
 				{
-					if ( version < 1 )
-						m_Level = SecureLevel.Anyone;
-
 					m_Facing = (DoorFacing)reader.ReadInt();
 					break;
 				}
@@ -237,8 +201,6 @@ namespace Server.Items
 
 				case DoorFacing.NorthCW:
 				case DoorFacing.SouthCCW: x = 0; y = -r; w = ss; h = bs; break;
-
-				//No way to test the 'insideness' of SE Sliding doors on OSI, so leaving them default to false until furthur information gained
 
 				default: return false;
 			}

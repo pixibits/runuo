@@ -1,18 +1,14 @@
 using System;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server;
-using Server.Commands;
 using Server.Gumps;
-using Server.Mobiles;
 using Server.Network;
-using Server.Spells;
+using Server.Mobiles;
 
 namespace Server.Items
 {
-	public class PublicMoongate : Item
+	public class PublicMoongate : BaseItem
 	{
-		public override bool ForceShowProperties{ get{ return ObjectPropertyList.Enabled; } }
-
 		[Constructable]
 		public PublicMoongate() : base( 0xF6C )
 		{
@@ -37,50 +33,35 @@ namespace Server.Items
 
 		public override bool OnMoveOver( Mobile m )
 		{
-			// Changed so criminals are not blocked by it.
-			if ( m.Player )
-				UseGate( m );
-
-			return true;
-		}
-
-		public override bool HandlesOnMovement{ get{ return true; } }
-
-		public override void OnMovement( Mobile m, Point3D oldLocation )
-		{
-			if ( m is PlayerMobile )
-			{
-				if ( !Utility.InRange( m.Location, this.Location, 1 ) && Utility.InRange( oldLocation, this.Location, 1 ) )
-					m.CloseGump( typeof( MoongateGump ) );
-			}
+			return !UseGate( m );
 		}
 
 		public bool UseGate( Mobile m )
 		{
-			if ( m.Criminal )
-			{
-				m.SendLocalizedMessage( 1005561, "", 0x22 ); // Thou'rt a criminal and cannot escape so easily.
+			if ( m is BaseVendor )
 				return false;
-			}
-			else if ( SpellHelper.CheckCombat( m ) )
+
+			int idx = (int)Clock.GetMoonPhase( Map.Felucca, this.X, this.Y );
+			if ( idx < 0 || idx >= PMList.Felucca.Entries.Length )
+				idx = 0;//Utility.Random( PMList.Felucca.Entries.Length );
+			Point3D loc = PMList.Felucca.Entries[idx].Location;
+
+			Effects.PlaySound( loc, Map.Felucca, 0x1FE );
+			if ( loc != this.Location )
 			{
-				m.SendLocalizedMessage( 1005564, "", 0x22 ); // Wouldst thou flee during the heat of battle??
-				return false;
-			}
-			else if ( m.Spell != null )
-			{
-				m.SendLocalizedMessage( 1049616 ); // You are too busy to do that at the moment.
-				return false;
+				BaseCreature.TeleportPets( m, loc, Map.Felucca );
+
+				m.Combatant = null;
+				m.Warmode = false;
+				if ( m.AccessLevel == AccessLevel.Player )
+					m.Hidden = false;
+				m.Map = Map.Felucca;
+				m.Location = loc;
+				return true;
 			}
 			else
 			{
-				m.CloseGump( typeof( MoongateGump ) );
-				m.SendGump( new MoongateGump( m, this ) );
-
-				if ( !m.Hidden || m.AccessLevel == AccessLevel.Player )
-					Effects.PlaySound( m.Location, m.Map, 0x20E );
-
-				return true;
+				return false;
 			}
 		}
 
@@ -100,29 +81,25 @@ namespace Server.Items
 
 		public static void Initialize()
 		{
-			CommandSystem.Register( "MoonGen", AccessLevel.Administrator, new CommandEventHandler( MoonGen_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "MoonGen", AccessLevel.Administrator, new Server.Commands.CommandEventHandler( MoonGen_OnCommand ) );
 		}
 
 		[Usage( "MoonGen" )]
 		[Description( "Generates public moongates. Removes all old moongates." )]
-		public static void MoonGen_OnCommand( CommandEventArgs e )
+		public static void MoonGen_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			DeleteAll();
 
 			int count = 0;
 
-			count += MoonGen( PMList.Trammel );
 			count += MoonGen( PMList.Felucca );
-			count += MoonGen( PMList.Ilshenar );
-			count += MoonGen( PMList.Malas );
-			count += MoonGen( PMList.Tokuno );
 
 			World.Broadcast( 0x35, true, "{0} moongates generated.", count );
 		}
 
 		private static void DeleteAll()
 		{
-			List<Item> list = new List<Item>();
+			ArrayList list = new ArrayList();
 
 			foreach ( Item item in World.Items.Values )
 			{
@@ -238,7 +215,7 @@ namespace Server.Items
 					new PMEntry( new Point3D( 1828, 2948,-20), 1012008 ), // Trinsic
 					new PMEntry( new Point3D(  643, 2067, 5 ), 1012009 ), // Skara Brae
 					new PMEntry( new Point3D( 3563, 2139, 34), 1012010 ), // Magincia
-					new PMEntry( new Point3D( 3450, 2677, 25), 1078098 )  // New Haven
+					new PMEntry( new Point3D( 3763, 2771, 50), 1046259 )  // Haven
 				} );
 
 		public static readonly PMList Felucca =
@@ -252,7 +229,7 @@ namespace Server.Items
 					new PMEntry( new Point3D( 1828, 2948,-20), 1012008 ), // Trinsic
 					new PMEntry( new Point3D(  643, 2067, 5 ), 1012009 ), // Skara Brae
 					new PMEntry( new Point3D( 3563, 2139, 34), 1012010 ), // Magincia
-					new PMEntry( new Point3D( 2711, 2234, 0 ), 1019001 )  // Buccaneer's Den
+					//new PMEntry( new Point3D( 2711, 2234, 0 ), 1019001 )  // Buccaneer's Den (No moongate @ buc's in preuor
 				} );
 
 		public static readonly PMList Ilshenar =
@@ -276,24 +253,10 @@ namespace Server.Items
 					new PMEntry( new Point3D( 1997, 1386, -85 ), 1060642 )  // Umbra
 				} );
 
-		public static readonly PMList Tokuno =
-			new PMList( 1063258, 1063415, Map.Tokuno, new PMEntry[]
-				{
-					new PMEntry( new Point3D( 1169,  998, 41 ), 1063412 ), // Isamu-Jima
-					new PMEntry( new Point3D(  802, 1204, 25 ), 1063413 ), // Makoto-Jima
-					new PMEntry( new Point3D(  270,  628, 15 ), 1063414 )  // Homare-Jima
-				} );
-
-		public static readonly PMList[] UORLists		= new PMList[] { Trammel, Felucca };
-		public static readonly PMList[] UORListsYoung	= new PMList[] { Trammel };
-		public static readonly PMList[] LBRLists		= new PMList[] { Trammel, Felucca, Ilshenar };
-		public static readonly PMList[] LBRListsYoung	= new PMList[] { Trammel, Ilshenar };
-		public static readonly PMList[] AOSLists		= new PMList[] { Trammel, Felucca, Ilshenar, Malas };
-		public static readonly PMList[] AOSListsYoung	= new PMList[] { Trammel, Ilshenar, Malas };
-		public static readonly PMList[] SELists			= new PMList[] { Trammel, Felucca, Ilshenar, Malas, Tokuno };
-		public static readonly PMList[] SEListsYoung	= new PMList[] { Trammel, Ilshenar, Malas, Tokuno };
-		public static readonly PMList[] RedLists		= new PMList[] { Felucca };
-		public static readonly PMList[] SigilLists		= new PMList[] { Felucca };
+		public static readonly PMList[] UORLists = new PMList[]{ Felucca };
+		public static readonly PMList[] LBRLists = new PMList[]{ Felucca };
+		public static readonly PMList[] AOSLists = new PMList[]{ Felucca };
+		public static readonly PMList[] RedLists = new PMList[]{ Felucca };
 	}
 
 	public class MoongateGump : Gump
@@ -311,32 +274,18 @@ namespace Server.Items
 
 			if ( mobile.Player )
 			{
-				if ( Factions.Sigil.ExistsOn( mobile ) )
-				{
-					checkLists = PMList.SigilLists;
-				}
-				else if ( mobile.Kills >= 5 )
+				if ( mobile.Kills >= 5 )
 				{
 					checkLists = PMList.RedLists;
 				}
 				else
 				{
-					ClientFlags flags = mobile.NetState == null ? ClientFlags.None : mobile.NetState.Flags;
-					bool young = mobile is PlayerMobile ? ((PlayerMobile)mobile).Young : false;
-
-					if ( Core.SE && (flags & ClientFlags.Tokuno) != 0 )
-						checkLists = young ? PMList.SEListsYoung : PMList.SELists;
-					else if ( Core.AOS && (flags & ClientFlags.Malas) != 0 )
-						checkLists = young ? PMList.AOSListsYoung : PMList.AOSLists;
-					else if ( (flags & ClientFlags.Ilshenar) != 0 )
-						checkLists = young ? PMList.LBRListsYoung : PMList.LBRLists;
-					else
-						checkLists = young ? PMList.UORListsYoung : PMList.UORLists;
+					checkLists = PMList.UORLists;
 				}
 			}
 			else
 			{
-				checkLists = PMList.SELists;
+				checkLists = PMList.AOSLists;
 			}
 
 			m_Lists = new PMList[checkLists.Length];
@@ -427,11 +376,7 @@ namespace Server.Items
 			{
 				m_Mobile.SendLocalizedMessage( 1019002 ); // You are too far away to use the gate.
 			}
-			else if ( m_Mobile.Player && m_Mobile.Kills >= 5 && list.Map != Map.Felucca )
-			{
-				m_Mobile.SendLocalizedMessage( 1019004 ); // You are not allowed to travel there.
-			}
-			else if ( Factions.Sigil.ExistsOn( m_Mobile ) && list.Map != Factions.Faction.Facet )
+			else if ( m_Mobile.Kills >= 5 && list.Map != Map.Felucca )
 			{
 				m_Mobile.SendLocalizedMessage( 1019004 ); // You are not allowed to travel there.
 			}
@@ -439,13 +384,12 @@ namespace Server.Items
 			{
 				m_Mobile.SendLocalizedMessage( 1005561, "", 0x22 ); // Thou'rt a criminal and cannot escape so easily.
 			}
-			else if ( SpellHelper.CheckCombat( m_Mobile ) )
+			else if ( m_Mobile.Player && m_Mobile.Kills >= 5 && list.Map != Map.Felucca )
+			{
+			}
+			else if ( Server.Spells.SpellHelper.CheckCombat( m_Mobile ) )
 			{
 				m_Mobile.SendLocalizedMessage( 1005564, "", 0x22 ); // Wouldst thou flee during the heat of battle??
-			}
-			else if ( m_Mobile.Spell != null )
-			{
-				m_Mobile.SendLocalizedMessage( 1049616 ); // You are too busy to do that at the moment.
 			}
 			else if ( m_Mobile.Map == list.Map && m_Mobile.InRange( entry.Location, 1 ) )
 			{
@@ -457,9 +401,9 @@ namespace Server.Items
 
 				m_Mobile.Combatant = null;
 				m_Mobile.Warmode = false;
-				m_Mobile.Hidden = true;
-
-				m_Mobile.MoveToWorld( entry.Location, list.Map );
+				m_Mobile.Hidden = false;
+				m_Mobile.Map = list.Map;
+				m_Mobile.Location = entry.Location;
 
 				Effects.PlaySound( entry.Location, list.Map, 0x1FE );
 			}

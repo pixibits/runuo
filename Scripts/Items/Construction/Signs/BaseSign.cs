@@ -3,7 +3,7 @@ using Server.Network;
 
 namespace Server.Items
 {
-	public abstract class BaseSign : Item
+	public abstract class BaseSign : BaseItem
 	{
 		public BaseSign( int dispID ) : base( dispID )
 		{

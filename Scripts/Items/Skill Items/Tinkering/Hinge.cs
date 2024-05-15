@@ -4,7 +4,7 @@ using Server;
 namespace Server.Items
 {
 	[Flipable( 0x1055, 0x1056 )]
-	public class Hinge : Item
+	public class Hinge : BaseItem
 	{
 		[Constructable]
 		public Hinge() : this( 1 )
@@ -22,6 +22,12 @@ namespace Server.Items
 		public Hinge( Serial serial ) : base( serial )
 		{
 		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Hinge(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );

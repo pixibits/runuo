@@ -4,17 +4,16 @@ using Server.Network;
 
 namespace Server.Spells.First
 {
-	public class WeakenSpell : MagerySpell
+	public class WeakenSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Weaken", "Des Mani",
+				SpellCircle.First,
 				212,
 				9031,
 				Reagent.Garlic,
 				Reagent.Nightshade
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.First; } }
 
 		public WeakenSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -39,18 +38,10 @@ namespace Server.Spells.First
 
 				SpellHelper.AddStatCurse( Caster, m, StatType.Str );
 
-				if ( m.Spell != null )
-					m.Spell.OnCasterHurt();
-
 				m.Paralyzed = false;
 
 				m.FixedParticles( 0x3779, 10, 15, 5009, EffectLayer.Waist );
 				m.PlaySound( 0x1E6 );
-
-				int percentage = (int)(SpellHelper.GetOffsetScalar( Caster, m, true )*100);
-				TimeSpan length = SpellHelper.GetDuration( Caster, m );
-
-				BuffInfo.AddBuff( m, new BuffInfo( BuffIcon.Weaken, 1075837, length, m, percentage.ToString() ) );
 			}
 
 			FinishSequence();
@@ -60,7 +51,7 @@ namespace Server.Spells.First
 		{
 			private WeakenSpell m_Owner;
 
-			public InternalTarget( WeakenSpell owner ) : base( Core.ML ? 10 : 12, false, TargetFlags.Harmful )
+			public InternalTarget( WeakenSpell owner ) : base( 12, false, TargetFlags.Harmful )
 			{
 				m_Owner = owner;
 			}

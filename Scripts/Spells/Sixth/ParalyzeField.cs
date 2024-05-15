@@ -3,14 +3,14 @@ using Server.Targeting;
 using Server.Items;
 using Server.Network;
 using Server.Misc;
-using Server.Mobiles;
 
 namespace Server.Spells.Sixth
 {
-	public class ParalyzeFieldSpell : MagerySpell
+	public class ParalyzeFieldSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Paralyze Field", "In Ex Grav",
+				SpellCircle.Sixth,
 				230,
 				9012,
 				false,
@@ -18,8 +18,6 @@ namespace Server.Spells.Sixth
 				Reagent.Ginseng,
 				Reagent.SpidersSilk
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Sixth; } }
 
 		public ParalyzeFieldSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -83,7 +81,7 @@ namespace Server.Spells.Sixth
 		}
 
 		[DispellableField]
-		public class InternalItem : Item
+		private class InternalItem : BaseItem
 		{
 			private Timer m_Timer;
 			private Mobile m_Caster;
@@ -160,31 +158,16 @@ namespace Server.Spells.Sixth
 
 			public override bool OnMoveOver( Mobile m )
 			{
-				if ( Visible && m_Caster != null && (!Core.AOS || m != m_Caster) && SpellHelper.ValidIndirectTarget( m_Caster, m ) && m_Caster.CanBeHarmful( m, false ) )
+				if ( Visible && m_Caster != null && SpellHelper.ValidIndirectTarget( m_Caster, m ) && m_Caster.CanBeHarmful( m, false ) )
 				{
-					if ( SpellHelper.CanRevealCaster( m ) )
-						m_Caster.RevealingAction();
-
 					m_Caster.DoHarmful( m );
 
-					double duration;
+					double duration = (m_Caster.Skills[SkillName.Magery].Value / 10 + 1) * 2 + 5;
 
-					if ( Core.AOS )
-					{
-						duration = 2.0 + ((int)(m_Caster.Skills[SkillName.EvalInt].Value / 10) - (int)(m.Skills[SkillName.MagicResist].Value / 10));
-
-						if ( !m.Player )
-							duration *= 3.0;
-
-						if ( duration < 0.0 )
-							duration = 0.0;
-					}
+					if ( !m.CheckSkill( SkillName.MagicResist, 10.0, 50.0 ) ) // CheckResistedEasy
+						m.Paralyze( TimeSpan.FromSeconds( duration ) );
 					else
-					{
-						duration = 7.0 + (m_Caster.Skills[SkillName.Magery].Value * 0.2);
-					}
-
-					m.Paralyze( TimeSpan.FromSeconds( duration ) );
+						m.SendLocalizedMessage( 501783 ); // You feel yourself resisting magical energy.
 
 					m.PlaySound( 0x204 );
 					m.FixedEffect( 0x376A, 10, 16 );
@@ -214,7 +197,7 @@ namespace Server.Spells.Sixth
 		{
 			private ParalyzeFieldSpell m_Owner;
 
-			public InternalTarget( ParalyzeFieldSpell owner ) : base( Core.ML ? 10 : 12, true, TargetFlags.None )
+			public InternalTarget( ParalyzeFieldSpell owner ) : base( 12, true, TargetFlags.None )
 			{
 				m_Owner = owner;
 			}

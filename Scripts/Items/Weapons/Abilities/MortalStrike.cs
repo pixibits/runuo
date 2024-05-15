@@ -1,5 +1,5 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 
 namespace Server.Items
 {
@@ -32,9 +32,7 @@ namespace Server.Items
 			defender.PlaySound( 0x1E1 );
 			defender.FixedParticles( 0x37B9, 244, 25, 9944, 31, 0, EffectLayer.Waist );
 
-			// Do not reset timer if one is already in place.
-			if ( !IsWounded( defender ) )
-				BeginWound( defender, defender.Player ? PlayerDuration : NPCDuration );
+			BeginWound( defender, defender.Player ? PlayerDuration : NPCDuration );
 		}
 
 		private static Hashtable m_Table = new Hashtable();
@@ -61,9 +59,6 @@ namespace Server.Items
 
 		public static void EndWound( Mobile m )
 		{
-			if ( !IsWounded( m ) )
-				return;
-
 			Timer t = (Timer)m_Table[m];
 
 			if ( t != null )

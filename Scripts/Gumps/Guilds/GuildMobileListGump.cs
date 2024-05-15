@@ -1,8 +1,7 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Guilds;
-using System.Collections.Generic;
 
 namespace Server.Gumps
 {
@@ -10,10 +9,9 @@ namespace Server.Gumps
 	{
 		protected Mobile m_Mobile;
 		protected Guild m_Guild;
-		protected List<Mobile> m_List;
+		protected ArrayList m_List;
 
-		public GuildMobileListGump( Mobile from, Guild guild, bool radio, List<Mobile> list )
-			: base( 20, 30 )
+		public GuildMobileListGump( Mobile from, Guild guild, bool radio, ArrayList list ) : base( 20, 30 )
 		{
 			m_Mobile = from;
 			m_Guild = guild;
@@ -26,7 +24,7 @@ namespace Server.Gumps
 
 			Design();
 
-			m_List = new List<Mobile>( list );
+			m_List = new ArrayList( list );
 
 			for ( int i = 0; i < m_List.Count; ++i )
 			{
@@ -50,7 +48,7 @@ namespace Server.Gumps
 				if ( radio )
 					AddRadio( 20, 35 + ((i % 11) * 30), 208, 209, false, i );
 
-				Mobile m = m_List[i];
+				Mobile m = (Mobile)m_List[i];
 
 				string name;
 

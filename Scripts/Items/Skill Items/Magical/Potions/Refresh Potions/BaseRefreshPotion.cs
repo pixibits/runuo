@@ -37,11 +37,11 @@ namespace Server.Items
 
 				BasePotion.PlayDrinkEffect( from );
 
-				this.Consume();
+				this.Delete();
 			}
 			else
 			{
-				from.SendMessage( "You decide against drinking this potion, as you are already at full stamina." );
+				from.SendAsciiMessage( "You decide against drinking this potion, as you are already at full stamina." );
 			}
 		}
 	}

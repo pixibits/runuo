@@ -4,7 +4,7 @@ using Server.Targeting;
 
 namespace Server.Items
 {
-	public class Scales : Item
+	public class Scales : BaseItem
 	{
 		[Constructable]
 		public Scales() : base( 0x1852 )
@@ -86,7 +86,7 @@ namespace Server.Items
 					message = "You cannot weigh that object.";
 				}
 
-				from.SendMessage( message );
+				from.SendAsciiMessage( message );
 			}
 		}
 	}

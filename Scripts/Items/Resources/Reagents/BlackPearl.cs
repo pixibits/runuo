@@ -6,8 +6,13 @@ namespace Server.Items
 {
 	public class BlackPearl : BaseReagent, ICommodity
 	{
-		int ICommodity.DescriptionNumber { get { return LabelNumber; } }
-		bool ICommodity.IsDeedable { get { return true; } }
+		string ICommodity.Description
+		{
+			get
+			{
+				return String.Format( "{0} black pearl", Amount );
+			}
+		}
 
 		[Constructable]
 		public BlackPearl() : this( 1 )
@@ -21,6 +26,11 @@ namespace Server.Items
 
 		public BlackPearl( Serial serial ) : base( serial )
 		{
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new BlackPearl( amount ), amount );
 		}
 
 		public override void Serialize( GenericWriter writer )

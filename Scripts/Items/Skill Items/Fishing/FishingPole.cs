@@ -1,14 +1,12 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server.Targeting;
 using Server.Items;
 using Server.Engines.Harvest;
-using System.Collections.Generic;
-using Server.ContextMenus;
 
 namespace Server.Items
 {
-	public class FishingPole : Item
+	public class FishingPole : BaseItem
 	{
 		[Constructable]
 		public FishingPole() : base( 0x0DC0 )
@@ -22,7 +20,7 @@ namespace Server.Items
 			Fishing.System.BeginHarvesting( from, this );
 		}
 
-		public override void GetContextMenuEntries( Mobile from, List<ContextMenuEntry> list )
+		public override void GetContextMenuEntries( Mobile from, List<ContextMenus.ContextMenuEntry> list )
 		{
 			base.GetContextMenuEntries( from, list );
 

@@ -31,6 +31,7 @@ namespace Server.Items
 	}
 
 	[Server.Engines.Craft.Forge]
+	[Server.Engines.Craft.Anvil]
 	public class ForgeComponent : AddonComponent
 	{
 		[Constructable]
@@ -57,56 +58,7 @@ namespace Server.Items
 		}
 	}
 
-	public class LocalizedAddonComponent : AddonComponent
-	{
-		private int m_LabelNumber;
-
-		[CommandProperty( AccessLevel.GameMaster )]
-		public int Number
-		{
-			get{ return m_LabelNumber; }
-			set{ m_LabelNumber = value; InvalidateProperties(); }
-		}
-
-		public override int LabelNumber{ get{ return m_LabelNumber; } }
-
-		[Constructable]
-		public LocalizedAddonComponent( int itemID, int labelNumber ) : base( itemID )
-		{
-			m_LabelNumber = labelNumber;
-		}
-
-		public LocalizedAddonComponent( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-
-			writer.Write( (int) 0 ); // version
-
-			writer.Write( (int) m_LabelNumber );
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-
-			switch ( version )
-			{
-				case 0:
-				{
-					m_LabelNumber = reader.ReadInt();
-					break;
-				}
-			}
-		}
-	}
-
-	public class AddonComponent : Item, IChopable
+	public class AddonComponent : BaseItem, IChopable
 	{
 		private Point3D m_Offset;
 		private BaseAddon m_Addon;
@@ -153,9 +105,6 @@ namespace Server.Items
 			}
 		}
 
-		public virtual bool NeedsWall{ get{ return false; } }
-		public virtual Point3D WallPosition{ get{ return Point3D.Zero; } }
-
 		[Constructable]
 		public AddonComponent( int itemID ) : base( itemID )
 		{
@@ -165,12 +114,6 @@ namespace Server.Items
 
 		public AddonComponent( Serial serial ) : base( serial )
 		{
-		}
-
-		public override void OnDoubleClick( Mobile from )
-		{
-			if ( m_Addon != null )
-				m_Addon.OnComponentUsed( this, from );
 		}
 
 		public void OnChop( Mobile from )
@@ -205,7 +148,7 @@ namespace Server.Items
 		{
 			base.Serialize( writer );
 
-			writer.Write( (int) 1 ); // version
+			writer.Write( (int) 0 ); // version
 
 			writer.Write( m_Addon );
 			writer.Write( m_Offset );
@@ -219,7 +162,6 @@ namespace Server.Items
 
 			switch ( version )
 			{
-				case 1:
 				case 0:
 				{
 					m_Addon = reader.ReadItem() as BaseAddon;
@@ -233,9 +175,6 @@ namespace Server.Items
 					break;
 				}
 			}
-
-			if ( version < 1 && Weight == 0 )
-				Weight = -1;
 		}
 
 		public static void ApplyLightTo( Item item )
@@ -266,8 +205,7 @@ namespace Server.Items
 			{
 				new LightEntry( LightType.WestSmall, 1122, 1123, 1124, 1141, 1142, 1143, 1144, 1145, 1146, 2347, 2359, 2360, 2361, 2362, 2363, 2364, 2387, 2388, 2389, 2390, 2391, 2392 ),
 				new LightEntry( LightType.NorthSmall, 1131, 1133, 1134, 1147, 1148, 1149, 1150, 1151, 1152, 2352, 2373, 2374, 2375, 2376, 2377, 2378, 2401, 2402, 2403, 2404, 2405, 2406 ),
-				new LightEntry( LightType.Circle300, 6526, 6538, 6571 ),
-				new LightEntry( LightType.Circle150, 5703, 6587 )
+				new LightEntry( LightType.Circle300, 6526, 6538 )
 			};
 
 		private class LightEntry

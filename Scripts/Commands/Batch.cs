@@ -1,13 +1,11 @@
 using System;
 using System.Reflection;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Gumps;
 using Server.Network;
-using Server.Commands;
-using Server.Commands.Generic;
 
-namespace Server.Commands
+namespace Server.Scripts.Commands
 {
 	public class Batch : BaseCommand
 	{
@@ -41,7 +39,7 @@ namespace Server.Commands
 			m_Condition = "";
 		}
 
-		public override void ExecuteList( CommandEventArgs e, ArrayList list )
+		public override void ExecuteList( Server.Commands.CommandEventArgs e, ArrayList list )
 		{
 			if ( list.Count == 0 )
 			{
@@ -52,7 +50,7 @@ namespace Server.Commands
 			try
 			{
 				BaseCommand[] commands = new BaseCommand[m_BatchCommands.Count];
-				CommandEventArgs[] eventArgs = new CommandEventArgs[m_BatchCommands.Count];
+				Server.Commands.CommandEventArgs[] eventArgs = new Server.Commands.CommandEventArgs[m_BatchCommands.Count];
 
 				for ( int i = 0; i < m_BatchCommands.Count; ++i )
 				{
@@ -63,10 +61,10 @@ namespace Server.Commands
 
 					bc.GetDetails( out commandString, out argString, out args );
 
-					BaseCommand command = m_Scope.Commands[commandString];
+					BaseCommand command = (BaseCommand)m_Scope.Commands[commandString];
 
 					commands[i] = command;
-					eventArgs[i] = new CommandEventArgs( e.Mobile, commandString, argString, args );
+					eventArgs[i] = new Server.Commands.CommandEventArgs( e.Mobile, commandString, argString, args );
 
 					if ( command == null )
 					{
@@ -173,7 +171,7 @@ namespace Server.Commands
 				return false;
 			}
 
-			string[] args = CommandSystem.Split( m_Condition );
+			string[] args = Server.Commands.CommandSystem.Split( m_Condition );
 
 			m_Scope.Process( from, this, args );
 
@@ -182,12 +180,12 @@ namespace Server.Commands
 
 		public static void Initialize()
 		{
-			CommandSystem.Register( "Batch", AccessLevel.Counselor, new CommandEventHandler( Batch_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "Batch", AccessLevel.Counselor, new Server.Commands.CommandEventHandler( Batch_OnCommand ) );
 		}
 
 		[Usage( "Batch" )]
 		[Description( "Allows multiple commands to be run at the same time." )]
-		public static void Batch_OnCommand( CommandEventArgs e )
+		public static void Batch_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			Batch batch = new Batch();
 
@@ -221,7 +219,7 @@ namespace Server.Commands
 				argString = m_Command.Substring( indexOf + 1 );
 
 				command = m_Command.Substring( 0, indexOf );
-				args = CommandSystem.Split( argString );
+				args = Server.Commands.CommandSystem.Split( argString );
 			}
 			else
 			{
@@ -355,7 +353,7 @@ namespace Server.Commands
 				if ( entry != null )
 					sc.Object = entry.Text;
 
-				if ( sc.Command.Length == 0 && sc.Object.Length == 0 )
+				if ( sc.Command == "" && sc.Object == "" )
 					m_Batch.BatchCommands.RemoveAt( i );
 			}
 
@@ -415,7 +413,7 @@ namespace Server.Commands
 			/* Options */
 			for ( int i = 0; i < BaseCommandImplementor.Implementors.Count; ++i )
 			{
-				BaseCommandImplementor impl = BaseCommandImplementor.Implementors[i];
+				BaseCommandImplementor impl = (BaseCommandImplementor)BaseCommandImplementor.Implementors[i];
 
 				if ( m_From.AccessLevel < impl.AccessLevel )
 					continue;
@@ -441,7 +439,7 @@ namespace Server.Commands
 					{
 						if ( index < BaseCommandImplementor.Implementors.Count )
 						{
-							BaseCommandImplementor impl = BaseCommandImplementor.Implementors[index];
+							BaseCommandImplementor impl = (BaseCommandImplementor)BaseCommandImplementor.Implementors[index];
 
 							if ( m_From.AccessLevel >= impl.AccessLevel )
 								m_Batch.Scope = impl;

@@ -2,7 +2,7 @@ using System;
 
 namespace Server.Items
 {
-	public class Beeswax : Item
+	public class Beeswax : BaseItem
 	{
 		[Constructable]
 		public Beeswax() : this( 1 )
@@ -21,7 +21,10 @@ namespace Server.Items
 		{
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Beeswax( amount ), amount );
+		}
 
 		public override void Serialize( GenericWriter writer )
 		{

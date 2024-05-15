@@ -20,11 +20,6 @@ namespace Server.Items
 		{
 		}
 
-		// Intended for defined books only
-		public BrownBook( bool writable ) : base( 0xFEF, writable )
-		{
-		}
-
 		public BrownBook( Serial serial ) : base( serial )
 		{
 		}

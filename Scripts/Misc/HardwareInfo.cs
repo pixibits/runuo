@@ -1,6 +1,6 @@
 using System;
 using Server;
-using Server.Commands;
+using Server.Scripts.Commands;
 using Server.Accounting;
 using Server.Network;
 using Server.Targeting;
@@ -20,7 +20,6 @@ namespace Server
 		private string m_VCDescription;
 		private string m_Language;
 		private string m_Unknown;
-        private DateTime m_TimeReceived;
 
 		[CommandProperty( AccessLevel.GameMaster )]
 		public int CpuModel{ get{ return m_CpuModel; } }
@@ -97,22 +96,18 @@ namespace Server
 		[CommandProperty( AccessLevel.GameMaster )]
 		public string Unknown{ get{ return m_Unknown; } }
 
-        [CommandProperty( AccessLevel.GameMaster )]
-        public DateTime TimeReceived { get { return m_TimeReceived; } }
-
 		public static void Initialize()
 		{
 			PacketHandlers.Register( 0xD9, 0x10C, false, new OnPacketReceive( OnReceive ) );
-
-			CommandSystem.Register( "HWInfo", AccessLevel.GameMaster, new CommandEventHandler( HWInfo_OnCommand ) );
+			Commands.CommandSystem.Register( "HWInfo", AccessLevel.GameMaster, new Server.Commands.CommandEventHandler( HWInfo_OnCommand ) );
 		}
 
 		[Usage( "HWInfo" )]
 		[Description( "Displays information about a targeted player's hardware." )]
-		public static void HWInfo_OnCommand( CommandEventArgs e )
+		public static void HWInfo_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			e.Mobile.BeginTarget( -1, false, TargetFlags.None, new TargetCallback( HWInfo_OnTarget ) );
-			e.Mobile.SendMessage( "Target a player to view their hardware information." );
+			e.Mobile.SendAsciiMessage( "Target a player to view their hardware information." );
 		}
 
 		public static void HWInfo_OnTarget( Mobile from, object obj )
@@ -132,18 +127,39 @@ namespace Server
 					if ( hwInfo != null )
 						from.SendGump( new Gumps.PropertiesGump( from, hwInfo ) );
 					else
-						from.SendMessage( "No hardware information for that account was found." );
+						from.SendAsciiMessage( "No hardware information for that account was found." );
 				}
 				else
 				{
-					from.SendMessage( "No account has been attached to that player." );
+					from.SendAsciiMessage( "No account has been attached to that player." );
 				}
 			}
 			else
 			{
 				from.BeginTarget( -1, false, TargetFlags.None, new TargetCallback( HWInfo_OnTarget ) );
-				from.SendMessage( "That is not a player. Try again." );
+				from.SendAsciiMessage( "That is not a player. Try again." );
 			}
+		}
+
+		public bool Equals( HardwareInfo hw )
+		{
+			return 
+				hw.m_OSMajor == m_OSMajor &&
+				hw.m_OSMinor == m_OSMinor &&
+				hw.m_OSRevision == m_OSRevision &&
+				hw.m_CpuManufacturer == m_CpuManufacturer &&
+				hw.m_CpuFamily == m_CpuFamily &&
+				hw.m_CpuModel == m_CpuModel &&
+				hw.m_CpuClockSpeed == m_CpuClockSpeed &&
+				hw.m_PhysicalMemory == m_PhysicalMemory &&
+				//hw.m_ScreenWidth == m_ScreenWidth &&
+				//hw.m_ScreenHeight == m_ScreenHeight &&
+				//hw.m_ScreenDepth == m_ScreenDepth &&
+				hw.m_DXMajor == m_DXMajor &&
+				hw.m_DXMinor == m_DXMinor &&
+				hw.m_VCVendorID == m_VCVendorID &&
+				hw.m_VCDeviceID == m_VCDeviceID &&
+				hw.m_VCMemory == m_VCMemory ;
 		}
 
 		public static void OnReceive( NetState state, PacketReader pvSrc )
@@ -177,8 +193,6 @@ namespace Server
 			info.m_PartialInstalled = pvSrc.ReadByte();
 			info.m_Language = pvSrc.ReadUnicodeStringLESafe( 4 );
 			info.m_Unknown = pvSrc.ReadStringSafe( 64 );
-
-            info.m_TimeReceived = DateTime.Now;
 
 			Account acct = state.Account as Account;
 

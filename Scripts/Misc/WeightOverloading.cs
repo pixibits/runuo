@@ -51,25 +51,15 @@ namespace Server.Misc
 
 		public static int GetMaxWeight( Mobile m )
 		{
-			//return ((( Core.ML && m.Race == Race.Human) ? 100 : 40 ) + (int)(3.5 * m.Str));
-			//Moved to core virtual method for use there
-
-			return m.MaxWeight;
+			return 40 + (int)(3.5 * m.Str);
 		}
 
 		public static void EventSink_Movement( MovementEventArgs e )
 		{
 			Mobile from = e.Mobile;
 
-			if ( !from.Alive || from.AccessLevel > AccessLevel.Player  )
+			if ( !from.Player || !from.Alive || from.AccessLevel >= AccessLevel.GameMaster )
 				return;
-
-			if ( !from.Player )
-			{
-				// Else it won't work on monsters.
-				Spells.Ninjitsu.DeathStrike.AddStep( from );
-				return;
-			}
 
 			int maxWeight = GetMaxWeight( from ) + OverloadAllowance;
 			int overWeight = (Mobile.BodyWeight + from.TotalWeight) - maxWeight;
@@ -86,26 +76,6 @@ namespace Server.Misc
 				}
 			}
 
-			if ( ((from.Stam * 100) / Math.Max( from.StamMax, 1 )) < 10 )
-				--from.Stam;
-
-			if ( from.Stam == 0 )
-			{
-				from.SendLocalizedMessage( 500110 ); // You are too fatigued to move.
-				e.Blocked = true;
-				return;
-			}
-
-			if ( from is PlayerMobile )
-			{
-				int amt = ( from.Mounted ? 48 : 16 );
-				PlayerMobile pm = (PlayerMobile)from;
-
-				if ( (++pm.StepsTaken % amt) == 0 )
-					--from.Stam;
-			}
-
-			Spells.Ninjitsu.DeathStrike.AddStep( from );
 		}
 
 		public static int GetStamLoss( Mobile from, int overWeight, bool running )
@@ -123,7 +93,7 @@ namespace Server.Misc
 
 		public static bool IsOverloaded( Mobile m )
 		{
-			if ( !m.Player || !m.Alive || m.AccessLevel > AccessLevel.Player )
+			if ( !m.Player || !m.Alive || m.AccessLevel >= AccessLevel.GameMaster )
 				return false;
 
 			return ( (Mobile.BodyWeight + m.TotalWeight) > (GetMaxWeight( m ) + OverloadAllowance) );

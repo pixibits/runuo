@@ -1,6 +1,5 @@
 using System;
 using Server;
-using Server.Commands;
 
 namespace Server.Misc
 {
@@ -15,17 +14,17 @@ namespace Server.Misc
 
 		public static void Initialize()
 		{
-			CommandSystem.Register( "ValidateName", AccessLevel.Administrator, new CommandEventHandler( ValidateName_OnCommand ) );
+			Commands.CommandSystem.Register( "ValidateName", AccessLevel.Administrator, new Server.Commands.CommandEventHandler( ValidateName_OnCommand ) );
 		}
 
 		[Usage( "ValidateName" )]
 		[Description( "Checks the result of NameValidation on the specified name." )]
-		public static void ValidateName_OnCommand( CommandEventArgs e )
+		public static void ValidateName_OnCommand( Server.Commands.CommandEventArgs e )
 		{
-			if ( Validate( e.ArgString, 2, 16, true, false, true, 1, SpaceDashPeriodQuote ) )
-				e.Mobile.SendMessage( 0x59, "That name is considered valid." );
+			if ( Validate( e.ArgString, 2, 16, true, true, true, 1, SpaceDashPeriodQuote ) )
+				e.Mobile.SendAsciiMessage( 0x59, "That name is considered valid." );
 			else
-				e.Mobile.SendMessage( 0x22, "That name is considered invalid." );
+				e.Mobile.SendAsciiMessage( 0x22, "That name is considered invalid." );
 		}
 
 		public static bool Validate( string name, int minLength, int maxLength, bool allowLetters, bool allowDigits, bool noExceptionsAtStart, int maxExceptions, char[] exceptions )
@@ -35,7 +34,7 @@ namespace Server.Misc
 
 		public static bool Validate( string name, int minLength, int maxLength, bool allowLetters, bool allowDigits, bool noExceptionsAtStart, int maxExceptions, char[] exceptions, string[] disallowed, string[] startDisallowed )
 		{
-			if ( name == null || name.Length < minLength || name.Length > maxLength )
+			if ( name.Length < minLength || name.Length > maxLength )
 				return false;
 
 			int exceptCount = 0;
@@ -112,15 +111,11 @@ namespace Server.Misc
 			return true;
 		}
 
-		public static string[] StartDisallowed { get { return m_StartDisallowed; } }
-		public static string[] Disallowed { get { return m_Disallowed; } }
-
 		private static string[] m_StartDisallowed = new string[]
 			{
 				"seer",
 				"counselor",
 				"gm",
-				"admin",
 				"lady",
 				"lord"
 			};

@@ -3,7 +3,7 @@ using System.IO;
 using Server;
 using Server.Accounting;
 
-namespace Server.Commands
+namespace Server.Scripts.Commands
 {
 	public class CommandLogging
 	{
@@ -16,7 +16,7 @@ namespace Server.Commands
 
 		public static void Initialize()
 		{
-			EventSink.Command += new CommandEventHandler( EventSink_Command );
+			EventSink.Command += new Server.Commands.CommandEventHandler( EventSink_Command );
 
 			if ( !Directory.Exists( "Logs" ) )
 				Directory.CreateDirectory( "Logs" );
@@ -50,7 +50,7 @@ namespace Server.Commands
 				if ( m.Account == null )
 					return String.Format( "{0} (no account)", m );
 				else
-					return String.Format( "{0} ('{1}')", m, m.Account.Username );
+					return String.Format( "{0} ('{1}')", m, ((Account)m.Account).Username );
 			}
 			else if ( o is Item )
 			{
@@ -64,9 +64,6 @@ namespace Server.Commands
 
 		public static void WriteLine( Mobile from, string format, params object[] args )
 		{
-			if ( !m_Enabled )
-				return;
-
 			WriteLine( from, String.Format( format, args ) );
 		}
 
@@ -134,7 +131,7 @@ namespace Server.Commands
 			return sb.ToString();
 		}
 
-		public static void EventSink_Command( CommandEventArgs e )
+		public static void EventSink_Command( Server.Commands.CommandEventArgs e )
 		{
 			WriteLine( e.Mobile, "{0} {1} used command '{2} {3}'", e.Mobile.AccessLevel, Format( e.Mobile ), e.Command, e.ArgString );
 		}

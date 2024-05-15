@@ -1,10 +1,8 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Items;
 using Server.Engines.Harvest;
-using Server.ContextMenus;
 
 namespace Server.Items
 {
@@ -56,7 +54,7 @@ namespace Server.Items
 				from.SendLocalizedMessage( 1042001 ); // That must be in your pack for you to use it.
 		}
 
-		public override void GetContextMenuEntries( Mobile from, List<ContextMenuEntry> list )
+		public override void GetContextMenuEntries( Mobile from, List<ContextMenus.ContextMenuEntry> list )
 		{
 			base.GetContextMenuEntries( from, list );
 
@@ -99,25 +97,6 @@ namespace Server.Items
 						m_UsesRemaining = 150;
 
 					break;
-				}
-			}
-		}
-
-		public override void OnHit( Mobile attacker, Mobile defender, double damageBonus )
-		{
-			base.OnHit( attacker, defender, damageBonus );
-
-			if ( !Core.AOS && (attacker.Player || attacker.Body.IsHuman) && Layer == Layer.TwoHanded && (attacker.Skills[SkillName.Anatomy].Value / 400.0) >= Utility.RandomDouble() )
-			{
-				StatMod mod = defender.GetStatMod( "Concussion" );
-
-				if ( mod == null )
-				{
-					defender.SendMessage( "You receive a concussion blow!" );
-					defender.AddStatMod( new StatMod( StatType.Int, "Concussion", -(defender.RawInt / 2), TimeSpan.FromSeconds( 30.0 ) ) );
-
-					attacker.SendMessage( "You deliver a concussion blow!" );
-					attacker.PlaySound( 0x11C );
 				}
 			}
 		}

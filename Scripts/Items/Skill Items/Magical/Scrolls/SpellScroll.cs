@@ -1,15 +1,14 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server.Spells;
-using Server.ContextMenus;
 
 namespace Server.Items
 {
-	public class SpellScroll : Item, ICommodity
+	public class SpellScroll : BaseItem
 	{
 		private int m_SpellID;
 
+		[CommandProperty( AccessLevel.GameMaster )]
 		public int SpellID
 		{
 			get
@@ -17,9 +16,6 @@ namespace Server.Items
 				return m_SpellID;
 			}
 		}
-
-		int ICommodity.DescriptionNumber { get { return LabelNumber; } }
-		bool ICommodity.IsDeedable { get { return (Core.ML); } }
 
 		public SpellScroll( Serial serial ) : base( serial )
 		{
@@ -66,22 +62,33 @@ namespace Server.Items
 			}
 		}
 
-		public override void GetContextMenuEntries( Mobile from, List<ContextMenuEntry> list )
+		public override void GetContextMenuEntries( Mobile from, List<ContextMenus.ContextMenuEntry> list )
 		{
 			base.GetContextMenuEntries( from, list );
 
-			if ( from.Alive && this.Movable )
+			if ( from.Alive )
 				list.Add( new ContextMenus.AddToSpellbookEntry() );
+		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new SpellScroll( m_SpellID, ItemID, amount ), amount );
 		}
 
 		public override void OnDoubleClick( Mobile from )
 		{
-			if ( !Multis.DesignContext.Check( from ) )
-				return; // They are customizing
-
 			if ( !IsChildOf( from.Backpack ) )
 			{
 				from.SendLocalizedMessage( 1042001 ); // That must be in your pack for you to use it.
+				return;
+			}
+			
+			Item oneHanded = from.FindItemOnLayer( Layer.OneHanded );
+			Item twoHanded = from.FindItemOnLayer( Layer.TwoHanded );
+			if ( (oneHanded != null && !oneHanded.AllowEquipedCast( from )) || (twoHanded != null && !twoHanded.AllowEquipedCast( from )) )
+			{
+				//m_Caster.SendLocalizedMessage( 502626 ); // Your hands must be free to cast spells or meditate
+				from.SendAsciiMessage( "Your hands must be free to cast spells." );
 				return;
 			}
 

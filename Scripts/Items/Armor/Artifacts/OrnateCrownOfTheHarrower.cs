@@ -8,18 +8,17 @@ namespace Server.Items
 		public override int LabelNumber{ get{ return 1061095; } } // Ornate Crown of the Harrower
 		public override int ArtifactRarity{ get{ return 11; } }
 
-		public override int BasePoisonResistance{ get{ return 17; } }
-
 		public override int InitMinHits{ get{ return 255; } }
 		public override int InitMaxHits{ get{ return 255; } }
 
 		[Constructable]
 		public OrnateCrownOfTheHarrower()
 		{
-			Hue = 0x4F6;
+			Hue = 0x55A;
 			Attributes.RegenHits = 2;
 			Attributes.RegenStam = 3;
 			Attributes.WeaponDamage = 25;
+			PoisonBonus = 15;
 		}
 
 		public OrnateCrownOfTheHarrower( Serial serial ) : base( serial )
@@ -30,7 +29,7 @@ namespace Server.Items
 		{
 			base.Serialize( writer );
 
-			writer.Write( (int) 1 );
+			writer.Write( (int) 0 );
 		}
 		
 		public override void Deserialize(GenericReader reader)
@@ -38,14 +37,6 @@ namespace Server.Items
 			base.Deserialize( reader );
 
 			int version = reader.ReadInt();
-
-			if ( version < 1 )
-			{
-				if ( Hue == 0x55A )
-					Hue = 0x4F6;
-
-				PoisonBonus = 0;
-			}
 		}
 	}
 }

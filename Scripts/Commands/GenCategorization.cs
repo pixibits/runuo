@@ -1,12 +1,12 @@
 using System;
 using System.IO;
 using System.Xml;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using System.Reflection;
 using Server;
 using Server.Items;
 
-namespace Server.Commands
+namespace Server.Custom
 {
 	public class Categorization
 	{
@@ -36,12 +36,12 @@ namespace Server.Commands
 
 		public static void Initialize()
 		{
-			CommandSystem.Register( "RebuildCategorization", AccessLevel.Administrator, new CommandEventHandler( RebuildCategorization_OnCommand ) );
+			Commands.CommandSystem.Register( "RebuildCategorization", AccessLevel.Administrator, new Server.Commands.CommandEventHandler( RebuildCategorization_OnCommand ) );
 		}
 
 		[Usage( "RebuildCategorization" )]
 		[Description( "Rebuilds the categorization data file used by the Add command." )]
-		public static void RebuildCategorization_OnCommand( CommandEventArgs e )
+		public static void RebuildCategorization_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			CategoryEntry root = new CategoryEntry( null, "Add Menu", new CategoryEntry[]{ Items, Mobiles } );
 
@@ -108,7 +108,7 @@ namespace Server.Commands
 					if ( item is BaseAddon && ((BaseAddon)item).Components.Count == 1 )
 						itemID = ((AddonComponent)(((BaseAddon)item).Components[0])).ItemID;
 
-					if ( itemID > TileData.MaxItemValue )
+					if ( itemID >= 0x4000 )
 						itemID = 1;
 
 					xml.WriteAttributeString( "gfx", XmlConvert.ToString( itemID ) );

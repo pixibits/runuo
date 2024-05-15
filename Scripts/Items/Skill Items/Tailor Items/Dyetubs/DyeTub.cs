@@ -1,10 +1,7 @@
 using System;
-using System.Collections.Generic;
 using Server;
 using Server.Multis;
 using Server.Targeting;
-using Server.ContextMenus;
-using Server.Gumps;
 
 namespace Server.Items
 {
@@ -13,11 +10,10 @@ namespace Server.Items
 		bool Dye( Mobile from, DyeTub sender );
 	}
 
-	public class DyeTub : Item, ISecurable
+	public class DyeTub : BaseItem
 	{
 		private bool m_Redyable;
 		private int m_DyedHue;
-		private SecureLevel m_SecureLevel;
 
 		public virtual CustomHuePicker CustomHuePicker{ get{ return null; } }
 
@@ -51,8 +47,9 @@ namespace Server.Items
 			base.Serialize( writer );
 
 			writer.Write( (int) 1 ); // version
-			
-			writer.Write( (int)m_SecureLevel );
+
+			writer.Write( (int) m_UsesRemaining );
+
 			writer.Write( (bool) m_Redyable );
 			writer.Write( (int) m_DyedHue );
 		}
@@ -67,7 +64,7 @@ namespace Server.Items
 			{
 				case 1:
 				{
-					m_SecureLevel = (SecureLevel)reader.ReadInt();
+					m_UsesRemaining = reader.ReadInt();
 					goto case 0;
 				}
 				case 0:
@@ -109,18 +106,14 @@ namespace Server.Items
 				}
 			}
 		}
-		
+
+		int m_UsesRemaining = int.MaxValue;
+
 		[CommandProperty( AccessLevel.GameMaster )]
-		public SecureLevel Level
+		public int UsesRemaining
 		{
-			get
-			{
-				return m_SecureLevel;
-			}
-			set
-			{
-				m_SecureLevel = value;
-			}
+			get { return m_UsesRemaining; }
+			set { m_UsesRemaining = value; }
 		}
 
 		[Constructable] 
@@ -128,12 +121,6 @@ namespace Server.Items
 		{
 			Weight = 10.0;
 			m_Redyable = true;
-		}
-		
-		public override void GetContextMenuEntries( Mobile from, List<ContextMenuEntry> list )
-		{
-			base.GetContextMenuEntries( from, list );
-			SetSecureLevelEntry.AddTo( from, this, list );
 		}
 
 		public DyeTub( Serial serial ) : base( serial )
@@ -176,12 +163,23 @@ namespace Server.Items
 
 					if ( item is IDyable && m_Tub.AllowDyables )
 					{
-						if ( !from.InRange( m_Tub.GetWorldLocation(), 1 ) || !from.InRange( item.GetWorldLocation(), 1 ) )
+						if ( m_Tub.DyedHue == 0x497 && ( !( item is BaseClothing ) || item.LootType == LootType.Newbied ) )
+							from.SendAsciiMessage( "This can only be used to dye regular clothes." );
+						else if ( !from.InRange( m_Tub.GetWorldLocation(), 1 ) || !from.InRange( item.GetWorldLocation(), 1 ) )
 							from.SendLocalizedMessage( 500446 ); // That is too far away.
 						else if ( item.Parent is Mobile )
 							from.SendLocalizedMessage( 500861 ); // Can't Dye clothing that is being worn.
 						else if ( ((IDyable)item).Dye( from, m_Tub ) )
+						{
 							from.PlaySound( 0x23E );
+							
+							m_Tub.UsesRemaining--;
+							if ( m_Tub.UsesRemaining <= 0 )
+							{
+								from.SendAsciiMessage( "The dye tub has run dry!" );
+								m_Tub.Delete();
+							}
+						}
 					}
 					else if ( (FurnitureAttribute.Check( item ) || (item is PotionKeg)) && m_Tub.AllowFurniture )
 					{
@@ -199,10 +197,8 @@ namespace Server.Items
 								{
 									BaseHouse house = BaseHouse.FindHouseAt( item );
 
-									if ( house == null || ( !house.IsLockedDown( item ) && !house.IsSecure( item ) ) )
+									if ( house == null )
 										from.SendLocalizedMessage( 501022 ); // Furniture must be locked down to paint it.
-									else if ( !house.IsCoOwner( from ) )
-										from.SendLocalizedMessage( 501023 ); // You must be the owner to use this item.
 									else
 										okay = true;
 								}
@@ -217,22 +213,6 @@ namespace Server.Items
 								item.Hue = m_Tub.DyedHue;
 								from.PlaySound( 0x23E );
 							}
-						}
-					}
-					else if ( (item is Runebook || item is RecallRune ) && m_Tub.AllowRunebooks )
-					{
-						if ( !from.InRange( m_Tub.GetWorldLocation(), 1 ) || !from.InRange( item.GetWorldLocation(), 1 ) )
-						{
-							from.SendLocalizedMessage( 500446 ); // That is too far away.
-						}
-						else if ( !item.Movable )
-						{
-							from.SendLocalizedMessage( 1049776 ); // You cannot dye runes or runebooks that are locked down.
-						}
-						else
-						{
-							item.Hue = m_Tub.DyedHue;
-							from.PlaySound( 0x23E );
 						}
 					}
 					else if ( item is MonsterStatuette && m_Tub.AllowStatuettes )
@@ -251,7 +231,7 @@ namespace Server.Items
 							from.PlaySound( 0x23E );
 						}
 					}
-					else if ( (item is BaseArmor && (((BaseArmor)item).MaterialType == ArmorMaterialType.Leather || ((BaseArmor)item).MaterialType == ArmorMaterialType.Studded) || item is ElvenBoots || item is WoodlandBelt) && m_Tub.AllowLeather )
+					else if ( (item is BaseArmor && (((BaseArmor)item).MaterialType == ArmorMaterialType.Leather || ((BaseArmor)item).MaterialType == ArmorMaterialType.Studded)) && m_Tub.AllowLeather )
 					{
 						if ( !from.InRange( m_Tub.GetWorldLocation(), 1 ) || !from.InRange( item.GetWorldLocation(), 1 ) )
 						{

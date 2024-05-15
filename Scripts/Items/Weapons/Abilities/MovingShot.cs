@@ -13,27 +13,22 @@ namespace Server.Items
 		}
 
 		public override int BaseMana{ get{ return 15; } }
-		public override int AccuracyBonus{ get{ return -25; } }
+		public override double AccuracyScalar{ get{ return 0.75; } }
 
-		public override bool OnBeforeSwing( Mobile attacker, Mobile defender )
-		{
-			return ( Validate( attacker ) && CheckMana( attacker, true ) );
-		}
-		
 		public override void OnMiss( Mobile attacker, Mobile defender )
 		{
-			//Validates in OnSwing for accuracy scalar
+			if ( !Validate( attacker ) || !CheckMana( attacker, true ) )
+				return;
 
 			ClearCurrentAbility( attacker );
 
 			attacker.SendLocalizedMessage( 1060089 ); // You fail to execute your special move
 		}
 
-		public override bool ValidatesDuringHit { get { return false; } }
-
 		public override void OnHit( Mobile attacker, Mobile defender, int damage )
 		{
-			//Validates in OnSwing for accuracy scalar
+			if ( !Validate( attacker ) || !CheckMana( attacker, true ) )
+				return;
 
 			ClearCurrentAbility( attacker );
 

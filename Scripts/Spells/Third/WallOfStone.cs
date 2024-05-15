@@ -3,22 +3,21 @@ using Server.Targeting;
 using Server.Network;
 using Server.Misc;
 using Server.Items;
-using Server.Mobiles;
+using Server.Regions;
 
 namespace Server.Spells.Third
 {
-	public class WallOfStoneSpell : MagerySpell
+	public class WallOfStoneSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Wall of Stone", "In Sanct Ylem",
+				SpellCircle.Third,
 				227,
 				9011,
 				false,
 				Reagent.Bloodmoss,
 				Reagent.Garlic
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Third; } }
 
 		public WallOfStoneSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -35,7 +34,7 @@ namespace Server.Spells.Third
 			{
 				Caster.SendLocalizedMessage( 500237 ); // Target can not be seen.
 			}
-			else if ( SpellHelper.CheckTown( p, Caster ) && CheckSequence() )
+			else if ( CheckSequence() )
 			{
 				SpellHelper.Turn( Caster, p );
 
@@ -89,22 +88,19 @@ namespace Server.Spells.Third
 		}
 
 		[DispellableField]
-		private class InternalItem : Item
+		private class InternalItem : BaseItem
 		{
 			private Timer m_Timer;
 			private DateTime m_End;
-			private Mobile m_Caster;
 
 			public override bool BlocksFit{ get{ return true; } }
 
-			public InternalItem( Point3D loc, Map map, Mobile caster ) : base( 0x82 )
+			public InternalItem( Point3D loc, Map map, Mobile caster ) : base( 0x80 )
 			{
 				Visible = false;
 				Movable = false;
 
 				MoveToWorld( loc, map );
-
-				m_Caster = caster;
 
 				if ( caster.InLOS( this ) )
 					Visible = true;
@@ -164,19 +160,6 @@ namespace Server.Spells.Third
 				}
 			}
 
-			public override bool OnMoveOver( Mobile m )
-			{
-				int noto;
-
-				if ( m is PlayerMobile )
-				{
-					noto = Notoriety.Compute( m_Caster, m );
-					if ( noto == Notoriety.Enemy || noto == Notoriety.Ally )
-						return false;
-				}
-				return base.OnMoveOver( m );
-			}
-
 			public override void OnAfterDelete()
 			{
 				base.OnAfterDelete();
@@ -206,7 +189,7 @@ namespace Server.Spells.Third
 		{
 			private WallOfStoneSpell m_Owner;
 
-			public InternalTarget( WallOfStoneSpell owner ) : base( Core.ML ? 10 : 12, true, TargetFlags.None )
+			public InternalTarget( WallOfStoneSpell owner ) : base( 12, true, TargetFlags.None )
 			{
 				m_Owner = owner;
 			}

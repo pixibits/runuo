@@ -2,9 +2,6 @@ using System;
 using Server;
 using Server.Items;
 using Server.Mobiles;
-using Server.Engines.Quests;
-using Server.Engines.Quests.Collector;
-using System.Collections.Generic;
 
 namespace Server.Engines.Harvest
 {
@@ -38,15 +35,15 @@ namespace Server.Engines.Harvest
 			#region Fishing
 			HarvestDefinition fish = new HarvestDefinition();
 
+			fish.PlaceAtFeetIfFull = true;
+
 			// Resource banks are every 8x8 tiles
 			fish.BankWidth = 8;
 			fish.BankHeight = 8;
 
-			// Every bank holds from 5 to 15 fish
-			fish.MinTotal = 5;
-			fish.MaxTotal = 15;
+			fish.MinTotal = 0;
+			fish.MaxTotal = 10;
 
-			// A resource bank will respawn its content every 10 to 20 minutes
 			fish.MinRespawn = TimeSpan.FromMinutes( 10.0 );
 			fish.MaxRespawn = TimeSpan.FromMinutes( 20.0 );
 
@@ -58,7 +55,7 @@ namespace Server.Engines.Harvest
 			fish.RangedTiles = true;
 
 			// Players must be within 4 tiles to harvest
-			fish.MaxRange = 4;
+			fish.MaxRange = 5;
 
 			// One fish per harvest action
 			fish.ConsumedPerHarvest = 1;
@@ -75,7 +72,7 @@ namespace Server.Engines.Harvest
 			fish.FailMessage = 503171; // You fish a while, but fail to catch anything.
 			fish.TimedOutOfRangeMessage = 500976; // You need to be closer to the water to fish!
 			fish.OutOfRangeMessage = 500976; // You need to be closer to the water to fish!
-			fish.PackFullMessage = 503176; // You do not have room in your backpack for a fish.
+			//fish.PackFullMessage = 503176; // You do not have room in your backpack for a fish.
 			fish.ToolBrokeMessage = 503174; // You broke your fishing pole.
 
 			res = new HarvestResource[]
@@ -90,15 +87,6 @@ namespace Server.Engines.Harvest
 
 			fish.Resources = res;
 			fish.Veins = veins;
-
-			if ( Core.ML )
-			{
-				fish.BonusResources = new BonusHarvestResource[]
-				{
-					new BonusHarvestResource( 0, 99.4, null, null ), //set to same chance as mining ml gems
-					new BonusHarvestResource( 80.0, .6, 1072597, typeof( WhitePearl ) )
-				};
-			}
 
 			m_Definition = fish;
 			Definitions.Add( fish );
@@ -128,47 +116,16 @@ namespace Server.Engines.Harvest
 
 		private static MutateEntry[] m_MutateTable = new MutateEntry[]
 			{
+				/*
 				new MutateEntry(  80.0,  80.0,  4080.0,  true, typeof( SpecialFishingNet ) ),
 				new MutateEntry(  80.0,  80.0,  4080.0,  true, typeof( BigFish ) ),
 				new MutateEntry(  90.0,  80.0,  4080.0,  true, typeof( TreasureMap ) ),
 				new MutateEntry( 100.0,  80.0,  4080.0,  true, typeof( MessageInABottle ) ),
 				new MutateEntry(   0.0, 125.0, -2375.0, false, typeof( PrizedFish ), typeof( WondrousFish ), typeof( TrulyRareFish ), typeof( PeculiarFish ) ),
+				*/
 				new MutateEntry(   0.0, 105.0,  -420.0, false, typeof( Boots ), typeof( Shoes ), typeof( Sandals ), typeof( ThighBoots ) ),
 				new MutateEntry(   0.0, 200.0,  -200.0, false, new Type[1]{ null } )
 			};
-
-		public override bool SpecialHarvest( Mobile from, Item tool, HarvestDefinition def, Map map, Point3D loc )
-		{
-			PlayerMobile player = from as PlayerMobile;
-
-			if ( player != null )
-			{
-				QuestSystem qs = player.Quest;
-
-				if ( qs is CollectorQuest )
-				{
-					QuestObjective obj = qs.FindObjective( typeof( FishPearlsObjective ) );
-
-					if ( obj != null && !obj.Completed )
-					{
-						if ( Utility.RandomDouble() < 0.5 )
-						{
-							player.SendLocalizedMessage( 1055086, "", 0x59 ); // You pull a shellfish out of the water, and find a rainbow pearl inside of it.
-
-							obj.CurProgress++;
-						}
-						else
-						{
-							player.SendLocalizedMessage( 1055087, "", 0x2C ); // You pull a shellfish out of the water, but it doesn't have a rainbow pearl.
-						}
-
-						return true;
-					}
-				}
-			}
-
-			return false;
-		}
 
 		public override Type MutateType( Type type, Mobile from, Item tool, HarvestDefinition def, Map map, Point3D loc, HarvestResource resource )
 		{
@@ -204,58 +161,26 @@ namespace Server.Engines.Harvest
 			return map;
 		}
 
-		public override bool CheckResources( Mobile from, Item tool, HarvestDefinition def, Map map, Point3D loc, bool timed )
-		{
-			Container pack = from.Backpack;
-
-			if ( pack != null )
-			{
-				List<SOS> messages = pack.FindItemsByType<SOS>();
-
-				for ( int i = 0; i < messages.Count; ++i )
-				{
-					SOS sos = messages[i];
-
-					if ( from.Map == sos.TargetMap && from.InRange( sos.TargetLocation, 60 ) )
-						return true;
-				}
-			}
-
-			return base.CheckResources( from, tool, def, map, loc, timed );
-		}
-
 		public override Item Construct( Type type, Mobile from )
 		{
-			if ( type == typeof( TreasureMap ) )
-			{
-				int level;
-				if ( from is PlayerMobile && ((PlayerMobile)from).Young && from.Map == Map.Trammel && TreasureMap.IsInHavenIsland( from ) )
-					level = 0;
-				else
-					level = 1;
-
-				return new TreasureMap( level, from.Map == Map.Felucca ? Map.Felucca : Map.Trammel );
-			}
-			else if ( type == typeof( MessageInABottle ) )
-			{
-				return new MessageInABottle( from.Map == Map.Felucca ? Map.Felucca : Map.Trammel );
-			}
+			if ( type == typeof( MessageInABottle ) )
+				return new MessageInABottle( SafeMap( from.Map ) );
 
 			Container pack = from.Backpack;
 
 			if ( pack != null )
 			{
-				List<SOS> messages = pack.FindItemsByType<SOS>();
+				Item[] messages = pack.FindItemsByType( typeof( SOS ) );
 
-				for ( int i = 0; i < messages.Count; ++i )
+				for ( int i = 0; i < messages.Length; ++i )
 				{
-					SOS sos = messages[i];
+					SOS sos = (SOS)messages[i];
 
-					if ( ( from.Map == Map.Felucca || from.Map == Map.Trammel ) && from.InRange( sos.TargetLocation, 60 ) )
+					if ( from.Map == sos.TargetMap && from.InRange( sos.TargetLocation, 60 ) )
 					{
 						Item preLoot = null;
 
-						switch ( Utility.Random( 8 ) )
+						switch ( Utility.Random( 7 ) )
 						{
 							case 0: // Body parts
 							{
@@ -297,16 +222,7 @@ namespace Server.Engines.Harvest
 								preLoot = new ShipwreckedItem( Utility.Random( 0xFC4, 9 ) );
 								break;
 							}
-							case 5:	//Hats
-							{
-								if ( Utility.RandomBool() )
-									preLoot = new SkullCap();
-								else
-									preLoot = new TricorneHat();
-
-								break;
-							}
-							case 6: // Misc
+							case 5: // Misc
 							{
 								int[] list = new int[]
 									{
@@ -317,47 +233,28 @@ namespace Server.Engines.Harvest
 										0x1EB1, 0x1EB2, 0x1EB3, 0x1EB4 // barrel staves
 									};
 
-								if ( Utility.Random( list.Length + 1 ) == 0 )
-									preLoot = new Candelabra();
-								else
-									preLoot = new ShipwreckedItem( Utility.RandomList( list ) );
-
+								preLoot = new ShipwreckedItem( Utility.RandomList( list ) );
 								break;
 							}
 						}
 
 						if ( preLoot != null )
-						{
-							if ( preLoot is IShipwreckedItem )
-								( (IShipwreckedItem)preLoot ).IsShipwreckedItem = true;
-
 							return preLoot;
-						}
 
-						LockableContainer chest;
-						
-						if ( Utility.RandomBool() )
-							chest = new MetalGoldenChest();
-						else
-							chest = new WoodenChest();
+						sos.Delete();
 
-						if ( sos.IsAncient )
-							chest.Hue = 0x481;
+						WoodenChest chest = new WoodenChest();
 
-						TreasureMapChest.Fill( chest, Math.Max( 1, Math.Max( 4, sos.Level ) ) );
+						//TreasureMapChest.Fill( chest, Utility.RandomMinMax( 1, 3 ) );
 
-						if ( sos.IsAncient )
-							chest.DropItem( new FabledFishingNet() );
-						else
-							chest.DropItem( new SpecialFishingNet() );
+						// TODO: Are there chances on this? All MIB's I've done had nets..
+						chest.DropItem( new SpecialFishingNet() );
 
 						chest.Movable = true;
 						chest.Locked = false;
 						chest.TrapType = TrapType.None;
 						chest.TrapPower = 0;
-						chest.TrapLevel = 0;
-
-						sos.Delete();
+						chest.Trapped = false;
 
 						return chest;
 					}
@@ -369,14 +266,11 @@ namespace Server.Engines.Harvest
 
 		public override bool Give( Mobile m, Item item, bool placeAtFeet )
 		{
-			if ( item is TreasureMap || item is MessageInABottle || item is SpecialFishingNet )
+			if ( item is MessageInABottle || item is SpecialFishingNet )
 			{
 				BaseCreature serp;
 
-				if ( 0.25 > Utility.RandomDouble() )
-					serp = new DeepSeaSerpent();
-				else
-					serp = new SeaSerpent();
+				serp = new SeaSerpent();
 
 				int x = m.X, y = m.Y;
 
@@ -397,7 +291,8 @@ namespace Server.Engines.Harvest
 					}
 				}
 
-				serp.MoveToWorld( new Point3D( x, y, -5 ), map );
+				serp.Map = map;
+				serp.Location = new Point3D( x, y, -5 );
 
 				serp.Home = serp.Location;
 				serp.RangeHome = 10;
@@ -409,7 +304,7 @@ namespace Server.Engines.Harvest
 				return true; // we don't want to give the item to the player, it's on the serpent
 			}
 
-			if ( item is BigFish || item is WoodenChest || item is MetalGoldenChest )
+			if ( item is BigFish || item is WoodenChest )
 				placeAtFeet = true;
 
 			return base.Give( m, item, placeAtFeet );
@@ -420,10 +315,8 @@ namespace Server.Engines.Harvest
 			if ( item is BigFish )
 			{
 				from.SendLocalizedMessage( 1042635 ); // Your fishing pole bends as you pull a big fish from the depths!
-
-				((BigFish)item).Fisher = from;
 			}
-			else if ( item is WoodenChest || item is MetalGoldenChest )
+			else if ( item is WoodenChest )
 			{
 				from.SendLocalizedMessage( 503175 ); // You pull up a heavy chest from the depths of the ocean!
 			}
@@ -446,11 +339,6 @@ namespace Server.Engines.Harvest
 				{
 					number = 1008124;
 					name = item.ItemData.Name;
-				}
-				else if ( item is TreasureMap )
-				{
-					number = 1008125;
-					name = "a sodden piece of parchment";
 				}
 				else if ( item is MessageInABottle )
 				{
@@ -490,23 +378,17 @@ namespace Server.Engines.Harvest
 			Point3D loc;
 
 			if ( GetHarvestDetails( from, tool, toHarvest, out tileID, out map, out loc ) )
-				Timer.DelayCall( TimeSpan.FromSeconds( 1.5 ), 
-					delegate
-					{
-						if( Core.ML )
-							from.RevealingAction();
-
-						Effects.SendLocationEffect( loc, map, 0x352D, 16, 4 );
-						Effects.PlaySound( loc, map, 0x364 );
-					} );
+				Timer.DelayCall( TimeSpan.FromSeconds( 1.5 ), new TimerStateCallback( Splash_Callback ), new object[]{ loc, map } );
 		}
 
-		public override void OnHarvestFinished( Mobile from, Item tool, HarvestDefinition def, HarvestVein vein, HarvestBank bank, HarvestResource resource, object harvested )
+		private void Splash_Callback( object state )
 		{
-			base.OnHarvestFinished( from, tool, def, vein, bank, resource, harvested );
+			object[] args = (object[])state;
+			Point3D loc = (Point3D)args[0];
+			Map map = (Map)args[1];
 
-			if ( Core.ML )
-				from.RevealingAction();
+			Effects.SendLocationEffect( loc, map, 0x352D, 16, 4 );
+			Effects.PlaySound( loc, map, 0x364 );
 		}
 
 		public override object GetLock( Mobile from, Item tool, HarvestDefinition def, object toHarvest )

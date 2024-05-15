@@ -1,23 +1,24 @@
 using System;
-using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
+using System.Reflection;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Items;
 using Server.Network;
 using Server.Targeting;
+using Server.Commands;
 using CPA = Server.CommandPropertyAttribute;
 
-namespace Server.Commands
+namespace Server.Scripts.Commands
 {
 	public class Add
 	{
 		public static void Initialize()
 		{
-			CommandSystem.Register( "Tile", AccessLevel.GameMaster, new CommandEventHandler( Tile_OnCommand ) );
-			CommandSystem.Register( "TileRXYZ", AccessLevel.GameMaster, new CommandEventHandler( TileRXYZ_OnCommand ) );
-			CommandSystem.Register( "TileXYZ", AccessLevel.GameMaster, new CommandEventHandler( TileXYZ_OnCommand ) );
-			CommandSystem.Register( "TileZ", AccessLevel.GameMaster, new CommandEventHandler( TileZ_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "Tile", AccessLevel.GameMaster, new Server.Commands.CommandEventHandler( Tile_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "TileRXYZ", AccessLevel.GameMaster, new Server.Commands.CommandEventHandler( TileRXYZ_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "TileXYZ", AccessLevel.GameMaster, new Server.Commands.CommandEventHandler( TileXYZ_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "TileZ", AccessLevel.GameMaster, new Server.Commands.CommandEventHandler( TileZ_OnCommand ) );
 		}
 
 		public static void Invoke( Mobile from, Point3D start, Point3D end, string[] args )
@@ -25,7 +26,7 @@ namespace Server.Commands
 			Invoke( from, start, end, args, null );
 		}
 
-		public static void Invoke( Mobile from, Point3D start, Point3D end, string[] args, List<Container> packs )
+		public static void Invoke( Mobile from, Point3D start, Point3D end, string[] args, ArrayList packs )
 		{
 			StringBuilder sb = new StringBuilder();
 
@@ -76,7 +77,8 @@ namespace Server.Commands
 
 			Type type = ScriptCompiler.FindTypeByName( name );
 
-			if ( !IsEntity( type ) ) {
+			if ( type == null )
+			{
 				from.SendMessage( "No type with that name was found." );
 				return;
 			}
@@ -107,7 +109,7 @@ namespace Server.Commands
 			Array.Copy( old, 1, args, 0, args.Length );
 		}
 
-		public static int BuildObjects( Mobile from, Type type, Point3D start, Point3D end, string[] args, string[,] props, List<Container> packs )
+		public static int BuildObjects( Mobile from, Type type, Point3D start, Point3D end, string[] args, string[,] props, ArrayList packs )
 		{
 			Utility.FixPoints( ref start, ref end );
 
@@ -143,7 +145,7 @@ namespace Server.Commands
 							from.SendMessage( "Property ({0}) not found.", propName );
 						else if ( from.AccessLevel < attr.WriteLevel )
 							from.SendMessage( "Setting this property ({0}) requires at least {1} access level.", propName, Mobile.GetAccessLevelName( attr.WriteLevel ) );
-						else if ( !thisProp.CanWrite || attr.ReadOnly )
+						else if ( !thisProp.CanWrite )
 							from.SendMessage( "Property ({0}) is read only.", propName );
 						else
 							realProps[i] = thisProp;
@@ -157,7 +159,7 @@ namespace Server.Commands
 			{
 				ConstructorInfo ctor = ctors[i];
 
-				if ( !IsConstructable( ctor, from.AccessLevel ) )
+				if ( !IsConstructable( ctor ) )
 					continue;
 
 				ParameterInfo[] paramList = ctor.GetParameters();
@@ -238,7 +240,7 @@ namespace Server.Commands
 			}
 		}
 
-		public static IEntity Build( Mobile from, ConstructorInfo ctor, object[] values, string[,] props, PropertyInfo[] realProps, ref bool sendError )
+		public static object Build( Mobile from, ConstructorInfo ctor, object[] values, string[,] props, PropertyInfo[] realProps, ref bool sendError )
 		{
 			object built = ctor.Invoke( values );
 
@@ -266,10 +268,10 @@ namespace Server.Commands
 					sendError = false;
 			}
 
-			return (IEntity)built;
+			return built;
 		}
 
-		public static int Build( Mobile from, Point3D start, Point3D end, ConstructorInfo ctor, object[] values, string[,] props, PropertyInfo[] realProps, List<Container> packs )
+		public static int Build( Mobile from, Point3D start, Point3D end, ConstructorInfo ctor, object[] values, string[,] props, PropertyInfo[] realProps, ArrayList packs )
 		{
 			try
 			{
@@ -289,16 +291,23 @@ namespace Server.Commands
 				{
 					for ( int i = 0; i < packs.Count; ++i )
 					{
-						IEntity built = Build( from, ctor, values, props, realProps, ref sendError );
+						object built = Build( from, ctor, values, props, realProps, ref sendError );
 
-						sb.AppendFormat( "0x{0:X}; ", built.Serial.Value );
-	
-						if ( built is Item ) {
-							Container pack = packs[i];
+						if( built is IEntity )
+							sb.AppendFormat( "0x{0:X}; ", ((IEntity)built).Serial.Value );
+						else
+							continue;
+
+						if ( built is Item )
+						{
+							Container pack = (Container)packs[i];
+
 							pack.DropItem( (Item)built );
 						}
-						else if ( built is Mobile ) {
+						else if ( built is Mobile )
+						{
 							Mobile m = (Mobile)built;
+
 							m.MoveToWorld( new Point3D( start.X, start.Y, start.Z ), map );
 						}
 					}
@@ -309,16 +318,23 @@ namespace Server.Commands
 					{
 						for ( int y = start.Y; y <= end.Y; ++y )
 						{
-							IEntity built = Build( from, ctor, values, props, realProps, ref sendError );
+							object built = Build( from, ctor, values, props, realProps, ref sendError );
 
-							sb.AppendFormat( "0x{0:X}; ", built.Serial.Value );
+							if( built is IEntity )
+								sb.AppendFormat( "0x{0:X}; ", ((IEntity)built).Serial.Value );
+							else
+								continue;
 
-							if ( built is Item ) {
+							if ( built is Item )
+							{
 								Item item = (Item)built;
+
 								item.MoveToWorld( new Point3D( x, y, start.Z ), map );
 							}
-							else if ( built is Mobile ) {
+							else if ( built is Mobile )
+							{
 								Mobile m = (Mobile)built;
+
 								m.MoveToWorld( new Point3D( x, y, start.Z ), map );
 							}
 						}
@@ -345,7 +361,7 @@ namespace Server.Commands
 			{
 				ConstructorInfo ctor = ctors[i];
 
-				if ( !IsConstructable( ctor, from.AccessLevel ) )
+				if ( !IsConstructable( ctor ) )
 					continue;
 
 				if ( !foundCtor )
@@ -404,8 +420,7 @@ namespace Server.Commands
 					else if ( p is Mobile )
 						p = ((Mobile)p).Location;
 
-					Point3D point = new Point3D( p );
-					Add.Invoke( from, point, point, m_Args );
+					Add.Invoke( from, new Point3D( p ), new Point3D( p ), m_Args );
 				}
 			}
 		}
@@ -444,7 +459,7 @@ namespace Server.Commands
 
 		[Usage( "Tile <name> [params] [set {<propertyName> <value> ...}]" )]
 		[Description( "Tiles an item or npc by name into a targeted bounding box. Optional constructor parameters. Optional set property list." )]
-		public static void Tile_OnCommand( CommandEventArgs e )
+		public static void Tile_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			if ( e.Length >= 1 )
 				BoundingBoxPicker.Begin( e.Mobile, new BoundingBoxCallback( TileBox_Callback ), new TileState( e.Arguments ) );
@@ -454,7 +469,7 @@ namespace Server.Commands
 
 		[Usage( "TileRXYZ <x> <y> <w> <h> <z> <name> [params] [set {<propertyName> <value> ...}]" )]
 		[Description( "Tiles an item or npc by name into a given bounding box, (x, y) parameters are relative to your characters position. Optional constructor parameters. Optional set property list." )]
-		public static void TileRXYZ_OnCommand( CommandEventArgs e )
+		public static void TileRXYZ_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			if ( e.Length >= 6 )
 			{
@@ -476,7 +491,7 @@ namespace Server.Commands
 
 		[Usage( "TileXYZ <x> <y> <w> <h> <z> <name> [params] [set {<propertyName> <value> ...}]" )]
 		[Description( "Tiles an item or npc by name into a given bounding box. Optional constructor parameters. Optional set property list." )]
-		public static void TileXYZ_OnCommand( CommandEventArgs e )
+		public static void TileXYZ_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			if ( e.Length >= 6 )
 			{
@@ -498,7 +513,7 @@ namespace Server.Commands
 
 		[Usage( "TileZ <z> <name> [params] [set {<propertyName> <value> ...}]" )]
 		[Description( "Tiles an item or npc by name into a targeted bounding box at a fixed Z location. Optional constructor parameters. Optional set property list." )]
-		public static void TileZ_OnCommand( CommandEventArgs e )
+		public static void TileZ_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			if ( e.Length >= 2 )
 			{
@@ -515,23 +530,11 @@ namespace Server.Commands
 			}
 		}
 
-		private static Type m_EntityType = typeof( IEntity );
-
-		public static bool IsEntity( Type t )
-		{
-			return m_EntityType.IsAssignableFrom( t );
-		}
-
 		private static Type m_ConstructableType = typeof( ConstructableAttribute );
 
-		public static bool IsConstructable( ConstructorInfo ctor, AccessLevel accessLevel )
+		public static bool IsConstructable( ConstructorInfo ctor )
 		{
-			object[] attrs = ctor.GetCustomAttributes( m_ConstructableType, false );
-
-			if ( attrs.Length == 0 )
-				return false;
-
-			return accessLevel >= ((ConstructableAttribute)attrs[0]).AccessLevel;
+			return ctor.IsDefined( m_ConstructableType, false );
 		}
 
 		private static Type m_EnumType = typeof( Enum );

@@ -5,10 +5,11 @@ using Server.Targeting;
 
 namespace Server.Spells.Fifth
 {
-	public class BladeSpiritsSpell : MagerySpell
+	public class BladeSpiritsSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Blade Spirits", "In Jux Hur Ylem", 
+				SpellCircle.Fifth,
 				266,
 				9040,
 				false,
@@ -17,32 +18,13 @@ namespace Server.Spells.Fifth
 				Reagent.Nightshade
 			);
 
-		public override SpellCircle Circle { get { return SpellCircle.Fifth; } }
-
 		public BladeSpiritsSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
 		}
 
 		public override TimeSpan GetCastDelay()
 		{
-			if ( Core.AOS )
-				return TimeSpan.FromTicks( base.GetCastDelay().Ticks * ((Core.SE) ? 3 : 5) );
-
-			return base.GetCastDelay() + TimeSpan.FromSeconds( 6.0 );
-		}
-
-		public override bool CheckCast()
-		{
-			if ( !base.CheckCast() )
-				return false;
-
-			if( (Caster.Followers + (Core.SE ? 2 : 1)) > Caster.FollowersMax )
-			{
-				Caster.SendLocalizedMessage( 1049645 ); // You have too many followers to summon that creature.
-				return false;
-			}
-
-			return true;
+			return TimeSpan.FromSeconds( 6.25 );
 		}
 
 		public override void OnCast()
@@ -54,22 +36,15 @@ namespace Server.Spells.Fifth
 		{
 			Map map = Caster.Map;
 
-			SpellHelper.GetSurfaceTop( ref p );
+			Point3D pt = SpellHelper.GetSurfaceTop( p );
 
-			if ( map == null || !map.CanSpawnMobile( p.X, p.Y, p.Z ) )
+			if ( !(p is Mobile) && ( map == null || !map.CanFit( pt, 16 ) ) )
 			{
 				Caster.SendLocalizedMessage( 501942 ); // That location is blocked.
 			}
-			else if ( SpellHelper.CheckTown( p, Caster ) && CheckSequence() )
+			else if ( SpellHelper.CheckTown( pt, Caster ) && CheckSequence() )
 			{
-				TimeSpan duration;
-
-				if ( Core.AOS )
-					duration = TimeSpan.FromSeconds( 120 );
-				else
-					duration = TimeSpan.FromSeconds( Utility.Random( 80, 40 ) );
-
-				BaseCreature.Summon( new BladeSpirits(), false, Caster, new Point3D( p ), 0x212, duration );
+				BaseCreature.Summon( new BladeSpirit(), false, Caster, pt, 0x212, TimeSpan.FromSeconds( Utility.Random( 80, 40 ) ) );
 			}
 
 			FinishSequence();
@@ -79,7 +54,7 @@ namespace Server.Spells.Fifth
 		{
 			private BladeSpiritsSpell m_Owner;
 
-			public InternalTarget( BladeSpiritsSpell owner ) : base( Core.ML ? 10 : 12, true, TargetFlags.None )
+			public InternalTarget( BladeSpiritsSpell owner ) : base( 12, true, TargetFlags.None )
 			{
 				m_Owner = owner;
 			}

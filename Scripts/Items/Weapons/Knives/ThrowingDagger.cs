@@ -5,18 +5,14 @@ using Server.Network;
 namespace Server.Items
 {
 	[FlipableAttribute( 0xF52, 0xF51 )]
-	public class ThrowingDagger : Item
+	public class ThrowingDagger : BaseItem
 	{
-		public override string DefaultName
-		{
-			get { return "a throwing dagger"; }
-		}
-
 		[Constructable]
 		public ThrowingDagger() : base( 0xF52 )
 		{
 			Weight = 1.0;
 			Layer = Layer.OneHanded;
+			Name = "a throwing dagger";
 		}
 
 		public ThrowingDagger( Serial serial ) : base( serial )
@@ -46,7 +42,7 @@ namespace Server.Items
 			}
 			else
 			{
-				from.SendMessage( "You must be holding that weapon to use it." );
+				from.SendAsciiMessage( "You must be holding that weapon to use it." );
 			}
 		}
 
@@ -67,7 +63,7 @@ namespace Server.Items
 				}
 				else if ( !from.Items.Contains( m_Dagger ) )
 				{
-					from.SendMessage( "You must be holding that weapon to use it." );
+					from.SendAsciiMessage( "You must be holding that weapon to use it." );
 				}
 				else if ( targeted is Mobile )
 				{
@@ -115,7 +111,7 @@ namespace Server.Items
 
 							from.MovingEffect( m_Dagger, 0x1BFE, 7, 1, false, false, 0x481, 0 );
 
-							from.SendMessage( "You miss." );
+							from.SendAsciiMessage( "You miss." );
 						}
 					}
 				}

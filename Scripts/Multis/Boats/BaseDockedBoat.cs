@@ -2,15 +2,16 @@ using System;
 using Server;
 using Server.Regions;
 using Server.Targeting;
-using Server.Engines.CannedEvil;
+using System.Text;
 
 namespace Server.Multis
 {
-	public abstract class BaseDockedBoat : Item
+	public abstract class BaseDockedBoat : BaseItem
 	{
 		private int m_MultiID;
 		private Point3D m_Offset;
 		private string m_ShipName;
+		private Point3D m_Loc;
 
 		[CommandProperty( AccessLevel.GameMaster )]
 		public int MultiID{ get{ return m_MultiID; } set{ m_MultiID = value; } }
@@ -21,12 +22,15 @@ namespace Server.Multis
 		[CommandProperty( AccessLevel.GameMaster )]
 		public string ShipName{ get{ return m_ShipName; } set{ m_ShipName = value; InvalidateProperties(); } }
 
-		public BaseDockedBoat( int id, Point3D offset, BaseBoat boat ) : base( 0x14F4 )
+		[CommandProperty( AccessLevel.GameMaster )]
+		public Point3D DockLocation { get { return m_Loc; } set { m_Loc = value; } }
+
+		public BaseDockedBoat( int id, Point3D offset, BaseBoat boat ) : base( 0x14F2 )
 		{
 			Weight = 1.0;
-			LootType = LootType.Blessed;
+			//LootType = LootType.Blessed;
 
-			m_MultiID = id;
+			m_MultiID = id & 0x3FFF;
 			m_Offset = offset;
 
 			m_ShipName = boat.ShipName;
@@ -40,7 +44,9 @@ namespace Server.Multis
 		{
 			base.Serialize( writer );
 
-			writer.Write( (int) 1 ); // version
+			writer.Write( (int) 2 ); // version
+
+			writer.Write( m_Loc );
 
 			writer.Write( m_MultiID );
 			writer.Write( m_Offset );
@@ -55,6 +61,11 @@ namespace Server.Multis
 
 			switch ( version )
 			{
+				case 2:
+				{
+					m_Loc = reader.ReadPoint3D();
+					goto case 1;
+				}
 				case 1:
 				case 0:
 				{
@@ -69,8 +80,8 @@ namespace Server.Multis
 				}
 			}
 
-			if ( LootType == LootType.Newbied )
-				LootType = LootType.Blessed;
+			//if ( LootType == LootType.Newbied )
+			//	LootType = LootType.Blessed;
 
 			if ( Weight == 0.0 )
 				Weight = 1.0;
@@ -100,13 +111,13 @@ namespace Server.Multis
 				base.AddNameProperty( list );
 		}
 
-		public override void OnSingleClick( Mobile from )
+		/*public override void OnSingleClick( Mobile from )
 		{
 			if ( m_ShipName != null )
 				LabelTo( from, m_ShipName );
 			else
 				base.OnSingleClick( from );
-		}
+		}*/
 
 		public void OnPlacement( Mobile from, Point3D p )
 		{
@@ -178,11 +189,17 @@ namespace Server.Multis
 
 					Point3D p = new Point3D( ip );
 
+					if ( m_Model.DockLocation != Point3D.Zero && !Utility.InRange( p, m_Model.DockLocation, 50 ) )
+					{
+						from.SendMessage( "You are too far from the place where this ship was originally docked." );
+						return;
+					}
+
 					Region region = Region.Find( p, from.Map );
 
-					if ( region.IsPartOf( typeof( DungeonRegion ) ) )
+					if ( region is DungeonRegion )
 						from.SendLocalizedMessage( 502488 ); // You can not place a ship inside a dungeon.
-					else if ( region.IsPartOf( typeof( HouseRegion ) ) || region.IsPartOf( typeof( ChampionSpawnRegion ) ) )
+					else if ( region is HouseRegion )
 						from.SendLocalizedMessage( 1042549 ); // A boat may not be placed in this area.
 					else
 						m_Model.OnPlacement( from, p );

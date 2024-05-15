@@ -21,7 +21,7 @@ namespace Server.Items
 		public override int ArmorBase{ get{ return 16; } }
 
 		public override ArmorMaterialType MaterialType{ get{ return ArmorMaterialType.Studded; } }
-		public override CraftResource DefaultResource{ get{ return CraftResource.RegularLeather; } }
+
 
 		public override int LabelNumber{ get{ return 1041493; } } // studded sleeves, ranger armor
 

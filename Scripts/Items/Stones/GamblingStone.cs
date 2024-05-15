@@ -3,7 +3,7 @@ using Server.Items;
 
 namespace Server.Items
 {
-	public class GamblingStone : Item
+	public class GamblingStone : BaseItem
 	{
 		private int m_GamblePot = 2500;
 
@@ -21,16 +21,12 @@ namespace Server.Items
 			}
 		}
 
-		public override string DefaultName
-		{
-			get { return "a gambling stone"; }
-		}
-
 		[Constructable]
 		public GamblingStone() : base( 0xED4 )
 		{
 			Movable = false;
 			Hue = 0x56;
+			Name = "a gambling stone";
 		}
 
 		public override void GetProperties( ObjectPropertyList list )
@@ -59,34 +55,34 @@ namespace Server.Items
 
 				if ( roll == 0 ) // Jackpot
 				{
-					from.SendMessage( 0x35, "You win the {0}gp jackpot!", m_GamblePot );
+					from.SendAsciiMessage( 0x35, "You win the {0}gp jackpot!", m_GamblePot );
 					from.AddToBackpack( new BankCheck( m_GamblePot ) );
 
 					m_GamblePot = 2500;
 				}
 				else if ( roll <= 20 ) // Chance for a regbag
 				{
-					from.SendMessage( 0x35, "You win a bag of reagents!" );
+					from.SendAsciiMessage( 0x35, "You win a bag of reagents!" );
 					from.AddToBackpack( new BagOfReagents( 50 ) );
 				}
 				else if ( roll <= 40 ) // Chance for gold
 				{
-					from.SendMessage( 0x35, "You win 1500gp!" );
+					from.SendAsciiMessage( 0x35, "You win 1500gp!" );
 					from.AddToBackpack( new BankCheck( 1500 ) );
 				}
 				else if ( roll <= 100 ) // Another chance for gold
 				{
-					from.SendMessage( 0x35, "You win 1000gp!" );
+					from.SendAsciiMessage( 0x35, "You win 1000gp!" );
 					from.AddToBackpack( new BankCheck( 1000 ) );
 				}
 				else // Loser!
 				{
-					from.SendMessage( 0x22, "You lose!" );
+					from.SendAsciiMessage( 0x22, "You lose!" );
 				}
 			}
 			else
 			{
-				from.SendMessage( 0x22, "You need at least 250gp in your backpack to use this." );
+				from.SendAsciiMessage( 0x22, "You need at least 250gp in your backpack to use this." );
 			}
 		}
     

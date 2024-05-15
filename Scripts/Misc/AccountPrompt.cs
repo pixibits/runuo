@@ -8,7 +8,7 @@ namespace Server.Misc
 	{
 		public static void Initialize()
 		{
-			if ( Accounts.Count == 0 && !Core.Service )
+			if ( Accounts.Table.Count == 0 && !Core.Service )
 			{
 				Console.WriteLine( "This server has no accounts." );
 				Console.Write( "Do you want to create the owner account now? (y/n)" );

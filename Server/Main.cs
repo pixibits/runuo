@@ -33,6 +33,7 @@ using Server.Accounting;
 using Server.Gumps;
 using Server.Network;
 using System.Runtime;
+using Ultima;
 
 namespace Server
 {
@@ -54,6 +55,7 @@ namespace Server
 		private static bool m_HaltOnWarning;
 		private static bool m_VBdotNET;
 		private static MultiTextWriter m_MultiConOut;
+        private static Ultima.StringList m_CliLoc;
 
 		private static bool m_Profiling;
 		private static DateTime m_ProfileStart;
@@ -66,6 +68,18 @@ namespace Server
 			get { return m_MessagePump; }
 			set { m_MessagePump = value; }
 		}
+
+        public static Ultima.StringList CliLoc
+        { 
+            get 
+            {
+                return m_CliLoc;
+            }
+            set
+            {
+                m_CliLoc = value;
+            }
+        }
 
 		public static Slice Slice;
 

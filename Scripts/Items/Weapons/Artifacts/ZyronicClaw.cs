@@ -15,15 +15,14 @@ namespace Server.Items
 		public ZyronicClaw()
 		{
 			Hue = 0x485;
-			Slayer = SlayerName.ElementalBan;
+			// TODO: Elemental Slayer
 			WeaponAttributes.HitLeechMana = 50;
 			Attributes.AttackChance = 30;
 			Attributes.WeaponDamage = 50;
 		}
 
-		public override void GetDamageTypes( Mobile wielder, out int phys, out int fire, out int cold, out int pois, out int nrgy, out int chaos, out int direct )
+		public override void GetDamageTypes( out int phys, out int fire, out int cold, out int pois, out int nrgy )
 		{
-			chaos = direct = 0;
 			phys = fire = cold = pois = nrgy = 20;
 		}
 
@@ -43,9 +42,6 @@ namespace Server.Items
 			base.Deserialize( reader );
 
 			int version = reader.ReadInt();
-
-			if ( Slayer == SlayerName.None )
-				Slayer = SlayerName.ElementalBan;
 		}
 	}
 }

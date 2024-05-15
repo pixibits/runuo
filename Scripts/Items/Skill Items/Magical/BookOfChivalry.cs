@@ -10,6 +10,15 @@ namespace Server.Items
 		public override int BookOffset{ get{ return 200; } }
 		public override int BookCount{ get{ return 10; } }
 
+		public override Item Dupe( int amount )
+		{
+			Spellbook book = new BookOfChivalry();
+
+			book.Content = this.Content;
+
+			return base.Dupe( book, amount );
+		}
+
 		[Constructable]
 		public BookOfChivalry() : this( (ulong)0x3FF )
 		{
@@ -18,7 +27,7 @@ namespace Server.Items
 		[Constructable]
 		public BookOfChivalry( ulong content ) : base( content, 0x2252 )
 		{
-			Layer = (Core.ML ? Layer.OneHanded : Layer.Invalid);
+			Layer = Layer.Invalid;
 		}
 
 		public BookOfChivalry( Serial serial ) : base( serial )
@@ -29,7 +38,7 @@ namespace Server.Items
 		{
 			base.Serialize( writer );
 
-			writer.Write( (int)1 ); // version
+			writer.Write( (int) 0 ); // version
 		}
 
 		public override void Deserialize( GenericReader reader )
@@ -37,9 +46,7 @@ namespace Server.Items
 			base.Deserialize( reader );
 
 			int version = reader.ReadInt();
-
-			if( version == 0 && Core.ML )
-				Layer = Layer.OneHanded;
+			Layer = Layer.Invalid;
 		}
 	}
 }

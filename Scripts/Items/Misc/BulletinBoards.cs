@@ -1,9 +1,9 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using System.Text;
 using Server;
 using Server.Network;
+using Server.Mobiles;
 
 namespace Server.Items
 {
@@ -34,7 +34,229 @@ namespace Server.Items
 		}
 	}
 
-	public abstract class BaseBulletinBoard : Item
+	[Flipable( 0x1E5E, 0x1E5F )]
+	public class BountyBoard : BaseBulletinBoard
+	{
+		[Constructable]
+		public BountyBoard() : base( 0x1E5E )
+		{
+			BoardName = "Bounty Board";
+		}
+
+		public BountyBoard( Serial serial ) : base( serial )
+		{
+		}
+
+		public override void Serialize( GenericWriter writer )
+		{
+			base.Serialize( writer );
+
+			writer.Write( (int) 0 ); // version
+		}
+
+		public override void Deserialize( GenericReader reader )
+		{
+			base.Deserialize( reader );
+
+			int version = reader.ReadInt();
+		}
+
+		public override void Cleanup()
+		{
+			// no cleanup
+			return;
+		}
+
+		public override DateTime GetLastPostTime(Mobile poster, bool onlyCheckRoot)
+		{
+			return DateTime.MinValue;
+		}
+
+		public override DateTime GetLastPostTime( BulletinMessage check )
+		{
+			return check.Time;
+		}
+
+		public override void PostMessage( Mobile from, BulletinMessage thread, string subject, string[] lines )
+		{
+			from.SendAsciiMessage( "This board is for automated bounty postings only.  For communications you should use the forums at http://www.uorebirth.com" );
+			return;
+		}
+
+		private const int BountyCount = 25;
+		private static PlayerMobile[] m_List;
+		private static PlayerMobile[] m_OldList;
+		private static bool m_UpdateMsgs;
+
+		static BountyBoard()
+		{
+			m_List = new PlayerMobile[BountyCount];
+			m_OldList = new PlayerMobile[BountyCount];
+			m_UpdateMsgs = true;
+		}
+
+		public static int LowestBounty { get { return m_List[BountyCount-1] != null ? m_List[BountyCount-1].Bounty : 0; } }
+
+		public static void Update( PlayerMobile pm )
+		{
+			if ( pm.AccessLevel > AccessLevel.Player ) return;
+			
+			PlayerMobile[] newList = m_OldList;
+			int ni = 0;
+			int ins = -1;
+			for(int i=0;i<BountyCount;i++)
+			{
+				if ( m_List[i] == null )
+				{
+					if ( ins == -1 )
+						ins = ni;
+					break; // we reached the end of the list
+				}
+				else if ( pm == m_List[i] || m_List[i].Bounty <= 0 || m_List[i].Kills <= 0 )
+				{
+					// we are already in the array, or someone needs to be removed
+					m_UpdateMsgs = true;
+				}
+				else //if ( pm != m_List[i] )
+				{
+					if ( ins == -1 && m_List[i].Bounty <= pm.Bounty )
+						ins = ni++;
+					if ( ni < BountyCount )
+						newList[ni++] = m_List[i];
+				}
+				
+				m_List[i] = null;
+			}
+
+			if ( ins >= 0 && ins < BountyCount )
+			{
+				newList[ins] = pm;
+				m_UpdateMsgs = true;
+			}
+			m_OldList = m_List;
+			m_List = newList;
+		}
+
+		public override void OnSingleClick(Mobile from)
+		{
+			GetMessages(); // check for update
+			LabelTo( from, true, String.Format( "a bounty board with {0} posted bount{1}", BountyMessage.List.Count, BountyMessage.List.Count != 1 ? "ies" : "y" ) );
+		}
+
+		public override ArrayList GetMessages()
+		{
+			if ( m_UpdateMsgs )
+			{
+				ArrayList del = new ArrayList();
+				ArrayList list = BountyMessage.List;
+				for(int i=0;i<m_List.Length;i++ )
+				{
+					BountyMessage post;
+					if ( m_List[i] == null || m_List[i].Kills <= 0 || m_List[i].Bounty <= 0 )
+					{
+						if ( i < list.Count )
+						{
+							post = (BountyMessage)list[i];
+							if ( post != null && !post.Deleted )
+								del.Add( post );
+						}
+						continue;
+					}
+					
+					if ( i < list.Count )
+						post = (BountyMessage)list[i];
+					else
+						post = new BountyMessage(); // autromatically adds itself to the list
+
+					post.Time = DateTime.MinValue + TimeSpan.FromTicks( m_List[i].Kills );//DateTime.Now;
+					post.PostedName = "";
+					post.PostedBody = 0x0190;
+					post.PostedHue = 0x83EA;
+					if ( post.PostedEquip.Length > 0 )
+						post.PostedEquip = new BulletinEquip[0];
+					post.Poster = null;
+					post.Thread = null;
+					post.Subject = String.Format( "{0}: {1}gp", m_List[i].Name, m_List[i].Bounty );
+					post.FormatMessage( "A price on {0}!\n  The foul scum known as {0} hath murdered one too many! For {1} is guilty of {2} murder{3}.\n  A bounty of {4}gp is hereby offered for {5} head!\n  If you kill {0}, bring {5} head to a guard here in this city to claim your reward.",
+						m_List[i].Name, m_List[i].Female ? "she" : "he", m_List[i].Kills , m_List[i].Kills != 1 ? "s" : "", m_List[i].Bounty, m_List[i].Female ? "her" : "his" );
+				}
+
+				for(int i=0;i<del.Count;i++)
+					((Item)del[i]).Delete();
+
+				if ( list.Count > m_List.Length )
+					BountyMessage.RemoveRange( m_List.Length, list.Count - m_List.Length );
+				m_UpdateMsgs = false;
+				return list;
+			}
+			else
+			{
+				return BountyMessage.List;
+			}
+		}
+
+		public override bool MessageOK( BulletinMessage msg )
+		{
+			return BountyMessage.List.Contains( msg );
+		}
+	}
+
+	public class BountyMessage : BulletinMessage
+	{
+		private static ArrayList m_List;
+		public static ArrayList List
+		{
+			get
+			{
+				if ( m_List == null )
+					m_List = new ArrayList();
+				return m_List;
+			}
+		}
+
+		public static void RemoveRange( int index, int count )
+		{
+			if ( index < 0 || index >= List.Count || count <= 0 )
+				return;
+			ArrayList oldList = new ArrayList( List );
+			int top = index+count;
+			if ( top > oldList.Count )
+				top = oldList.Count;
+			for (int i=index;i<top;i++)
+				((BountyMessage)oldList[i]).Delete();
+		}
+
+		public BountyMessage() : base()
+		{
+			List.Add( this );
+		}
+
+		public BountyMessage( Serial serial ) : base( serial )
+		{
+		}
+
+		public override void OnAfterDelete()
+		{
+			List.Remove( this );
+		}
+
+		public override void Serialize( GenericWriter writer )
+		{
+			base.Serialize( writer );
+
+			writer.Write( (int) 0 ); // version
+		}
+
+		public override void Deserialize( GenericReader reader )
+		{
+			base.Deserialize( reader );
+			List.Add( this );
+			
+			int version = reader.ReadInt();
+		}
+	}
+
+	public abstract class BaseBulletinBoard : BaseItem
 	{
 		private string m_BoardName;
 
@@ -59,11 +281,6 @@ namespace Server.Items
 
 		// A player may only reply once every thirty seconds
 		private static TimeSpan ThreadReplyTime = TimeSpan.FromSeconds( 30.0 );
-
-		public static bool CheckTime( DateTime time, TimeSpan range )
-		{
-			return (time + range) < DateTime.Now;
-		}
 
 		public static string FormatTS( TimeSpan ts )
 		{
@@ -90,51 +307,43 @@ namespace Server.Items
 
 				BulletinMessage msg = items[i] as BulletinMessage;
 
-				if ( msg == null )
+				if ( msg == null || msg.Thread != null )
 					continue;
-
-				if ( msg.Thread == null && CheckTime( msg.LastPostTime, ThreadDeletionTime ) )
-				{
-					msg.Delete();
+				DateTime lpt = GetLastPostTime( msg );
+				if ( lpt != DateTime.MinValue && (lpt + ThreadDeletionTime) < DateTime.Now )
 					RecurseDelete( msg ); // A root-level thread has expired
-				}
 			}
 		}
 
 		private void RecurseDelete( BulletinMessage msg )
 		{
-			List<Item> found = new List<Item>();
+			ArrayList found = null;
 			List<Item> items = this.Items;
 
 			for ( int i = items.Count - 1; i >= 0; --i )
 			{
-				if ( i >= items.Count )
-					continue;
-
 				BulletinMessage check = items[i] as BulletinMessage;
-
-				if ( check == null )
-					continue;
-
-				if ( check.Thread == msg )
+				if ( check != null && check.Thread == msg )
 				{
-					check.Delete();
+					if ( found == null ) found = new ArrayList( 1 );
 					found.Add( check );
 				}
 			}
 
-			for ( int i = 0; i < found.Count; ++i )
-				RecurseDelete( (BulletinMessage)found[i] );
+			if ( found != null )
+			{
+				for ( int i = 0; i < found.Count; ++i )
+					RecurseDelete( (BulletinMessage)found[i] );
+			}
+			msg.Delete();
 		}
 
-		public virtual bool GetLastPostTime( Mobile poster, bool onlyCheckRoot, ref DateTime lastPostTime )
+		public virtual DateTime GetLastPostTime( Mobile poster, bool onlyCheckRoot )
 		{
-			List<Item> items = this.Items;
-			bool wasSet = false;
-
-			for ( int i = 0; i < items.Count; ++i )
+			DateTime lastPostTime = DateTime.MinValue;
+			for ( int i = 0; i < this.Items.Count; ++i )
 			{
-				BulletinMessage msg = items[i] as BulletinMessage;
+				BulletinMessage msg = this.Items[i] as BulletinMessage;
 
 				if ( msg == null || msg.Poster != poster )
 					continue;
@@ -143,13 +352,36 @@ namespace Server.Items
 					continue;
 
 				if ( msg.Time > lastPostTime )
-				{
-					wasSet = true;
 					lastPostTime = msg.Time;
-				}
 			}
 
-			return wasSet;
+			return lastPostTime;
+		}
+
+		public virtual DateTime GetLastPostTime( BulletinMessage check )
+		{
+			DateTime lastPostTime = check.Time;
+			for ( int i = 0; i < this.Items.Count; ++i )
+			{
+				BulletinMessage msg = this.Items[i] as BulletinMessage;
+
+				if ( msg == null || msg.Thread != check )
+					continue;
+
+				if ( msg.Time > lastPostTime )
+					lastPostTime = msg.Time;
+			}
+			return lastPostTime;
+		}
+
+		public virtual ArrayList GetMessages()
+		{
+			return new ArrayList(this.Items);
+		}
+
+		public virtual bool MessageOK( BulletinMessage msg )
+		{
+			return msg.Parent == this;
 		}
 
 		public override void OnDoubleClick( Mobile from )
@@ -158,7 +390,7 @@ namespace Server.Items
 			{
 				Cleanup();
 
-				NetState state = from.NetState;
+                NetState state = from.NetState;
 
 				state.Send( new BBDisplayBoard( this ) );
 				if ( state.ContainerGridLines )
@@ -180,11 +412,8 @@ namespace Server.Items
 			return ( from.Map == this.Map && from.InRange( GetWorldLocation(), 2 ) );
 		}
 
-		public void PostMessage( Mobile from, BulletinMessage thread, string subject, string[] lines )
+		public virtual void PostMessage( Mobile from, BulletinMessage thread, string subject, string[] lines )
 		{
-			if ( thread != null )
-				thread.LastPostTime = DateTime.Now;
-
 			AddItem( new BulletinMessage( from, thread, subject, lines ) );
 		}
 
@@ -245,7 +474,7 @@ namespace Server.Items
 		{
 			BulletinMessage msg = World.FindItem( pvSrc.ReadInt32() ) as BulletinMessage;
 
-			if ( msg == null || msg.Parent != board )
+			if ( msg == null || !board.MessageOK( msg ) )
 				return;
 
 			from.Send( new BBMessageContent( board, msg ) );
@@ -255,7 +484,7 @@ namespace Server.Items
 		{
 			BulletinMessage msg = World.FindItem( pvSrc.ReadInt32() ) as BulletinMessage;
 
-			if ( msg == null || msg.Parent != board )
+			if ( msg == null || !board.MessageOK( msg ) )
 				return;
 
 			from.Send( new BBMessageHeader( board, msg ) );
@@ -265,7 +494,7 @@ namespace Server.Items
 		{
 			BulletinMessage thread = World.FindItem( pvSrc.ReadInt32() ) as BulletinMessage;
 
-			if ( thread != null && thread.Parent != board )
+			if ( thread != null && !board.MessageOK( thread ) )
 				thread = null;
 
 			int breakout = 0;
@@ -273,31 +502,23 @@ namespace Server.Items
 			while ( thread != null && thread.Thread != null && breakout++ < 10 )
 				thread = thread.Thread;
 
-			DateTime lastPostTime = DateTime.MinValue;
-
-			if ( board.GetLastPostTime( from, ( thread == null ), ref lastPostTime ) )
+			DateTime lastPostTime = board.GetLastPostTime( from, ( thread == null ) );
+			if ( lastPostTime+(thread == null ? ThreadCreateTime : ThreadReplyTime) > DateTime.Now )
 			{
-				if ( !CheckTime( lastPostTime, (thread == null ? ThreadCreateTime : ThreadReplyTime) ) )
-				{
-					if ( thread == null )
-						from.SendMessage( "You must wait {0} before creating a new thread.", FormatTS( ThreadCreateTime ) );
-					else
-						from.SendMessage( "You must wait {0} before replying to another thread.", FormatTS( ThreadReplyTime ) );
-
-					return;
-				}
+				if ( thread == null )
+					from.SendAsciiMessage( "You must wait {0} before creating a new thread.", FormatTS( ThreadCreateTime ) );
+				else
+					from.SendAsciiMessage( "You must wait {0} before replying to another thread.", FormatTS( ThreadReplyTime ) );
+				return;
 			}
 
 			string subject = pvSrc.ReadUTF8StringSafe( pvSrc.ReadByte() );
-
 			if ( subject.Length == 0 )
 				return;
 
 			string[] lines = new string[pvSrc.ReadByte()];
-
 			if ( lines.Length == 0 )
 				return;
-
 			for ( int i = 0; i < lines.Length; ++i )
 				lines[i] = pvSrc.ReadUTF8StringSafe( pvSrc.ReadByte() );
 
@@ -308,7 +529,7 @@ namespace Server.Items
 		{
 			BulletinMessage msg = World.FindItem( pvSrc.ReadInt32() ) as BulletinMessage;
 
-			if ( msg == null || msg.Parent != board )
+			if ( msg == null || !board.MessageOK( msg ) )
 				return;
 
 			if ( from.AccessLevel < AccessLevel.GameMaster && msg.Poster != from )
@@ -330,11 +551,11 @@ namespace Server.Items
 		}
 	}
 
-	public class BulletinMessage : Item
+	public class BulletinMessage : BaseItem
 	{
 		private Mobile m_Poster;
 		private string m_Subject;
-		private DateTime m_Time, m_LastPostTime;
+		private DateTime m_Time;
 		private BulletinMessage m_Thread;
 		private string m_PostedName;
 		private int m_PostedBody;
@@ -344,7 +565,16 @@ namespace Server.Items
 
 		public string GetTimeAsString()
 		{
-			return m_Time.ToString( "MMM dd, yyyy" );
+			//if ( ( m_Time.DayOfYear == DateTime.Now.DayOfYear && m_Time.Year == DateTime.Now.Year ) || m_Time == DateTime.MinValue )
+				return "Today";
+			//else
+			//	return m_Time.ToString( "MMM d, yyyy" );
+		}
+
+		public string GetHeaderTime()
+		{
+			long kills = (m_Time - DateTime.MinValue).Ticks;
+			return String.Format( "{0} kill{1}", kills, kills != 1 ? "s" : "" );
 		}
 
 		public override bool CheckTarget( Mobile from, Server.Targeting.Target targ, object targeted )
@@ -357,6 +587,10 @@ namespace Server.Items
 			return false;
 		}
 
+		public BulletinMessage() : this( null, null, "", new string[0] )
+		{
+		}
+
 		public BulletinMessage( Mobile poster, BulletinMessage thread, string subject, string[] lines ) : base( 0xEB0 )
 		{
 			Movable = false;
@@ -364,36 +598,136 @@ namespace Server.Items
 			m_Poster = poster;
 			m_Subject = subject;
 			m_Time = DateTime.Now;
-			m_LastPostTime = m_Time;
 			m_Thread = thread;
-			m_PostedName = m_Poster.Name;
-			m_PostedBody = m_Poster.Body;
-			m_PostedHue = m_Poster.Hue;
 			m_Lines = lines;
-
-			List<BulletinEquip> list = new List<BulletinEquip>();
-
-			for ( int i = 0; i < poster.Items.Count; ++i )
+			if ( m_Poster == null )
 			{
-				Item item = poster.Items[i];
-
-				if ( item.Layer >= Layer.OneHanded && item.Layer <= Layer.Mount )
-					list.Add( new BulletinEquip( item.ItemID, item.Hue ) );
+				m_PostedName = "";
+				m_PostedBody = 0x0190;
+				m_PostedHue = 0x83EA;
+				m_PostedEquip = new BulletinEquip[0];
 			}
+			else
+			{
+				m_PostedName = m_Poster.Name;
+				m_PostedBody = m_Poster.Body;
+				m_PostedHue = m_Poster.Hue;
 
-			m_PostedEquip = list.ToArray();
+				ArrayList list = new ArrayList( poster.Items.Count );
+				for ( int i = 0; i < poster.Items.Count; ++i )
+				{
+					Item item = (Item)poster.Items[i];
+
+					if ( item.Layer >= Layer.FirstValid && item.Layer <= Layer.LastValid )
+						list.Add( new BulletinEquip( item.ItemID, item.Hue ) );
+				}
+				m_PostedEquip = (BulletinEquip[])list.ToArray( typeof( BulletinEquip ) );
+			}
 		}
 
-		public Mobile Poster{ get{ return m_Poster; } }
-		public BulletinMessage Thread{ get{ return m_Thread; } }
-		public string Subject{ get{ return m_Subject; } }
-		public DateTime Time{ get{ return m_Time; } }
-		public DateTime LastPostTime{ get{ return m_LastPostTime; } set{ m_LastPostTime = value; } }
-		public string PostedName{ get{ return m_PostedName; } }
-		public int PostedBody{ get{ return m_PostedBody; } }
-		public int PostedHue{ get{ return m_PostedHue; } }
-		public BulletinEquip[] PostedEquip{ get{ return m_PostedEquip; } }
-		public string[] Lines{ get{ return m_Lines; } }
+		public Mobile Poster
+		{ 
+			get{ return m_Poster; } 
+			set{ m_Poster = value; }
+		}
+
+		public BulletinMessage Thread
+		{ 
+			get{ return m_Thread; } 
+			set{ m_Thread = value; }
+		}
+
+		public string Subject
+		{ 
+			get{ return m_Subject; } 
+			set{ m_Subject = value; }
+		}
+
+		public DateTime Time
+		{ 
+			get{ return m_Time; } 
+			set{ m_Time = value; }
+		}
+
+		public string PostedName
+		{ 
+			get{ return m_PostedName; } 
+			set{ m_PostedName = value; }
+		}
+
+		public int PostedBody
+		{ 
+			get{ return m_PostedBody; } 
+			set{ m_PostedBody = value; }
+		}
+
+		public int PostedHue
+		{ 
+			get{ return m_PostedHue; } 
+			set{ m_PostedHue = value; }
+		}
+
+		public BulletinEquip[] PostedEquip
+		{ 
+			get{ return m_PostedEquip; } 
+			set{ m_PostedEquip = value; }
+		}
+
+		public void FormatMessage( string fmt, params object[] args )
+		{
+			FormatMessage( String.Format( fmt, args ) );
+		}
+
+		public virtual void FormatMessage( string msg )
+		{
+			StringBuilder sb = new StringBuilder( msg.Length + 32 );
+			int len = 0;
+			int space = -1;
+			int i = 0;
+
+			while ( i < msg.Length )
+			{
+				char ch = msg[i];
+				sb.Append( ch );
+				len++; i++;
+
+				if ( ch == ' ' || ch == '-' )
+				{
+					space = sb.Length;
+				}
+				else if ( ch == '\n' )
+				{
+					len = 0;
+					space = -1;
+					sb.Append( '\r' );
+				}
+				else if ( len >= 30 )
+				{
+					if ( space != -1 )
+					{
+						len = 2 + sb.Length - space;
+						sb.Insert( space, "\n\r" );
+					}
+					else
+					{
+						len = 0;
+						sb.Append( "\n\r" );
+					}
+					space = -1;
+				}
+			}
+
+			if ( len != 0 )
+				sb.Append( "\n\r" );
+
+			m_Lines = sb.ToString().Split( '\r' );
+		}
+
+		public string[] Lines
+		{ 
+			get{ return m_Lines; } 
+			set{ m_Lines = value; }
+		}
 
 		public BulletinMessage( Serial serial ) : base( serial )
 		{
@@ -408,23 +742,21 @@ namespace Server.Items
 			writer.Write( (Mobile) m_Poster );
 			writer.Write( (string) m_Subject );
 			writer.Write( (DateTime) m_Time );
-			writer.Write( (DateTime) m_LastPostTime );
 			writer.Write( (bool) (m_Thread != null) );
-			writer.Write( (Item) m_Thread );
+			if ( m_Thread != null )
+				writer.Write( (Item) m_Thread );
 			writer.Write( (string) m_PostedName );
-			writer.Write( (int) m_PostedBody );
-			writer.Write( (int) m_PostedHue );
+			writer.Write( (short) m_PostedBody );
+			writer.Write( (short) m_PostedHue );
 
-			writer.Write( (int) m_PostedEquip.Length );
-
+			writer.Write( (byte) m_PostedEquip.Length );
 			for ( int i = 0; i < m_PostedEquip.Length; ++i )
 			{
-				writer.Write( (int) m_PostedEquip[i].itemID );
-				writer.Write( (int) m_PostedEquip[i].hue );
+				writer.Write( (short) m_PostedEquip[i].itemID );
+				writer.Write( (short) m_PostedEquip[i].hue );
 			}
 
-			writer.Write( (int) m_Lines.Length );
-
+			writer.Write( (byte) m_Lines.Length );
 			for ( int i = 0; i < m_Lines.Length; ++i )
 				writer.Write( (string) m_Lines[i] );
 		}
@@ -442,23 +774,21 @@ namespace Server.Items
 					m_Poster = reader.ReadMobile();
 					m_Subject = reader.ReadString();
 					m_Time = reader.ReadDateTime();
-					m_LastPostTime = reader.ReadDateTime();
 					bool hasThread = reader.ReadBool();
-					m_Thread = reader.ReadItem() as BulletinMessage;
+					if ( hasThread )
+						m_Thread = reader.ReadItem() as BulletinMessage;
 					m_PostedName = reader.ReadString();
-					m_PostedBody = reader.ReadInt();
-					m_PostedHue = reader.ReadInt();
+					m_PostedBody = reader.ReadShort();
+					m_PostedHue = reader.ReadShort();
 
-					m_PostedEquip = new BulletinEquip[reader.ReadInt()];
-
+					m_PostedEquip = new BulletinEquip[reader.ReadByte()];
 					for ( int i = 0; i < m_PostedEquip.Length; ++i )
 					{
-						m_PostedEquip[i].itemID = reader.ReadInt();
-						m_PostedEquip[i].hue = reader.ReadInt();
+						m_PostedEquip[i].itemID = reader.ReadShort();
+						m_PostedEquip[i].hue = reader.ReadShort();
 					}
 
-					m_Lines = new string[reader.ReadInt()];
-
+					m_Lines = new string[reader.ReadByte()];
 					for ( int i = 0; i < m_Lines.Length; ++i )
 						m_Lines[i] = reader.ReadString();
 
@@ -470,7 +800,7 @@ namespace Server.Items
 			}
 		}
 	}
-
+    
 	public class BBDisplayBoard : Packet
 	{
 		public BBDisplayBoard( BaseBulletinBoard board ) : base( 0x71 )

@@ -1,9 +1,7 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Network;
 
@@ -18,9 +16,19 @@ namespace Server.Accounting
 			if ( !Enabled )
 				return;
 
-			PacketHandlers.RegisterThrottler( 0x80, new ThrottlePacketCallback( Throttle_Callback ) );
-			PacketHandlers.RegisterThrottler( 0x91, new ThrottlePacketCallback( Throttle_Callback ) );
-			PacketHandlers.RegisterThrottler( 0xCF, new ThrottlePacketCallback( Throttle_Callback ) );
+			RegisterThrottler( 0x80 );
+			RegisterThrottler( 0x91 );
+			RegisterThrottler( 0xCF );
+		}
+
+		public static void RegisterThrottler( int packetID )
+		{
+			PacketHandler ph = PacketHandlers.GetHandler( packetID );
+
+			if ( ph == null )
+				return;
+
+			ph.ThrottleCallback = new ThrottlePacketCallback( Throttle_Callback );
 		}
 
 		public static bool Throttle_Callback( NetState ns )
@@ -33,7 +41,7 @@ namespace Server.Accounting
 			return ( DateTime.Now >= (accessLog.LastAccessTime + ComputeThrottle( accessLog.Counts )) );
 		}
 
-		private static List<InvalidAccountAccessLog> m_List = new List<InvalidAccountAccessLog>();
+		private static ArrayList m_List = new ArrayList();
 
 		public static InvalidAccountAccessLog FindAccessLog( NetState ns )
 		{
@@ -44,7 +52,7 @@ namespace Server.Accounting
 
 			for ( int i = 0; i < m_List.Count; ++i )
 			{
-				InvalidAccountAccessLog accessLog = m_List[i];
+				InvalidAccountAccessLog accessLog = (InvalidAccountAccessLog)m_List[i];
 
 				if ( accessLog.HasExpired )
 					m_List.RemoveAt( i-- );
@@ -67,21 +75,6 @@ namespace Server.Accounting
 
 			accessLog.Counts += 1;
 			accessLog.RefreshAccessTime();
-
-			if ( accessLog.Counts >= 3 ) {
-				try {
-					using ( StreamWriter op = new StreamWriter( "throttle.log", true ) ) {
-						op.WriteLine(
-							"{0}\t{1}\t{2}",
-							DateTime.Now,
-							ns,
-							accessLog.Counts
-						);
-					}
-				}
-				catch {
-				}
-			}
 		}
 
 		public static TimeSpan ComputeThrottle( int counts )

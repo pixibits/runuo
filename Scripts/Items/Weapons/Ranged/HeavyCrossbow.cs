@@ -15,17 +15,18 @@ namespace Server.Items
 		public override WeaponAbility SecondaryAbility{ get{ return WeaponAbility.Dismount; } }
 
 		public override int AosStrengthReq{ get{ return 80; } }
-		public override int AosMinDamage{ get{ return Core.ML ? 20 : 19; } }
-		public override int AosMaxDamage{ get{ return Core.ML ? 24 : 20; } }
+		public override int AosMinDamage{ get{ return 19; } }
+		public override int AosMaxDamage{ get{ return 20; } }
 		public override int AosSpeed{ get{ return 22; } }
-		public override float MlSpeed{ get{ return 5.00f; } }
 
 		public override int OldStrengthReq{ get{ return 40; } }
-		public override int OldMinDamage{ get{ return 11; } }
-		public override int OldMaxDamage{ get{ return 56; } }
-		public override int OldSpeed{ get{ return 10; } }
+		public override int OldSpeed{ get{ return 9; } }
 
-		public override int DefMaxRange{ get{ return 8; } }
+		public override int NumDice { get { return 4; } }
+		public override int NumSides { get { return 9; } }
+		public override int DiceBonus { get { return 6; } }
+
+		public override int DefMaxRange{ get{ return 6; } }
 
 		public override int InitMinHits{ get{ return 31; } }
 		public override int InitMaxHits{ get{ return 100; } }

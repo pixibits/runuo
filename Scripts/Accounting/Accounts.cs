@@ -1,6 +1,5 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 
@@ -8,7 +7,7 @@ namespace Server.Accounting
 {
 	public class Accounts
 	{
-		private static Dictionary<string, IAccount> m_Accounts = new Dictionary<string, IAccount>();
+		private static Hashtable m_Accounts = new Hashtable();
 
 		public static void Configure()
 		{
@@ -20,61 +19,104 @@ namespace Server.Accounting
 		{
 		}
 
-		public static int Count { get { return m_Accounts.Count; } }
-
-		public static ICollection<IAccount> GetAccounts()
+		public static Hashtable Table
 		{
-#if !MONO
-			return m_Accounts.Values;
-#else
-			return new List<IAccount>( m_Accounts.Values );
-#endif
+			get
+			{
+				return m_Accounts;
+			}
 		}
 
-		public static IAccount GetAccount( string username )
+		public static Account GetAccount( string username )
 		{
-			IAccount a;
+			return m_Accounts[username] as Account;
+		}
 
-			m_Accounts.TryGetValue( username, out a );
+		public static Account AddAccount( string user, string pass )
+		{
+			Account a = new Account( user, pass );
+			if ( m_Accounts.Count == 0 )
+				a.AccessLevel = AccessLevel.Administrator;
+
+			m_Accounts[a.Username] = a;
 
 			return a;
 		}
 
-		public static void Add( IAccount a )
+		public static int GetInt32( string intString, int defaultValue )
 		{
-			m_Accounts[a.Username] = a;
-		}
-		
-		public static void Remove( string username )
-		{
-			m_Accounts.Remove( username );
-		}
-
-		public static void Load()
-		{
-			m_Accounts = new Dictionary<string, IAccount>( 32, StringComparer.OrdinalIgnoreCase );
-
-			string filePath = Path.Combine( "Saves/Accounts", "accounts.xml" );
-
-			if ( !File.Exists( filePath ) )
-				return;
-
-			XmlDocument doc = new XmlDocument();
-			doc.Load( filePath );
-
-			XmlElement root = doc["accounts"];
-
-			foreach ( XmlElement account in root.GetElementsByTagName( "account" ) )
+			try
+			{
+				return XmlConvert.ToInt32( intString );
+			}
+			catch
 			{
 				try
 				{
-					Account acct = new Account( account );
+					return Convert.ToInt32( intString );
 				}
 				catch
 				{
-					Console.WriteLine( "Warning: Account instance load failed" );
+					return defaultValue;
 				}
 			}
+		}
+
+		public static DateTime GetDateTime( string dateTimeString, DateTime defaultValue )
+		{
+			try
+			{
+				return XmlConvert.ToDateTime( dateTimeString );
+			}
+			catch
+			{
+				try
+				{
+					return DateTime.Parse( dateTimeString );
+				}
+				catch
+				{
+					return defaultValue;
+				}
+			}
+		}
+
+		public static TimeSpan GetTimeSpan( string timeSpanString, TimeSpan defaultValue )
+		{
+			try
+			{
+				return XmlConvert.ToTimeSpan( timeSpanString );
+			}
+			catch
+			{
+				return defaultValue;
+			}
+		}
+
+		public static string GetAttribute( XmlElement node, string attributeName )
+		{
+			return GetAttribute( node, attributeName, null );
+		}
+
+		public static string GetAttribute( XmlElement node, string attributeName, string defaultValue )
+		{
+			if ( node == null )
+				return defaultValue;
+
+			XmlAttribute attr = node.Attributes[attributeName];
+
+			if ( attr == null )
+				return defaultValue;
+
+			return attr.Value;
+		}
+
+		public static string GetText( XmlElement node, string defaultValue )
+		{
+			if ( node == null )
+				return defaultValue;
+
+			return node.InnerText;
 		}
 
 		public static void Save( WorldSaveEventArgs e )
@@ -98,12 +140,41 @@ namespace Server.Accounting
 
 				xml.WriteAttributeString( "count", m_Accounts.Count.ToString() );
 
-				foreach ( Account a in GetAccounts() )
+				foreach ( Account a in Accounts.Table.Values )
 					a.Save( xml );
 
 				xml.WriteEndElement();
 
 				xml.Close();
+			}
+		}
+
+		public static void Load()
+		{
+			m_Accounts = new Hashtable( 32, 1.0f, CaseInsensitiveHashCodeProvider.Default, CaseInsensitiveComparer.Default );
+
+			string filePath = Path.Combine( "Saves/Accounts", "accounts.xml" );
+
+			if ( !File.Exists( filePath ) )
+				return;
+
+			XmlDocument doc = new XmlDocument();
+			doc.Load( filePath );
+
+			XmlElement root = doc["accounts"];
+
+			foreach ( XmlElement account in root.GetElementsByTagName( "account" ) )
+			{
+				try
+				{
+					Account acct = new Account( account );
+
+					m_Accounts[acct.Username] = acct;
+				}
+				catch
+				{
+					Console.WriteLine( "Warning: Account instance load failed" );
+				}
 			}
 		}
 	}

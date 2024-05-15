@@ -56,31 +56,4 @@ namespace Server.Items
 			int version = reader.ReadInt();
 		}
 	}
-
-	public class LanternOfSouls : Lantern
-	{
-		public override int LabelNumber{ get{ return 1061618; } } // Lantern of Souls
-
-		[Constructable]
-		public LanternOfSouls()
-		{
-			Hue = 0x482;
-		}
-
-		public LanternOfSouls( Serial serial ) : base( serial )
-		{
-		}
-
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
-			writer.Write( (int) 0 );
-		}
-
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-			int version = reader.ReadInt();
-		}
-	}
 }

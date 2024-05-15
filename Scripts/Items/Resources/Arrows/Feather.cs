@@ -3,14 +3,14 @@ using Server.Items;
 
 namespace Server.Items
 {
-	public class Feather : Item, ICommodity
+	public class Feather : BaseItem, ICommodity
 	{
-		int ICommodity.DescriptionNumber { get { return LabelNumber; } }
-		bool ICommodity.IsDeedable { get { return true; } }
-
-		public override double DefaultWeight
+		string ICommodity.Description
 		{
-			get { return 0.1; }
+			get
+			{
+				return String.Format( Amount == 1 ? "{0} feather" : "{0} feathers", Amount );
+			}
 		}
 
 		[Constructable]
@@ -22,6 +22,7 @@ namespace Server.Items
 		public Feather( int amount ) : base( 0x1BD1 )
 		{
 			Stackable = true;
+			Weight = 0.1;
 			Amount = amount;
 		}
 
@@ -43,6 +44,32 @@ namespace Server.Items
 			int version = reader.ReadInt();
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Feather( amount ), amount );
+		}
+
+		public override void OnDoubleClick( Mobile from )
+		{
+			from.BeginTarget( 10, false, Targeting.TargetFlags.None, new TargetCallback( OnTargShafts ) );
+			from.SendAsciiMessage( "Select the shafts you wish to use this on." );
+		}
+
+		private void OnTargShafts( Mobile from, object target )
+		{
+			if ( target is Shaft )
+			{
+				Shaft shaft = (Shaft)target;
+				if ( shaft.IsChildOf( from.Backpack ) )
+					new Engines.Craft.FletchingSystem( this, shaft ).Begin( from, null );
+				else
+					from.SendAsciiMessage( "That belongs to someone else." );
+			}
+			else
+			{
+				from.SendAsciiMessage( "You can't use feathers on that." );
+			}
+		}
 	}
 }
+

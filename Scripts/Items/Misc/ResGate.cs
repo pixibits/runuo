@@ -3,18 +3,14 @@ using Server.Gumps;
 
 namespace Server.Items
 {
-	public class ResGate : Item
+	public class ResGate : BaseItem
 	{
-		public override string DefaultName
-		{
-			get { return "a resurrection gate"; }
-		}
-
 		[Constructable]
 		public ResGate() : base( 0xF6C )
 		{
 			Movable = false;
 			Hue = 0x2D1;
+			Name = "a resurection gate";
 			Light = LightType.Circle300;
 		}
 
@@ -29,8 +25,7 @@ namespace Server.Items
 				m.PlaySound( 0x214 );
 				m.FixedEffect( 0x376A, 10, 16 );
 
-				m.CloseGump( typeof( ResurrectGump ) );
-				m.SendGump( new ResurrectGump( m ) );
+				m.SendMenu( new ResurrectMenu( m ) );
 			}
 			else
 			{

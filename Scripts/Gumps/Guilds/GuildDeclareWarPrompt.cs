@@ -1,9 +1,8 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Guilds;
 using Server.Prompts;
-using System.Collections.Generic;
 
 namespace Server.Gumps
 {
@@ -36,13 +35,13 @@ namespace Server.Gumps
 
 			if ( text.Length >= 3 )
 			{
-				List<Guild> guilds = Utility.CastConvertList<BaseGuild, Guild>( Guild.Search( text ) );
+				List<BaseGuild> guilds = BaseGuild.Search( text );
 
 				GuildGump.EnsureClosed( m_Mobile );
 
 				if ( guilds.Count > 0 )
 				{
-					m_Mobile.SendGump( new GuildDeclareWarGump( m_Mobile, m_Guild, guilds ) );
+					m_Mobile.SendGump( new GuildDeclareWarGump( m_Mobile, m_Guild, new ArrayList( guilds ) ) );
 				}
 				else
 				{
@@ -52,7 +51,7 @@ namespace Server.Gumps
 			}
 			else
 			{
-				m_Mobile.SendMessage( "Search string must be at least three letters in length." );
+				m_Mobile.SendAsciiMessage( "Search string must be at least three letters in length." );
 			}
 		}
 	}

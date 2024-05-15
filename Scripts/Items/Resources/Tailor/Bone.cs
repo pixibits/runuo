@@ -3,10 +3,15 @@ using Server.Items;
 
 namespace Server.Items
 {
-	public class Bone : Item, ICommodity
+	public class Bone : BaseItem, ICommodity
 	{
-		int ICommodity.DescriptionNumber { get { return LabelNumber; } }
-		bool ICommodity.IsDeedable { get { return true; } }
+		string ICommodity.Description
+		{
+			get
+			{
+				return String.Format( Amount == 1 ? "{0} bone" : "{0} bones", Amount );
+			}
+		}
 
 		[Constructable]
 		public Bone() : this( 1 )
@@ -25,7 +30,10 @@ namespace Server.Items
 		{
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Bone( amount ), amount );
+		}
 
 		public override void Serialize( GenericWriter writer )
 		{

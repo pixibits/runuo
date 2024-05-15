@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using Server;
 using Server.Mobiles;
 using Server.Network;
@@ -6,16 +6,12 @@ using Server.Multis;
 
 namespace Server.Items
 {
-	public class BarkeepContract : Item
+	public class BarkeepContract : BaseItem
 	{
-		public override string DefaultName
-		{
-			get { return "a barkeep contract"; }
-		}
-
 		[Constructable]
 		public BarkeepContract() : base( 0x14F0 )
 		{
+			Name = "a barkeep contract";
 			Weight = 1.0;
 			LootType = LootType.Blessed;
 		}
@@ -48,10 +44,11 @@ namespace Server.Items
 			{
 				from.SendLocalizedMessage( 503248 ); // Your godly powers allow you to place this vendor whereever you wish.
 
-				Mobile v = new PlayerBarkeeper( from, BaseHouse.FindHouseAt( from ) );
+				Mobile v = new PlayerBarkeeper( from );
 
+				v.Location = from.Location;
 				v.Direction = from.Direction & Direction.Mask;
-				v.MoveToWorld( from.Location, from.Map );
+				v.Map = from.Map;
 
 				this.Delete();
 			}
@@ -63,34 +60,17 @@ namespace Server.Items
 				{
 					from.LocalOverheadMessage( MessageType.Regular, 0x3B2, false, "You are not the full owner of this house." );
 				}
-				else if ( !house.CanPlaceNewBarkeep() )
-				{
-					from.SendLocalizedMessage( 1062490 ); // That action would exceed the maximum number of barkeeps for this house.
-				}
 				else
 				{
-					bool vendor, contract;
-					BaseHouse.IsThereVendor( from.Location, from.Map, out vendor, out contract );
+					Mobile v = new PlayerBarkeeper( from );
 
-					if ( vendor )
-					{
-						from.SendLocalizedMessage( 1062677 ); // You cannot place a vendor or barkeep at this location.
-					}
-					else if ( contract )
-					{
-						from.SendLocalizedMessage( 1062678 ); // You cannot place a vendor or barkeep on top of a rental contract!
-					}
-					else
-					{
-						Mobile v = new PlayerBarkeeper( from, house );
-
-						v.Direction = from.Direction & Direction.Mask;
-						v.MoveToWorld( from.Location, from.Map );
+					v.Location = from.Location;
+					v.Direction = from.Direction & Direction.Mask;
+					v.Map = from.Map;
 						
-						this.Delete();
-					}
+					this.Delete();
 				}
 			}
 		}
 	}
-}
+}*/

@@ -1,5 +1,5 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Multis;
 
@@ -7,7 +7,7 @@ namespace Server.Items
 {
 	public enum PlankSide{ Port, Starboard }
 
-	public class Plank : Item, ILockable
+	public class Plank : BaseItem, ILockable
 	{
 		private BaseBoat m_Boat;
 		private PlankSide m_Side;
@@ -169,24 +169,26 @@ namespace Server.Items
 					{
 						z = from.Z + j;
 
-						if ( map.CanFit( x, y, z, 16, false, false ) && !Server.Spells.SpellHelper.CheckMulti( new Point3D( x, y, z ), map ) && !Region.Find( new Point3D( x, y, z ), map ).IsPartOf( typeof( Factions.StrongholdRegion ) ) )
+						if ( map.CanFit( x, y, z, 16, false, false ) && !Server.Spells.SpellHelper.CheckMulti( new Point3D( x, y, z ), map ) )
 						{
 							if ( i == 1 && j >= -2 && j <= 2 )
 								return true;
 
 							from.Location = new Point3D( x, y, z );
+							from.RevealingAction();
 							return false;
 						}
 					}
 
 					z = map.GetAverageZ( x, y );
 
-					if ( map.CanFit( x, y, z, 16, false, false ) && !Server.Spells.SpellHelper.CheckMulti( new Point3D( x, y, z ), map ) && !Region.Find( new Point3D( x, y, z ), map ).IsPartOf( typeof( Factions.StrongholdRegion ) ) )
+					if ( map.CanFit( x, y, z, 16, false, false ) && !Server.Spells.SpellHelper.CheckMulti( new Point3D( x, y, z ), map ) )
 					{
 						if ( i == 1 )
 							return true;
 
 						from.Location = new Point3D( x, y, z );
+						from.RevealingAction();
 						return false;
 					}
 				}
@@ -238,6 +240,11 @@ namespace Server.Items
 		}
 
 		public override void OnDoubleClickDead( Mobile from )
+		{
+			OnDoubleClick( from );
+		}
+
+		public override void OnDoubleClickCantSee(Mobile from)
 		{
 			OnDoubleClick( from );
 		}

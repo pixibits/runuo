@@ -13,10 +13,10 @@ namespace Server.Items
 
 		public override int BaseMana{ get{ return 25; } }
 
-		public override bool OnBeforeDamage( Mobile attacker, Mobile defender )
+		public override void OnHit( Mobile attacker, Mobile defender, int damage )
 		{
 			if ( !Validate( attacker ) || !CheckMana( attacker, true ) )
-				return false;
+				return;
 
 			ClearCurrentAbility( attacker );
 
@@ -28,25 +28,7 @@ namespace Server.Items
 
 			Effects.SendMovingParticles( new Entity( Serial.Zero, new Point3D( defender.X, defender.Y, defender.Z + 10 ), defender.Map ), new Entity( Serial.Zero, new Point3D( defender.X, defender.Y, defender.Z + 20 ), defender.Map ), 0x36FE, 1, 0, false, false, 1133, 3, 9501, 1, 0, EffectLayer.Waist, 0x100 );
 
-			int damage = 10; // Base damage is 10.
-
-			if ( defender.HitsMax > 0 ) 
-			{
-				double hitsPercent = ( (double)defender.Hits / (double)defender.HitsMax ) * 100.0;
-
-				double manaPercent = 0;
-
-				if ( defender.ManaMax > 0 )
-					manaPercent = ( (double)defender.Mana / (double)defender.ManaMax ) * 100.0;
-
-				damage += Math.Min( (int)(Math.Abs( hitsPercent - manaPercent ) / 4), 20 );
-			}
-
-			// Total damage is 10 + (0~20) = 10~30, physical, non-resistable.
-
-			defender.Damage( damage, attacker );
-
-			return true;
+			AOS.Damage( defender, attacker, Utility.RandomMinMax( 10, 40 ), 100, 0, 0, 0, 0 );
 		}
 	}
 }

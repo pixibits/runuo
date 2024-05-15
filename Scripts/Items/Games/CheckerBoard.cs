@@ -1,11 +1,18 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 
 namespace Server.Items
 {
 	public class CheckerBoard : BaseBoard
 	{
 		public override int LabelNumber{ get{ return 1016449; } } // a checker board
+
+		public override int DefaultGumpID{ get{ return 0x91A; } }
+
+		public override Rectangle2D Bounds
+		{
+			get{ return new Rectangle2D( 0, 0, 282, 210 ); }
+		}
 
 		[Constructable]
 		public CheckerBoard() : base( 0xFA6 )

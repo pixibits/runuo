@@ -7,7 +7,7 @@ using Server.Regions;
 
 namespace Server.Items
 {
-	public class GuildDeed : Item
+	public class GuildDeed : BaseItem
 	{
 		public override int LabelNumber{ get{ return 1041055; } } // a guild deed
 
@@ -40,9 +40,6 @@ namespace Server.Items
 
 		public override void OnDoubleClick( Mobile from )
 		{
-			if( Guild.NewGuildSystem )
-				return;
-
 			if ( !IsChildOf( from.Backpack ) )
 			{
 				from.SendLocalizedMessage( 1042001 ); // That must be in your pack for you to use it.
@@ -55,7 +52,7 @@ namespace Server.Items
 			{
 				BaseHouse house = BaseHouse.FindHouseAt( from );
 
-				if ( house == null )
+				if ( house == null || house is Tent )
 				{
 					from.SendLocalizedMessage( 501138 ); // You can only place a guildstone in a house.
 				}
@@ -69,6 +66,18 @@ namespace Server.Items
 				}
 				else
 				{
+					IPooledEnumerable eable = from.GetItemsInRange( 1 );
+					foreach ( Item item in eable )
+					{
+						if ( item is BaseDoor && ( item.X == from.X || item.Y == from.Y ) && item.Z - 5 < from.Z && item.Z + 5 > from.Z )
+						{
+							from.SendAsciiMessage( "You cannot place this in front of a door." );
+							eable.Free();
+							return;
+						}
+					}
+					eable.Free();
+
 					from.SendLocalizedMessage( 1013060 ); // Enter new guild name (40 characters max):
 					from.Prompt = new InternalPrompt( this );
 				}

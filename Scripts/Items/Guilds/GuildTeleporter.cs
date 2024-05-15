@@ -7,7 +7,7 @@ using Server.Regions;
 
 namespace Server.Items
 {
-	public class GuildTeleporter : Item
+	public class GuildTeleporter : BaseItem
 	{
 		private Item m_Stone;
 
@@ -64,9 +64,6 @@ namespace Server.Items
 
 		public override void OnDoubleClick( Mobile from )
 		{
-			if( Guild.NewGuildSystem )
-				return;
-
 			Guildstone stone = m_Stone as Guildstone;
 
 			if ( !IsChildOf( from.Backpack ) )
@@ -81,7 +78,7 @@ namespace Server.Items
 			{
 				BaseHouse house = BaseHouse.FindHouseAt( from );
 
-				if ( house == null )
+				if ( house == null || house is Tent )
 				{
 					from.SendLocalizedMessage( 501138 ); // You can only place a guildstone in a house.
 				}
@@ -89,12 +86,19 @@ namespace Server.Items
 				{
 					from.SendLocalizedMessage( 501141 ); // You can only place a guildstone in a house you own!
 				}
-				else if( house.FindGuildstone() != null )
-				{
-					from.SendLocalizedMessage( 501142 );//Only one guildstone may reside in a given house.
-				}
 				else
 				{
+					IPooledEnumerable eable = from.GetItemsInRange( 1 );
+					foreach ( Item item in eable )
+					{
+						if ( item is BaseDoor && ( item.X == from.X || item.Y == from.Y ) && item.Z - 5 < from.Z && item.Z + 5 > from.Z )
+						{
+							from.SendAsciiMessage( "You cannot place this in front of a door." );
+							eable.Free();
+							return;
+						}
+					}
+					eable.Free();
 					m_Stone.MoveToWorld( from.Location, from.Map );
 					Delete();
 					stone.Guild.Teleporter = null;

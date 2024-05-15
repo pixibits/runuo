@@ -1,15 +1,13 @@
 using System;
 using System.Reflection;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Targeting;
 using Server.Items;
 using Server.Gumps;
 using CPA = Server.CommandPropertyAttribute;
-using Server.Commands;
-using Server.Commands.Generic;
 
-namespace Server.Commands
+namespace Server.Scripts.Commands
 {
 	public enum PropertyAccess
 	{
@@ -20,29 +18,35 @@ namespace Server.Commands
 
 	public class Properties
 	{
-		public static void Initialize()
+		public static void Register()
 		{
-			CommandSystem.Register( "Props", AccessLevel.Counselor, new CommandEventHandler( Props_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "Props", AccessLevel.Counselor, new Server.Commands.CommandEventHandler( Props_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "GuildProps", AccessLevel.Counselor, new Server.Commands.CommandEventHandler( GuildProps_OnCommand ) );
 		}
 
 		private class PropsTarget : Target
 		{
-			public PropsTarget() : base( -1, true, TargetFlags.None )
+			private bool m_Normal;
+
+			public PropsTarget( bool normal ) : base( -1, true, TargetFlags.None )
 			{
+				m_Normal = normal;
 			}
 
 			protected override void OnTarget( Mobile from, object o )
 			{
 				if ( !BaseCommand.IsAccessible( from, o ) )
 					from.SendMessage( "That is not accessible." );
-				else
+				else if ( m_Normal )
 					from.SendGump( new PropertiesGump( from, o ) );
+				else if ( o is Guildstone )
+					from.SendGump( new PropertiesGump( from, ((Guildstone)o).Guild ) );
 			}
 		}
 
 		[Usage( "Props [serial]" )]
 		[Description( "Opens a menu where you can view and edit all properties of a targeted (or specified) object." )]
-		private static void Props_OnCommand( CommandEventArgs e )
+		private static void Props_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			if ( e.Length == 1 )
 			{
@@ -57,8 +61,15 @@ namespace Server.Commands
 			}
 			else
 			{
-				e.Mobile.Target = new PropsTarget();
+				e.Mobile.Target = new PropsTarget( true );
 			}
+		}
+
+		[Usage( "GuildProps" )]
+		[Description( "Opens a menu where you can view and edit guild properties of a targeted guild stone." )]
+		private static void GuildProps_OnCommand( Server.Commands.CommandEventArgs e )
+		{
+			e.Mobile.Target = new PropsTarget( false );
 		}
 
 		private static bool CIEqual( string l, string r )
@@ -135,7 +146,7 @@ namespace Server.Commands
 							failReason = String.Format( "Property '{0}' is write only.", propertyName );
 							return null;
 						}
-						else if ( (access & PropertyAccess.Write) != 0 && (!p.CanWrite || attr.ReadOnly) && isFinal )
+						else if ( (access & PropertyAccess.Write) != 0 && !p.CanWrite && isFinal )
 						{
 							failReason = String.Format( "Property '{0}' is read only.", propertyName );
 							return null;
@@ -262,22 +273,10 @@ namespace Server.Commands
 			for ( int i = 0; i < realProps.Length; ++i )
 			{
 				object obj = realProps[i].GetValue( realObjs[i], null );
+				long v = (long)Convert.ChangeType( obj, TypeCode.Int64 );
+				v += realValues[i];
 
-				if( !( obj is IConvertible ) )
-					return "Property is not IConvertable.";
-
-				try
-				{
-
-					long v = (long)Convert.ChangeType( obj, TypeCode.Int64 );
-					v += realValues[i];
-
-					realProps[i].SetValue( realObjs[i], Convert.ChangeType( v, realProps[i].PropertyType ), null );
-				}
-				catch
-				{
-					return "Value could not be converted";
-				}
+				realProps[i].SetValue( realObjs[i], Convert.ChangeType( v, realProps[i].PropertyType ), null );
 			}
 
 			if ( realProps.Length == 1 )
@@ -310,13 +309,13 @@ namespace Server.Commands
 			string toString;
 
 			if ( value == null )
-				toString = "null";
+				toString = "(-null-)";
 			else if ( IsNumeric( type ) )
 				toString = String.Format( "{0} (0x{0:X})", value );
 			else if ( IsChar( type ) )
-				toString = String.Format( "'{0}' ({1} [0x{1:X}])", value, (int) value );
+				toString = String.Format( "'{0}' ({1} [0x{1:X}])", value, (int)value );
 			else if ( IsString( type ) )
-				toString = ( (string) value == "null" ? @"@""null""" : String.Format( "\"{0}\"", value ) );
+				toString = String.Format( "\"{0}\"", value );
 			else
 				toString = value.ToString();
 
@@ -496,54 +495,6 @@ namespace Server.Commands
 			return null;
 		}
 
-		public static string SetDirect( Mobile from, object logObject, object obj, PropertyInfo prop, string givenName, object toSet, bool shouldLog )
-		{
-			try
-			{
-				if ( toSet is AccessLevel )
-				{
-					AccessLevel newLevel = (AccessLevel) toSet;
-					AccessLevel reqLevel = AccessLevel.Administrator;
-
-					if ( newLevel == AccessLevel.Administrator )
-						reqLevel = AccessLevel.Developer;
-					else if ( newLevel >= AccessLevel.Developer )
-						reqLevel = AccessLevel.Owner;
-
-					if ( from.AccessLevel < reqLevel )
-						return "You do not have access to that level.";
-				}
-
-				if ( shouldLog )
-					CommandLogging.LogChangeProperty( from, logObject, givenName, toSet == null ? "(-null-)" : toSet.ToString() );
-
-				prop.SetValue( obj, toSet, null );
-				return "Property has been set.";
-			}
-			catch
-			{
-				return "An exception was caught, the property may not be set.";
-			}
-		}
-
-		public static string SetDirect( object obj, PropertyInfo prop, object toSet )
-		{
-			try
-			{
-				if ( toSet is AccessLevel )
-				{
-					return "You do not have access to that level.";
-				}
-
-				prop.SetValue( obj, toSet, null );
-				return "Property has been set.";
-			}
-			catch
-			{
-				return "An exception was caught, the property may not be set.";
-			}
-		}
-
 		public static string InternalSetValue( Mobile from, object logobj, object o, PropertyInfo p, string pname, string value, bool shouldLog )
 		{
 			object toSet = null;
@@ -552,286 +503,18 @@ namespace Server.Commands
 			if ( result != null )
 				return result;
 
-			return SetDirect( from, logobj, o, p, pname, toSet, shouldLog );
-		}
-
-		public static string InternalSetValue( object o, PropertyInfo p, string value )
-		{
-			object toSet = null;
-			string result = ConstructFromString( p.PropertyType, o, value, ref toSet );
-
-			if ( result != null )
-				return result;
-
-			return SetDirect( o, p, toSet );
-		}
-	}
-}
-
-namespace Server
-{
-	public abstract class PropertyException : ApplicationException
-	{
-		protected Property m_Property;
-
-		public Property Property
-		{
-			get { return m_Property; }
-		}
-
-		public PropertyException( Property property, string message )
-			: base( message )
-		{
-			m_Property = property;
-		}
-	}
-
-	public abstract class BindingException : PropertyException
-	{
-		public BindingException( Property property, string message )
-			: base( property, message )
-		{
-		}
-	}
-
-	public sealed class NotYetBoundException : BindingException
-	{
-		public NotYetBoundException( Property property )
-			: base( property, String.Format( "Property has not yet been bound." ) )
-		{
-		}
-	}
-
-	public sealed class AlreadyBoundException : BindingException
-	{
-		public AlreadyBoundException( Property property )
-			: base( property, String.Format( "Property has already been bound." ) )
-		{
-		}
-	}
-
-	public sealed class UnknownPropertyException : BindingException
-	{
-		public UnknownPropertyException( Property property, string current )
-			: base( property, String.Format( "Property '{0}' not found.", current ) )
-		{
-		}
-	}
-
-	public sealed class ReadOnlyException : BindingException
-	{
-		public ReadOnlyException( Property property )
-			: base( property, "Property is read-only." )
-		{
-		}
-	}
-
-	public sealed class WriteOnlyException : BindingException
-	{
-		public WriteOnlyException( Property property )
-			: base( property, "Property is write-only." )
-		{
-		}
-	}
-
-	public abstract class AccessException : PropertyException
-	{
-		public AccessException( Property property, string message )
-			: base( property, message )
-		{
-		}
-	}
-
-	public sealed class InternalAccessException : AccessException
-	{
-		public InternalAccessException( Property property )
-			: base( property, "Property is internal." )
-		{
-		}
-	}
-
-	public abstract class ClearanceException : AccessException
-	{
-		protected AccessLevel m_PlayerAccess;
-		protected AccessLevel m_NeededAccess;
-
-		public AccessLevel PlayerAccess
-		{
-			get { return m_PlayerAccess; }
-		}
-
-		public AccessLevel NeededAccess
-		{
-			get { return m_NeededAccess; }
-		}
-
-		public ClearanceException( Property property, AccessLevel playerAccess, AccessLevel neededAccess, string accessType )
-			: base( property, string.Format(
-				"You must be at least {0} to {1} this property.",
-				Mobile.GetAccessLevelName( neededAccess ),
-				accessType
-			) )
-		{
-		}
-	}
-
-	public sealed class ReadAccessException : ClearanceException
-	{
-		public ReadAccessException( Property property, AccessLevel playerAccess, AccessLevel neededAccess )
-			: base( property, playerAccess, neededAccess, "read" )
-		{
-		}
-	}
-
-	public sealed class WriteAccessException : ClearanceException
-	{
-		public WriteAccessException( Property property, AccessLevel playerAccess, AccessLevel neededAccess )
-			: base( property, playerAccess, neededAccess, "write" )
-		{
-		}
-	}
-
-	public sealed class Property
-	{
-		private string m_Binding;
-
-		private PropertyInfo[] m_Chain;
-		private PropertyAccess m_Access;
-
-		public string Binding
-		{
-			get { return m_Binding; }
-		}
-
-		public bool IsBound
-		{
-			get { return ( m_Chain != null ); }
-		}
-
-		public PropertyAccess Access
-		{
-			get { return m_Access; }
-		}
-
-		public PropertyInfo[] Chain
-		{
-			get
+			try
 			{
-				if ( !IsBound )
-					throw new NotYetBoundException( this );
+				if ( shouldLog )
+					CommandLogging.LogChangeProperty( from, logobj, pname, value );
 
-				return m_Chain;
+				p.SetValue( o, toSet, null );
+				return "Property has been set.";
 			}
-		}
-
-		public Type Type
-		{
-			get
+			catch
 			{
-				if ( !IsBound )
-					throw new NotYetBoundException( this );
-
-				return m_Chain[m_Chain.Length - 1].PropertyType;
+				return "An exception was caught, the property may not be set.";
 			}
-		}
-
-		public bool CheckAccess( Mobile from )
-		{
-			if ( !IsBound )
-				throw new NotYetBoundException( this );
-
-			for ( int i = 0; i < m_Chain.Length; ++i )
-			{
-				PropertyInfo prop = m_Chain[i];
-
-				bool isFinal = ( i == ( m_Chain.Length - 1 ) );
-
-				PropertyAccess access = m_Access;
-
-				if ( !isFinal )
-					access |= PropertyAccess.Read;
-
-				CPA security = Properties.GetCPA( prop );
-
-				if ( security == null )
-					throw new InternalAccessException( this );
-
-				if ( ( access & PropertyAccess.Read ) != 0 && from.AccessLevel < security.ReadLevel )
-					throw new ReadAccessException( this, from.AccessLevel, security.ReadLevel );
-
-				if ( ( access & PropertyAccess.Write ) != 0 && (from.AccessLevel < security.WriteLevel || security.ReadOnly) )
-					throw new WriteAccessException( this, from.AccessLevel, security.ReadLevel );
-			}
-
-			return true;
-		}
-
-		public void BindTo( Type objectType, PropertyAccess desiredAccess )
-		{
-			if ( IsBound )
-				throw new AlreadyBoundException( this );
-
-			string[] split = m_Binding.Split( '.' );
-
-			PropertyInfo[] chain = new PropertyInfo[split.Length];
-
-			for ( int i = 0; i < split.Length; ++i )
-			{
-				bool isFinal = ( i == ( chain.Length - 1 ) );
-
-				chain[i] = objectType.GetProperty( split[i], BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase );
-
-				if ( chain[i] == null )
-					throw new UnknownPropertyException( this, split[i] );
-
-				objectType = chain[i].PropertyType;
-
-				PropertyAccess access = desiredAccess;
-
-				if ( !isFinal )
-					access |= PropertyAccess.Read;
-
-				if ( ( access & PropertyAccess.Read ) != 0 && !chain[i].CanRead )
-					throw new WriteOnlyException( this );
-
-				if ( ( access & PropertyAccess.Write ) != 0 && !chain[i].CanWrite )
-					throw new ReadOnlyException( this );
-			}
-
-			m_Access = desiredAccess;
-			m_Chain = chain;
-		}
-
-		public Property( string binding )
-		{
-			m_Binding = binding;
-		}
-
-		public Property( PropertyInfo[] chain )
-		{
-			m_Chain = chain;
-		}
-
-		public override string ToString()
-		{
-			if ( !IsBound )
-				return m_Binding;
-
-			string[] toJoin = new string[m_Chain.Length];
-
-			for ( int i = 0; i < toJoin.Length; ++i )
-				toJoin[i] = m_Chain[i].Name;
-
-			return string.Join( ".", toJoin );
-		}
-
-		public static Property Parse( Type type, string binding, PropertyAccess access )
-		{
-			Property prop = new Property( binding );
-
-			prop.BindTo( type, access );
-
-			return prop;
 		}
 	}
 }

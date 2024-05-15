@@ -1,20 +1,18 @@
 using System;
-using System.Diagnostics;
 using System.IO;
-using System.Text;
+using System.Diagnostics;
 using Server;
-using Server.Commands;
 
 namespace Server.Misc
 {
 	public class AutoRestart : Timer
 	{
-		public static bool Enabled = false; // is the script enabled?
+		private static bool Enabled = true; // is the script enabled?
 
-		private static TimeSpan RestartTime = TimeSpan.FromHours( 2.0 ); // time of day at which to restart
-		private static TimeSpan RestartDelay = TimeSpan.Zero; // how long the server should remain active before restart (period of 'server wars')
+		private static TimeSpan RestartTime = TimeSpan.FromSeconds( 1.0 ); // 0:00:01am (server time) to restart
+		private static TimeSpan RestartDelay = TimeSpan.FromMinutes( 15.25 ); // how long the server should remain active before restart (period of 'server wars')
 
-		private static TimeSpan WarningDelay = TimeSpan.FromMinutes( 1.0 ); // at what interval should the shutdown message be displayed?
+		private static TimeSpan WarningDelay = TimeSpan.FromMinutes( 3 ); // at what interval should the shutdown message be displayed?
 
 		private static bool m_Restarting;
 		private static DateTime m_RestartTime;
@@ -26,19 +24,22 @@ namespace Server.Misc
 
 		public static void Initialize()
 		{
-			CommandSystem.Register( "Restart", AccessLevel.Administrator, new CommandEventHandler( Restart_OnCommand ) );
-			new AutoRestart().Start();
+			if ( Enabled )
+			{
+				Commands.CommandSystem.Register( "Restart", AccessLevel.Administrator, new Server.Commands.CommandEventHandler( Restart_OnCommand ) );
+				new AutoRestart().Start();
+			}
 		}
 
-		public static void Restart_OnCommand( CommandEventArgs e )
+		public static void Restart_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			if ( m_Restarting )
 			{
-				e.Mobile.SendMessage( "The server is already restarting." );
+				e.Mobile.SendAsciiMessage( "The server is already restarting." );
 			}
 			else
 			{
-				e.Mobile.SendMessage( "You have initiated server shutdown." );
+				e.Mobile.SendAsciiMessage( "You have initiated server shutdown." );
 				Enabled = true;
 				m_RestartTime = DateTime.Now;
 			}
@@ -56,12 +57,20 @@ namespace Server.Misc
 
 		private void Warning_Callback()
 		{
-			World.Broadcast( 0x22, true, "The server is going down shortly." );
+			//World.Broadcast( 0x22, true, "The server is going down shortly." );
+			Scripts.Commands.CommandHandlers.SystemMessage( "The server is going down shortly." );
 		}
 
 		private void Restart_Callback()
 		{
-			Core.Kill( true );
+			Scripts.Commands.CommandHandlers.SystemMessage( "The server is going down shortly." );
+
+			while ( AsyncWriter.ThreadCount > 0 /*|| Accounting.Accounts.ThreadRunning*/ )
+				System.Threading.Thread.Sleep( 100 );
+
+			System.Threading.Thread.Sleep( 5000 );
+			Process.Start( Core.ExePath );
+			Core.Process.Kill();
 		}
 
 		protected override void OnTick()
@@ -78,10 +87,9 @@ namespace Server.Misc
 				Timer.DelayCall( WarningDelay, WarningDelay, new TimerCallback( Warning_Callback ) );
 			}
 
-			AutoSave.Save();
+            Misc.AutoSave.Save();
 
 			m_Restarting = true;
-
 			Timer.DelayCall( RestartDelay, new TimerCallback( Restart_Callback ) );
 		}
 	}

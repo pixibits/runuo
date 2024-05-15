@@ -1,6 +1,7 @@
 using System;
 using Server;
-using Server.Spells.Spellweaving;
+using Server.Items;
+using Server.Engines.Harvest;
 
 namespace Server.Items
 {
@@ -18,35 +19,19 @@ namespace Server.Items
 		{
 			damage = base.AbsorbDamage( attacker, defender, damage );
 
-			AttuneWeaponSpell.TryAbsorb( defender, ref damage );
-
-			if ( Core.AOS )
-				return damage;
-			
-			int absorb = defender.MeleeDamageAbsorb;
-
-			if ( absorb > 0 )
+			if ( defender.MeleeDamageAbsorb > 0 && attacker.GetDistanceToSqrt( defender ) <= 1 )
 			{
+				double absorb = (double)(damage * defender.MeleeDamageAbsorb) / 100.0;
 				if ( absorb > damage )
+					absorb = damage;
+				
+				attacker.PlaySound( 0x1F1 );
+				attacker.FixedEffect( 0x374A, 10, 16 );
+
+				if ( absorb >= 1 )
 				{
-					int react = damage / 5;
-
-					if ( react <= 0 )
-						react = 1;
-
-					defender.MeleeDamageAbsorb -= damage;
-					damage = 0;
-
-					attacker.Damage( react, defender );
-
-					attacker.PlaySound( 0x1F1 );
-					attacker.FixedEffect( 0x374A, 10, 16 );
-				}
-				else
-				{
-					defender.MeleeDamageAbsorb = 0;
-					defender.SendLocalizedMessage( 1005556 ); // Your reactive armor spell has been nullified.
-					DefensiveSpell.Nullify( defender );
+					attacker.Damage( ((int)absorb + 1) / 2 ); // since damage is havled before its applied... halve it here too
+					damage -= (int)absorb;
 				}
 			}
 

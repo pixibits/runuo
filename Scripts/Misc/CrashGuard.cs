@@ -1,12 +1,11 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Net.Mail;
+using System.Web.Mail;
+using System.Collections; using System.Collections.Generic;
+using System.Diagnostics;
 using Server;
-using Server.Accounting;
 using Server.Network;
+using Server.Accounting;
 
 namespace Server.Misc
 {
@@ -17,6 +16,14 @@ namespace Server.Misc
 		private static bool RestartServer = true;
 		private static bool GenerateReport = true;
 
+		// To add reporting emailing, fill in EmailServer and Emails:
+		// Example:
+		//  private const string EmailServer = "mail.domain.com";
+		//  private const string Emails = "first@email.here;second@email.here;third@email.here";
+
+		private static string EmailServer = null;
+		private static string Emails = null;
+
 		public static void Initialize()
 		{
 			if ( Enabled ) // If enabled, register our crash event handler
@@ -25,18 +32,15 @@ namespace Server.Misc
 
 		public static void CrashGuard_OnCrash( CrashedEventArgs e )
 		{
-			if ( GenerateReport )
-				GenerateCrashReport( e );
-
-			World.WaitForWriteCompletion();
-
 			if ( SaveBackup )
 				Backup();
 
+			if ( GenerateReport )
+				GenerateCrashReport( e );
 
-			/*if ( Core.Service )
+			if ( Core.Service )
 				e.Close = true;
-			else */ if ( RestartServer )
+			else if ( RestartServer )
 				Restart( e );
 		}
 
@@ -44,18 +48,26 @@ namespace Server.Misc
 		{
 			Console.Write( "Crash: Sending email..." );
 
-			MailMessage message = new MailMessage( "RunUO", Email.CrashAddresses );
+			try
+			{
+				MailMessage message = new MailMessage();
 
-			message.Subject = "Automated RunUO Crash Report";
+				message.Subject = "Automated RunUO Crash Report";
+				message.From = "RunUO";
+				message.To = Emails;
+				message.Body = "Automated RunUO Crash Report. See attachment for details.";
 
-			message.Body = "Automated RunUO Crash Report. See attachment for details.";
+				message.Attachments.Add( new MailAttachment( filePath ) );
 
-			message.Attachments.Add( new Attachment( filePath ) );
+				SmtpMail.SmtpServer = EmailServer;
+				SmtpMail.Send( message );
 
-			if ( Email.Send( message ) )
 				Console.WriteLine( "done" );
-			else
+			}
+			catch
+			{
 				Console.WriteLine( "failed" );
+			}
 		}
 
 		private static string GetRoot()
@@ -72,7 +84,7 @@ namespace Server.Misc
 
 		private static string Combine( string path1, string path2 )
 		{
-			if ( path1.Length == 0 )
+			if ( path1 == "" )
 				return path2;
 
 			return Path.Combine( path1, path2 );
@@ -86,7 +98,12 @@ namespace Server.Misc
 
 			try
 			{
-				Process.Start( Core.ExePath, Core.Arguments );
+				DateTime start = DateTime.Now;
+				while ( ( AsyncWriter.ThreadCount > 0 /*|| Accounting.Accounts.ThreadRunning*/ ) && DateTime.Now - start < TimeSpan.FromMinutes( 5.0 ) )
+					System.Threading.Thread.Sleep( 100 );
+
+				System.Threading.Thread.Sleep( 1000 );
+				Process.Start( Core.ExePath );
 				Console.WriteLine( "done" );
 
 				e.Close = true;
@@ -170,6 +187,11 @@ namespace Server.Misc
 
 		private static void GenerateCrashReport( CrashedEventArgs e )
 		{
+			GenerateCrashReport( e.Exception );
+		}
+
+		public static void GenerateCrashReport( Exception e )
+		{
 			Console.Write( "Crash: Generating report..." );
 
 			try
@@ -182,12 +204,9 @@ namespace Server.Misc
 
 				using ( StreamWriter op = new StreamWriter( filePath ) )
 				{
-					Version ver = Core.Assembly.GetName().Version;
-
 					op.WriteLine( "Server Crash Report" );
 					op.WriteLine( "===================" );
 					op.WriteLine();
-					op.WriteLine( "RunUO Version {0}.{1}, Build {2}.{3}", ver.Major, ver.Minor, ver.Build, ver.Revision );
 					op.WriteLine( "Operating System: {0}", Environment.OSVersion );
 					op.WriteLine( ".NET Framework: {0}", Environment.Version );
 					op.WriteLine( "Time: {0}", DateTime.Now );
@@ -197,10 +216,6 @@ namespace Server.Misc
 
 					try { op.WriteLine( "Items: {0}", World.Items.Count ); }
 					catch {}
-
-					op.WriteLine( "Exception:" );
-					op.WriteLine( e.Exception );
-					op.WriteLine();
 
 					op.WriteLine( "Clients:" );
 
@@ -212,7 +227,7 @@ namespace Server.Misc
 
 						for ( int i = 0; i < states.Count; ++i )
 						{
-							NetState state = states[i];
+							NetState state = (NetState)states[i];
 
 							op.Write( "+ {0}:", state );
 
@@ -233,11 +248,16 @@ namespace Server.Misc
 					{
 						op.WriteLine( "- Failed" );
 					}
+
+					op.WriteLine();
+
+					op.WriteLine( "Exception:" );
+					op.WriteLine( e );
 				}
 
 				Console.WriteLine( "done" );
 
-				if ( Email.CrashAddresses != null )
+				if ( Emails != null )
 					SendEmail( filePath );
 			}
 			catch

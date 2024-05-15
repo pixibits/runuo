@@ -6,18 +6,17 @@ using Server.Mobiles;
 
 namespace Server.Spells.First
 {
-	public class HealSpell : MagerySpell
+	public class HealSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Heal", "In Mani",
+				SpellCircle.First,
 				224,
 				9061,
 				Reagent.Garlic,
 				Reagent.Ginseng,
 				Reagent.SpidersSilk
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.First; } }
 
 		public HealSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -34,44 +33,27 @@ namespace Server.Spells.First
 			{
 				Caster.SendLocalizedMessage( 500237 ); // Target can not be seen.
 			}
-			else if ( m.IsDeadBondedPet )
-			{
-				Caster.SendLocalizedMessage( 1060177 ); // You cannot heal a creature that is already dead!
-			}
 			else if ( m is BaseCreature && ((BaseCreature)m).IsAnimatedDead )
 			{
 				Caster.SendLocalizedMessage( 1061654 ); // You cannot heal that which is not alive.
 			}
-			else if ( m is Golem )
-			{
-				Caster.LocalOverheadMessage( MessageType.Regular, 0x3B2, 500951 ); // You cannot heal that.
-			}
-			else if ( m.Poisoned || Server.Items.MortalStrike.IsWounded( m ) )
+			else if ( Server.Items.MortalStrike.IsWounded( m ) )
 			{
 				Caster.LocalOverheadMessage( MessageType.Regular, 0x22, (Caster == m) ? 1005000 : 1010398 );
 			}
+			/* // idea... dont allow lesser heal to heal through poison (but allow it on gheal)
+			else if ( m.Poisoned || Server.Items.MortalStrike.IsWounded( m ) )
+			{
+				Caster.LocalOverheadMessage( MessageType.Regular, 0x22, (Caster == m) ? 1005000 : 1010398 ); // You cannot heal that target/yourself in their/your current state.
+			}*/
 			else if ( CheckBSequence( m ) )
 			{
 				SpellHelper.Turn( Caster, m );
 
-				int toHeal;
-
-				if ( Core.AOS )
-				{
-					toHeal = Caster.Skills.Magery.Fixed / 120;
-					toHeal += Utility.RandomMinMax( 1, 4 );
-
-					if( Core.SE && Caster != m )
-						toHeal = (int)(toHeal * 1.5);
-				}
-				else
-				{
-					toHeal = (int)(Caster.Skills[SkillName.Magery].Value * 0.1);
-					toHeal += Utility.Random( 1, 5 );
-				}
-
-				//m.Heal( toHeal, Caster );
-				SpellHelper.Heal( toHeal, m, Caster );
+				int toHeal = 1 + (int)( Utility.Random( 15 ) * Caster.Skills[SkillName.Magery].Value / 100.0 );
+				if ( Caster != m && Caster.NetState != null )
+					Caster.NetState.Send( new MessageLocalizedAffix( Serial.MinusOne, -1, MessageType.Label, 0x3B2, 3, 1008158, "", AffixType.Append | AffixType.System, (m.Hits+toHeal > m.HitsMax ? m.HitsMax - m.Hits : toHeal).ToString(), "" ) );
+				m.Heal( toHeal );
 
 				m.FixedParticles( 0x376A, 9, 32, 5005, EffectLayer.Waist );
 				m.PlaySound( 0x1F2 );
@@ -84,7 +66,7 @@ namespace Server.Spells.First
 		{
 			private HealSpell m_Owner;
 
-			public InternalTarget( HealSpell owner ) : base( Core.ML ? 10 : 12, false, TargetFlags.Beneficial )
+			public InternalTarget( HealSpell owner ) : base( 12, false, TargetFlags.Beneficial )
 			{
 				m_Owner = owner;
 			}

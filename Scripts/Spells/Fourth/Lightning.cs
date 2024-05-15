@@ -4,17 +4,16 @@ using Server.Network;
 
 namespace Server.Spells.Fourth
 {
-	public class LightningSpell : MagerySpell
+	public class LightningSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Lightning", "Por Ort Grav",
+				SpellCircle.Fourth,
 				239,
 				9021,
 				Reagent.MandrakeRoot,
 				Reagent.SulfurousAsh
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Fourth; } }
 
 		public LightningSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -24,8 +23,6 @@ namespace Server.Spells.Fourth
 		{
 			Caster.Target = new InternalTarget( this );
 		}
-
-		public override bool DelayedDamage{ get{ return false; } }
 
 		public void Target( Mobile m )
 		{
@@ -39,25 +36,7 @@ namespace Server.Spells.Fourth
 
 				SpellHelper.CheckReflect( (int)this.Circle, Caster, ref m );
 
-				double damage;
-
-				if ( Core.AOS )
-				{
-					damage = GetNewAosDamage( 23, 1, 4, m );
-				}
-				else
-				{
-					damage = Utility.Random( 12, 9 );
-
-					if ( CheckResisted( m ) )
-					{
-						damage *= 0.75;
-
-						m.SendLocalizedMessage( 501783 ); // You feel yourself resisting magical energy.
-					}
-
-					damage *= GetDamageScalar( m );
-				}
+				double damage = GetDamage( m );
 
 				m.BoltEffect( 0 );
 
@@ -71,7 +50,7 @@ namespace Server.Spells.Fourth
 		{
 			private LightningSpell m_Owner;
 
-			public InternalTarget( LightningSpell owner ) : base( Core.ML ? 10 : 12, false, TargetFlags.Harmful )
+			public InternalTarget( LightningSpell owner ) : base( 12, false, TargetFlags.Harmful )
 			{
 				m_Owner = owner;
 			}

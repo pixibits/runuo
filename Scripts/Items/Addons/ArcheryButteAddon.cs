@@ -1,7 +1,6 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
-using Server.Network;
 
 namespace Server.Items
 {
@@ -64,8 +63,8 @@ namespace Server.Items
 
 		public ArcheryButte( int itemID ) : base( itemID )
 		{
-			m_MinSkill = -25.0;
-			m_MaxSkill = +25.0;
+			m_MinSkill = 0.0;
+			m_MaxSkill = 30.0;
 		}
 
 		public ArcheryButte( Serial serial ) : base( serial )
@@ -82,7 +81,7 @@ namespace Server.Items
 
 		public void Gather( Mobile from )
 		{
-			from.LocalOverheadMessage( MessageType.Regular, 0x3B2, 500592 ); // You gather the arrows and bolts.
+			from.SendLocalizedMessage( 500592 ); // You gather the arrows and bolts.
 
 			if ( m_Arrows > 0 )
 				from.AddToBackpack( new Arrow( m_Arrows ) );
@@ -92,45 +91,9 @@ namespace Server.Items
 
 			m_Arrows = 0;
 			m_Bolts = 0;
-
-			m_Entries = null;
 		}
 
-		private static TimeSpan UseDelay = TimeSpan.FromSeconds( 2.0 );
-
-		private class ScoreEntry
-		{
-			private int m_Total;
-			private int m_Count;
-
-			public int Total{ get{ return m_Total; } set{ m_Total = value; } }
-			public int Count{ get{ return m_Count; } set{ m_Count = value; } }
-
-			public void Record( int score )
-			{
-				m_Total += score;
-				m_Count += 1;
-			}
-
-			public ScoreEntry()
-			{
-			}
-		}
-
-		private Hashtable m_Entries;
-
-		private ScoreEntry GetEntryFor( Mobile from )
-		{
-			if ( m_Entries == null )
-				m_Entries = new Hashtable();
-
-			ScoreEntry e = (ScoreEntry)m_Entries[from];
-
-			if ( e == null )
-				m_Entries[from] = e = new ScoreEntry();
-
-			return e;
-		}
+		private static TimeSpan UseDelay = TimeSpan.FromSeconds( 3.0 );
 
 		public void Fire( Mobile from )
 		{
@@ -149,24 +112,24 @@ namespace Server.Items
 
 			if ( FacingEast ? from.X <= worldLoc.X : from.Y <= worldLoc.Y )
 			{
-				from.LocalOverheadMessage( MessageType.Regular, 0x3B2, 500596 ); // You would do better to stand in front of the archery butte.
+				SendLocalizedMessageTo( from, 500596 ); // You would do better to stand in front of the archery butte.
 				return;
 			}
 
 			if ( FacingEast ? from.Y != worldLoc.Y : from.X != worldLoc.X )
 			{
-				from.LocalOverheadMessage( MessageType.Regular, 0x3B2, 500597 ); // You aren't properly lined up with the archery butte to get an accurate shot.
+				SendLocalizedMessageTo( from, 500597 ); // You aren't properly lined up with the archery butte to get an accurate shot.
 				return;
 			}
 
-			if ( !from.InRange( worldLoc, 6 ) )
+			if ( !from.InRange( worldLoc, bow.MaxRange ) )
 			{
-				from.LocalOverheadMessage( MessageType.Regular, 0x3B2, 500598 ); // You are too far away from the archery butte to get an accurate shot.
+				SendLocalizedMessageTo( from, 500598 ); // You are too far away from the archery butte to get an accurate shot.
 				return;
 			}
 			else if ( from.InRange( worldLoc, 4 ) )
 			{
-				from.LocalOverheadMessage( MessageType.Regular, 0x3B2, 500599 ); // You are too close to the target.
+				SendLocalizedMessageTo( from, 500599 ); // You are too close to the target.
 				return;
 			}
 
@@ -180,9 +143,9 @@ namespace Server.Items
 			if ( pack == null || !pack.ConsumeTotal( ammoType, 1 ) )
 			{
 				if ( isArrow )
-					from.LocalOverheadMessage( MessageType.Regular, 0x3B2, 500594 ); // You do not have any arrows with which to practice.
+					SendLocalizedMessageTo( from, 500594 ); // You do not have any arrows with which to practice.
 				else if ( isBolt )
-					from.LocalOverheadMessage( MessageType.Regular, 0x3B2, 500595 ); // You do not have any crossbow bolts with which to practice.
+					SendLocalizedMessageTo( from, 500595 ); // You do not have any crossbow bolts with which to practice.
 				else
 					SendLocalizedMessageTo( from, 500593 ); // You must practice with ranged weapons on this.
 
@@ -195,77 +158,43 @@ namespace Server.Items
 			bow.PlaySwingAnimation( from );
 			from.MovingEffect( this, bow.EffectID, 18, 1, false, false );
 
-			ScoreEntry se = GetEntryFor( from );
-
 			if ( !from.CheckSkill( bow.Skill, m_MinSkill, m_MaxSkill ) )
 			{
 				from.PlaySound( bow.MissSound );
-
-				PublicOverheadMessage( MessageType.Regular, 0x3B2, 500604, from.Name ); // You miss the target altogether.
-
-				se.Record( 0 );
-
-				if ( se.Count == 1 )
-					PublicOverheadMessage( MessageType.Regular, 0x3B2, 1062719, se.Total.ToString() );
-				else
-					PublicOverheadMessage( MessageType.Regular, 0x3B2, 1042683, String.Format( "{0}\t{1}", se.Total, se.Count ) );
-
+				SendLocalizedMessageTo( from, 500604 ); // You miss the target altogether.
 				return;
 			}
 
-			Effects.PlaySound( Location, Map, 0x2B1 );
+			from.PlaySound( bow.HitSound );
 
 			double rand = Utility.RandomDouble();
 
-			int area, score, splitScore;
+			int area;
 
 			if ( 0.10 > rand )
-			{
 				area = 0; // bullseye
-				score = 50;
-				splitScore = 100;
-			}
 			else if ( 0.25 > rand )
-			{
 				area = 1; // inner ring
-				score = 10;
-				splitScore = 20;
-			}
 			else if ( 0.50 > rand )
-			{
 				area = 2; // middle ring
-				score = 5;
-				splitScore = 15;
-			}
 			else
-			{
 				area = 3; // outer ring
-				score = 2;
-				splitScore = 5;
-			}
 
-			bool split = ( isKnown && ((m_Arrows + m_Bolts) * 0.02) > Utility.RandomDouble() );
+			bool split = ( isKnown && ((m_Arrows + m_Bolts) * 0.05) > Utility.RandomDouble() );
 
 			if ( split )
 			{
-				PublicOverheadMessage( MessageType.Regular, 0x3B2, 1010027 + (isArrow ? 0 : 4) + area, from.Name );
+				SendLocalizedMessageTo( from, 1010027 + (isArrow ? 0 : 4) + area );
 			}
 			else
 			{
-				PublicOverheadMessage( MessageType.Regular, 0x3B2, 1010035 + area, from.Name );
+				SendLocalizedMessageTo( from, 1010035 + area );
 
 				if ( isArrow )
 					++m_Arrows;
 				else if ( isBolt )
 					++m_Bolts;
 			}
-
-			se.Record( split ? splitScore : score );
-
-			if ( se.Count == 1 )
-				PublicOverheadMessage( MessageType.Regular, 0x3B2, 1062719, se.Total.ToString() );
-			else
-				PublicOverheadMessage( MessageType.Regular, 0x3B2, 1042683, String.Format( "{0}\t{1}", se.Total, se.Count ) );
 		}
 
 		public override void Serialize( GenericWriter writer )
@@ -294,12 +223,6 @@ namespace Server.Items
 					m_MaxSkill = reader.ReadDouble();
 					m_Arrows = reader.ReadInt();
 					m_Bolts = reader.ReadInt();
-
-					if ( m_MinSkill == 0.0 && m_MaxSkill == 30.0 )
-					{
-						m_MinSkill = -25.0;
-						m_MaxSkill = +25.0;
-					}
 
 					break;
 				}

@@ -1,6 +1,5 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Collections; using System.Collections.Generic;
 using Server.Multis;
 
 namespace Server.Items
@@ -9,11 +8,30 @@ namespace Server.Items
 	{
 		public override int LabelNumber{ get{ return 1041064; } } // a trash barrel
 
-		public override int DefaultMaxWeight{ get{ return 0; } } // A value of 0 signals unlimited weight
+		public override int MaxWeight{ get{ return 0; } } // A value of 0 signals unlimited weight
+
+		public override int DefaultGumpID{ get{ return 0x3E; } }
+		public override int DefaultDropSound{ get{ return 0x42; } }
+
+		public override Rectangle2D Bounds
+		{
+			get{ return new Rectangle2D( 33, 36, 109, 112 ); }
+		}
+		
+		public override bool IsPublicContainer
+		{
+			get
+			{
+				return true;
+			}
+		}
 
 		public override bool IsDecoContainer
 		{
-			get{ return false; }
+			get
+			{
+				return false;
+			}
 		}
 
 		[Constructable]
@@ -97,14 +115,9 @@ namespace Server.Items
 
 		public void OnChop( Mobile from )
 		{
-			BaseHouse house = BaseHouse.FindHouseAt( from );
-
-			if ( house != null && house.IsCoOwner( from ) )
-			{
-				Effects.PlaySound( Location, Map, 0x3B3 );
-				from.SendLocalizedMessage( 500461 ); // You destroy the item.
-				Destroy();
-			}
+			Effects.PlaySound( Location, Map, 0x11C );
+			from.SendLocalizedMessage( 500461 ); // You destroy the item.
+			Destroy();
 		}
 
 		public void Empty( int message )
@@ -120,7 +133,7 @@ namespace Server.Items
 					if ( i >= items.Count )
 						continue;
 
-					items[i].Delete();
+					((Item)items[i]).Delete();
 				}
 			}
 

@@ -3,7 +3,7 @@ using Server;
 
 namespace Server.Items
 {
-	public class BasePiece : Item
+	public class BasePiece : BaseItem
 	{
 		private BaseBoard m_Board;
 
@@ -15,9 +15,10 @@ namespace Server.Items
 
 		public override bool IsVirtualItem{ get{ return true; } }
 
-		public BasePiece( int itemID, BaseBoard board ) : base( itemID )
+		public BasePiece( int itemID, string name, BaseBoard board ) : base( itemID )
 		{
 			m_Board = board;
+			Name = name;
 		}
 
 		public BasePiece( Serial serial ) : base( serial )

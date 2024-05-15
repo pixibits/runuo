@@ -5,18 +5,17 @@ using Server.Items;
 
 namespace Server.Spells.Third
 {
-	public class MagicLockSpell : MagerySpell
+	public class MagicLockSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Magic Lock", "An Por",
+				SpellCircle.Third,
 				215,
 				9001,
 				Reagent.Garlic,
 				Reagent.Bloodmoss,
 				Reagent.SulfurousAsh
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Third; } }
 
 		public MagicLockSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -29,15 +28,13 @@ namespace Server.Spells.Third
 
 		public void Target( LockableContainer targ )
 		{
-			if ( Multis.BaseHouse.CheckLockedDownOrSecured( targ ) )
+			if ( targ.Locked || targ.LockLevel == 0 || targ.MaxLockLevel == 0 )
 			{
-				// You cannot cast this on a locked down item.
-				Caster.LocalOverheadMessage( MessageType.Regular, 0x22, 501761 );
+				Caster.SendLocalizedMessage( 501762 ); // Target must be an unlocked chest.
 			}
-			else if ( targ.Locked || targ.LockLevel == 0 || targ is ParagonChest )
+			else if ( targ.MaxLockLevel > 65 )
 			{
-				// Target must be an unlocked chest.
-				Caster.SendLocalizedMessage( 501762 );
+				Caster.SendAsciiMessage( "This chest cannot be magically locked." );
 			}
 			else if ( CheckSequence() )
 			{
@@ -65,7 +62,7 @@ namespace Server.Spells.Third
 		{
 			private MagicLockSpell m_Owner;
 
-			public InternalTarget( MagicLockSpell owner ) : base( Core.ML ? 10 : 12, false, TargetFlags.None )
+			public InternalTarget( MagicLockSpell owner ) : base( 12, false, TargetFlags.None )
 			{
 				m_Owner = owner;
 			}

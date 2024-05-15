@@ -8,7 +8,6 @@ namespace Server.Items
 	{
 		public abstract int MinHeal { get; }
 		public abstract int MaxHeal { get; }
-		public abstract double Delay { get; }
 
 		public BaseHealPotion( PotionEffect effect ) : base( 0xF0C, effect )
 		{
@@ -44,26 +43,19 @@ namespace Server.Items
 		{
 			if ( from.Hits < from.HitsMax )
 			{
-				if ( from.Poisoned || MortalStrike.IsWounded( from ) )
+				if ( from.BeginAction( typeof( BaseHealPotion ) ) )
 				{
-					from.LocalOverheadMessage( MessageType.Regular, 0x22, 1005000 ); // You can not heal yourself in your current state.
+					DoHeal( from );
+
+					BasePotion.PlayDrinkEffect( from );
+
+					this.Delete();
+
+					Timer.DelayCall( TimeSpan.FromSeconds( 10.0 ), new TimerStateCallback( ReleaseHealLock ), from );
 				}
 				else
 				{
-					if ( from.BeginAction( typeof( BaseHealPotion ) ) )
-					{
-						DoHeal( from );
-
-						BasePotion.PlayDrinkEffect( from );
-
-						this.Consume();
-
-						Timer.DelayCall( TimeSpan.FromSeconds( Delay ), new TimerStateCallback( ReleaseHealLock ), from );
-					}
-					else
-					{
-						from.LocalOverheadMessage( MessageType.Regular, 0x22, 500235 ); // You must wait 10 seconds before using another healing potion.
-					}
+					from.LocalOverheadMessage( MessageType.Regular, 0x22, 500235 ); // You must wait 10 seconds before using another healing potion.
 				}
 			}
 			else

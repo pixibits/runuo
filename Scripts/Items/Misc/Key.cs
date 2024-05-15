@@ -1,8 +1,9 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server.Network;
 using Server.Targeting;
 using Server.Prompts;
+using Server.Multis;
 
 namespace Server.Items
 {
@@ -20,7 +21,7 @@ namespace Server.Items
 		uint KeyValue{ get; set; }
 	}
 
-	public class Key : Item
+	public class Key : BaseItem
 	{
 		private string m_Description;
 		private uint m_KeyVal;
@@ -37,61 +38,27 @@ namespace Server.Items
 			if ( keyValue == 0 )
 				return;
 
-			RemoveKeys( m.Backpack, keyValue );
-			RemoveKeys( m.BankBox, keyValue );
-		}
+			Container pack = m.Backpack;
 
-		public static void RemoveKeys( Container cont, uint keyValue )
-		{
-			if ( cont == null || keyValue == 0 )
-				return;
-
-			Item[] items = cont.FindItemsByType( new Type[] { typeof( Key ), typeof( KeyRing ) } );
-
-			foreach ( Item item in items )
+			if ( pack != null )
 			{
-				if ( item is Key )
-				{
-					Key key = (Key) item;
+				Item[] keys = pack.FindItemsByType( typeof( Key ), true );
 
+				foreach ( Key key in keys )
 					if ( key.KeyValue == keyValue )
 						key.Delete();
-				}
-				else
-				{
-					KeyRing keyRing = (KeyRing) item;
-
-					keyRing.RemoveKeys( keyValue );
-				}
 			}
-		}
 
-		public static bool ContainsKey( Container cont, uint keyValue )
-		{
-			if ( cont == null )
-				return false;
+			BankBox box = m.BankBox;
 
-			Item[] items = cont.FindItemsByType( new Type[] { typeof( Key ), typeof( KeyRing ) } );
-
-			foreach ( Item item in items )
+			if ( box != null )
 			{
-				if ( item is Key )
-				{
-					Key key = (Key) item;
+				Item[] keys = box.FindItemsByType( typeof( Key ), true );
 
+				foreach ( Key key in keys )
 					if ( key.KeyValue == keyValue )
-						return true;
-				}
-				else
-				{
-					KeyRing keyRing = (KeyRing) item;
-
-					if ( keyRing.ContainsKey( keyValue ) )
-						return true;
-				}
+						key.Delete();
 			}
-
-			return false;
 		}
 
 		[CommandProperty( AccessLevel.GameMaster )]
@@ -200,7 +167,7 @@ namespace Server.Items
 		}
 
 		[Constructable]
-		public Key() : this( KeyType.Iron, 0 )
+		public Key() : this( KeyType.Copper, 0 )
 		{
 		}
 
@@ -210,7 +177,7 @@ namespace Server.Items
 		}
 
 		[Constructable]
-		public Key( uint val ) : this ( KeyType.Iron, val )
+		public Key( uint val ) : this ( KeyType.Copper, val )
 		{
 		}
 
@@ -235,15 +202,14 @@ namespace Server.Items
 
 		public override void OnDoubleClick( Mobile from )
 		{
-			if ( !this.IsChildOf( from.Backpack ) )
+			if ( !IsChildOf( from ) )
 			{
-				from.SendLocalizedMessage( 501661 ); // That key is unreachable.
+				from.SendAsciiMessage( "That must be in your backpack to use it." );
 				return;
 			}
 
 			Target t;
 			int number;
-
 			if ( m_KeyVal != 0 )
 			{
 				number = 501662; // What shall I use this key on?
@@ -251,7 +217,7 @@ namespace Server.Items
 			}
 			else
 			{
-				number = 501663; // This key is a key blank. Which key would you like to make a copy of?
+				number = 501663; // This key is a key blank
 				t = new CopyTarget( this );
 			}
 
@@ -286,59 +252,7 @@ namespace Server.Items
 				desc = "";
 
 			if ( desc.Length > 0 )
-				from.Send( new UnicodeMessage( Serial, ItemID, MessageType.Regular, 0x3B2, 3, "ENU", "", desc ) );
-		}
-
-		public bool UseOn( Mobile from, ILockable o )
-		{
-			if ( o.KeyValue == this.KeyValue )
-			{
-				if ( o is BaseDoor && !((BaseDoor)o).UseLocks() )
-				{
-					return false;
-				}
-				else
-				{
-					o.Locked = !o.Locked;
-
-					if ( o is LockableContainer )
-					{
-						LockableContainer cont = (LockableContainer)o;
-
-						if ( cont.LockLevel == -255 )
-							cont.LockLevel = cont.RequiredSkill - 10;
-					}
-
-					if ( o is Item )
-					{
-						Item item = (Item) o;
-
-						if ( o.Locked )
-							item.SendLocalizedMessageTo( from, 1048000 ); // You lock it.
-						else
-							item.SendLocalizedMessageTo( from, 1048001 ); // You unlock it.
-
-						if ( item is LockableContainer )
-						{
-							LockableContainer cont = (LockableContainer) item;
-
-							if ( cont.TrapType != TrapType.None && cont.TrapOnLockpick )
-							{
-								if ( o.Locked )
-									item.SendLocalizedMessageTo( from, 501673 ); // You re-enable the trap.
-								else
-									item.SendLocalizedMessageTo( from, 501672 ); // You disable the trap temporarily.  Lock it again to re-enable it.
-							}
-						}
-					}
-
-					return true;
-				}
-			}
-			else
-			{
-				return false;
-			}
+				from.Send( new AsciiMessage( Serial, ItemID, MessageType.Regular, 0x3B2, 3, "", desc ) );
 		}
 
 		private class RenamePrompt : Prompt
@@ -352,17 +266,11 @@ namespace Server.Items
 
 			public override void OnResponse( Mobile from, string text )
 			{
-				if ( m_Key.Deleted || !m_Key.IsChildOf( from.Backpack ) )
-				{
-					from.SendLocalizedMessage( 501661 ); // That key is unreachable.
-					return;
-				}
-
-				m_Key.Description = Utility.FixHtml( text );
+				m_Key.Description = text;
 			}
 		}
 
-		private class UnlockTarget : Target
+		public class UnlockTarget : Target
 		{
 			private Key m_Key;
 
@@ -374,13 +282,7 @@ namespace Server.Items
 
 			protected override void OnTarget( Mobile from, object targeted )
 			{
-				if ( m_Key.Deleted || !m_Key.IsChildOf( from.Backpack ) )
-				{
-					from.SendLocalizedMessage( 501661 ); // That key is unreachable.
-					return;
-				}
-
-				int number;
+				int number = -1;
 
 				if ( targeted == m_Key )
 				{
@@ -388,12 +290,66 @@ namespace Server.Items
 
 					from.Prompt = new RenamePrompt( m_Key );
 				}
+				else if ( targeted is StrongBox )
+				{
+					StrongBox sb = (StrongBox)targeted;
+
+					if ( sb.Owner == null || sb.Owner.Deleted )
+					{
+						from.SendAsciiMessage( "You can not recover that strong box." );
+						return;
+					}
+
+					if ( sb.Owner == from || sb.Owner.Account == from.Account )
+					{
+						while ( sb.Items.Count > 0 )
+							((Item)sb.Items[0]).MoveToWorld( sb.Location, sb.Map );
+						sb.Delete();
+						from.AddToBackpack( new StrongBoxDeed() );
+					}
+					else
+					{
+						from.SendAsciiMessage( "You do not own that strong box." );
+					}
+				}
 				else if ( targeted is ILockable )
 				{
-					if ( m_Key.UseOn( from, (ILockable) targeted ) )
-						number = -1;
+					ILockable o = (ILockable)targeted;
+
+					if ( o.KeyValue == m_Key.KeyValue )
+					{
+						if ( o is BaseDoor && !((BaseDoor)o).UseLocks() )
+						{
+							number = 501668; // This key doesn't seem to unlock that.
+						}
+						else
+						{
+							o.Locked = !o.Locked;
+
+							if ( targeted is Item )
+							{
+								Item item = (Item)targeted;
+
+								if ( o.Locked )
+									item.SendLocalizedMessageTo( from, 1048000 );
+								else
+									item.SendLocalizedMessageTo( from, 1048001 );
+							}
+						}
+					}
 					else
+					{
 						number = 501668; // This key doesn't seem to unlock that.
+					}
+				}
+				else if ( targeted is HouseSign )
+				{
+					HouseSign sign = (HouseSign)targeted;
+					if ( sign.Owner != null && sign.Owner.KeyValue == m_Key.KeyValue )
+					{
+						from.Prompt = new Prompts.HouseRenamePrompt( sign.Owner );
+						number = 1060767; // Enter the new name of your house.
+					}
 				}
 				else
 				{
@@ -418,12 +374,6 @@ namespace Server.Items
 
 			protected override void OnTarget( Mobile from, object targeted )
 			{
-				if ( m_Key.Deleted || !m_Key.IsChildOf( from.Backpack ) )
-				{
-					from.SendLocalizedMessage( 501661 ); // That key is unreachable.
-					return;
-				}
-
 				int number;
 
 				if ( targeted is Key )

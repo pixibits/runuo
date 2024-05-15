@@ -31,18 +31,11 @@ namespace Server.Items
 			return true;
 		}
 
-		public static readonly TimeSpan DefenderRemountDelay = TimeSpan.FromSeconds( 10.0 ); // TODO: Taken from bola script, needs to be verified
-		public static readonly TimeSpan AttackerRemountDelay = TimeSpan.FromSeconds( 3.0 );
+		public static readonly TimeSpan BlockMountDuration = TimeSpan.FromSeconds( 3.0 ); // TODO: Taken from bola script, needs to be verified
 
 		public override void OnHit( Mobile attacker, Mobile defender, int damage )
 		{
 			if ( !Validate( attacker ) )
-				return;
-
-			if ( defender is ChaosDragoon || defender is ChaosDragoonElite )
-				return;
-
-			if ( attacker.Mounted && !(defender.Weapon is Lance) ) // TODO: Should there be a message here?
 				return;
 
 			ClearCurrentAbility( attacker );
@@ -58,11 +51,6 @@ namespace Server.Items
 			if ( !CheckMana( attacker, true ) )
 				return;
 
-			if ( Core.ML && attacker is LesserHiryu && 0.8 >= Utility.RandomDouble() )
-			{
-				return; //Lesser Hiryu have an 80% chance of missing this attack
-			}
-
 			attacker.SendLocalizedMessage( 1060082 ); // The force of your attack has dislodged them from their mount!
 
 			if ( attacker.Mounted )
@@ -75,18 +63,16 @@ namespace Server.Items
 
 			mount.Rider = null;
 
-			BaseMount.SetMountPrevention( defender, BlockMountType.Dazed, DefenderRemountDelay );
-			if( Core.ML && attacker is BaseCreature && ((BaseCreature)attacker).ControlMaster != null )
-			{
-				BaseMount.SetMountPrevention( ((BaseCreature)attacker).ControlMaster, BlockMountType.DismountRecovery, AttackerRemountDelay );
-			}
-			else
-			{
-				BaseMount.SetMountPrevention( attacker, BlockMountType.DismountRecovery, AttackerRemountDelay );
-			}
-				
+			defender.BeginAction( typeof( BaseMount ) );
+			Timer.DelayCall( BlockMountDuration, new TimerStateCallback( ReleaseMountLock ), defender );
+
 			if ( !attacker.Mounted )
 				AOS.Damage( defender, attacker, Utility.RandomMinMax( 15, 25 ), 100, 0, 0, 0, 0 );
+		}
+
+		private void ReleaseMountLock( object state )
+		{
+			((Mobile)state).EndAction( typeof( BaseMount ) );
 		}
 	}
 }

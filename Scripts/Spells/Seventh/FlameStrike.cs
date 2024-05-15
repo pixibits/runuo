@@ -4,17 +4,16 @@ using Server.Network;
 
 namespace Server.Spells.Seventh
 {
-	public class FlameStrikeSpell : MagerySpell
+	public class FlameStrikeSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Flame Strike", "Kal Vas Flam",
+				SpellCircle.Seventh,
 				245,
 				9042,
 				Reagent.SpidersSilk,
 				Reagent.SulfurousAsh
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Seventh; } }
 
 		public FlameStrikeSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -39,25 +38,7 @@ namespace Server.Spells.Seventh
 
 				SpellHelper.CheckReflect( (int)this.Circle, Caster, ref m );
 
-				double damage;
-
-				if ( Core.AOS )
-				{
-					damage = GetNewAosDamage( 48, 1, 5, m );
-				}
-				else
-				{
-					damage = Utility.Random( 27, 22 );
-
-					if ( CheckResisted( m ) )
-					{
-						damage *= 0.6;
-
-						m.SendLocalizedMessage( 501783 ); // You feel yourself resisting magical energy.
-					}
-
-					damage *= GetDamageScalar( m );
-				}
+				double damage = GetDamage( m );
 
 				m.FixedParticles( 0x3709, 10, 30, 5052, EffectLayer.LeftFoot );
 				m.PlaySound( 0x208 );
@@ -72,7 +53,7 @@ namespace Server.Spells.Seventh
 		{
 			private FlameStrikeSpell m_Owner;
 
-			public InternalTarget( FlameStrikeSpell owner ) : base( Core.ML ? 10 : 12, false, TargetFlags.Harmful )
+			public InternalTarget( FlameStrikeSpell owner ) : base( 12, false, TargetFlags.Harmful )
 			{
 				m_Owner = owner;
 			}

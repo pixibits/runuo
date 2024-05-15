@@ -35,11 +35,11 @@ namespace Server.Items
 			int version = reader.ReadInt();
 		}
 
-		public override void OnHit( Mobile attacker, Mobile defender, double damageBonus )
+		public override void OnHit( Mobile attacker, Mobile defender )
 		{
-			base.OnHit( attacker, defender, damageBonus );
+			base.OnHit( attacker, defender );
 
-			defender.Stam -= Utility.Random( 3, 3 ); // 3-5 points of stamina loss
+			defender.Stam -= Utility.Random( 3 ) + 2; // 2-4 points of stamina loss
 		}
 	}
 }

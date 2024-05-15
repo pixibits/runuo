@@ -59,6 +59,12 @@ namespace Server.Items
 		public Banana( Serial serial ) : base( serial )
 		{
 		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Banana(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -92,6 +98,12 @@ namespace Server.Items
 		public Bananas( Serial serial ) : base( serial )
 		{
 		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Bananas(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -124,6 +136,12 @@ namespace Server.Items
 		public SplitCoconut( Serial serial ) : base( serial )
 		{
 		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new SplitCoconut(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -156,38 +174,12 @@ namespace Server.Items
 		public Lemon( Serial serial ) : base( serial )
 		{
 		}
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
 
-			writer.Write( (int) 0 ); // version
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Lemon(), amount );
 		}
 
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-	}
-
-	public class Lemons : Food
-	{
-		[Constructable]
-		public Lemons() : this( 1 )
-		{
-		}
-
-		[Constructable]
-		public Lemons( int amount ) : base( amount, 0x1729 )
-		{
-			this.Weight = 1.0;
-			this.FillFactor = 1;
-		}
-
-		public Lemons( Serial serial ) : base( serial )
-		{
-		}
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -220,38 +212,12 @@ namespace Server.Items
 		public Lime( Serial serial ) : base( serial )
 		{
 		}
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
 
-			writer.Write( (int) 0 ); // version
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Lime(), amount );
 		}
 
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-	}
-
-	public class Limes : Food
-	{
-		[Constructable]
-		public Limes() : this( 1 )
-		{
-		}
-
-		[Constructable]
-		public Limes( int amount ) : base( amount, 0x172B )
-		{
-			this.Weight = 1.0;
-			this.FillFactor = 1;
-		}
-
-		public Limes( Serial serial ) : base( serial )
-		{
-		}
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -284,38 +250,12 @@ namespace Server.Items
 		public Coconut( Serial serial ) : base( serial )
 		{
 		}
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
 
-			writer.Write( (int) 0 ); // version
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Coconut(), amount );
 		}
 
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-		}
-	}
-
-	public class OpenCoconut : Food
-	{
-		[Constructable]
-		public OpenCoconut() : this( 1 )
-		{
-		}
-
-		[Constructable]
-		public OpenCoconut( int amount ) : base( amount, 0x1723 )
-		{
-			this.Weight = 1.0;
-			this.FillFactor = 1;
-		}
-
-		public OpenCoconut( Serial serial ) : base( serial )
-		{
-		}
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -348,6 +288,12 @@ namespace Server.Items
 		public Dates( Serial serial ) : base( serial )
 		{
 		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Dates(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -380,6 +326,12 @@ namespace Server.Items
 		public Grapes( Serial serial ) : base( serial )
 		{
 		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Grapes(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -412,6 +364,12 @@ namespace Server.Items
 		public Peach( Serial serial ) : base( serial )
 		{
 		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Peach(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -444,6 +402,12 @@ namespace Server.Items
 		public Pear( Serial serial ) : base( serial )
 		{
 		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Pear(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -476,6 +440,12 @@ namespace Server.Items
 		public Apple( Serial serial ) : base( serial )
 		{
 		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Apple(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -491,6 +461,7 @@ namespace Server.Items
 		}
 	}
 
+	[FlipableAttribute( 0xc5c, 0xc5d )]
 	public class Watermelon : Food
 	{
 		[Constructable]
@@ -499,56 +470,21 @@ namespace Server.Items
 		}
 
 		[Constructable]
-		public Watermelon( int amount ) : base( amount, 0xC5C )
+		public Watermelon( int amount ) : base( amount, 0xc5c )
 		{
-			this.Weight = 5.0;
-			this.FillFactor = 5;
+			this.Weight = 2.0;
+			this.FillFactor = 2;
 		}
 
 		public Watermelon( Serial serial ) : base( serial )
 		{
 		}
-		public override void Serialize( GenericWriter writer )
-		{
-			base.Serialize( writer );
 
-			writer.Write( (int) 1 ); // version
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Watermelon(), amount );
 		}
 
-		public override void Deserialize( GenericReader reader )
-		{
-			base.Deserialize( reader );
-
-			int version = reader.ReadInt();
-
-			if ( version < 1 )
-			{
-				if ( FillFactor == 2 )
-					FillFactor = 5;
-
-				if ( Weight == 2.0 )
-					Weight = 5.0;
-			}
-		}
-	}
-
-	public class SmallWatermelon : Food
-	{
-		[Constructable]
-		public SmallWatermelon() : this( 1 )
-		{
-		}
-
-		[Constructable]
-		public SmallWatermelon( int amount ) : base( amount, 0xC5D )
-		{
-			this.Weight = 5.0;
-			this.FillFactor = 5;
-		}
-
-		public SmallWatermelon( Serial serial ) : base( serial )
-		{
-		}
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -582,6 +518,12 @@ namespace Server.Items
 		public Squash( Serial serial ) : base( serial )
 		{
 		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Squash(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );
@@ -615,6 +557,12 @@ namespace Server.Items
 		public Cantaloupe( Serial serial ) : base( serial )
 		{
 		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Cantaloupe(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );

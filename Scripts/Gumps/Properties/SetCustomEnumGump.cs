@@ -1,9 +1,8 @@
 using System;
 using System.Reflection;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Network;
-using Server.Commands;
 
 namespace Server.Gumps
 {
@@ -26,17 +25,14 @@ namespace Server.Gumps
 				{
 					MethodInfo info = m_Property.PropertyType.GetMethod( "Parse", new Type[]{ typeof( string ) } );
 
-					string result = "";
+					Server.Scripts.Commands.CommandLogging.LogChangeProperty( m_Mobile, m_Object, m_Property.Name, m_Names[index] );
 
 					if ( info != null )
-						result = Properties.SetDirect( m_Mobile, m_Object, m_Object, m_Property, m_Property.Name, info.Invoke( null, new object[] { m_Names[index] } ), true );
+						m_Property.SetValue( m_Object, info.Invoke( null, new object[]{ m_Names[index] } ), null );
 					else if ( m_Property.PropertyType == typeof( Enum ) || m_Property.PropertyType.IsSubclassOf( typeof( Enum ) ) )
-						result = Properties.SetDirect( m_Mobile, m_Object, m_Object, m_Property, m_Property.Name, Enum.Parse( m_Property.PropertyType, m_Names[index], false ), true );
+						m_Property.SetValue( m_Object, Enum.Parse( m_Property.PropertyType, m_Names[index], false ), null );
 
-					m_Mobile.SendMessage( result );
-
-					if ( result == "Property has been set." )
-						PropertiesGump.OnValueChanged( m_Object, m_Property, m_Stack );
+					PropertiesGump.OnValueChanged( m_Object, m_Property, m_Stack );
 				}
 				catch
 				{

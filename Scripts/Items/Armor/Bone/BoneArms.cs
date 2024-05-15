@@ -18,13 +18,10 @@ namespace Server.Items
 		public override int AosStrReq{ get{ return 55; } }
 		public override int OldStrReq{ get{ return 40; } }
 
-		public override int OldDexBonus{ get{ return -2; } }
-
 		public override int ArmorBase{ get{ return 30; } }
 		public override int RevertArmorBase{ get{ return 4; } }
 
 		public override ArmorMaterialType MaterialType{ get{ return ArmorMaterialType.Bone; } }
-		public override CraftResource DefaultResource{ get{ return CraftResource.RegularLeather; } }
 
 		[Constructable]
 		public BoneArms() : base( 0x144E )

@@ -1,6 +1,9 @@
+// UOGamers:  Rebirth Patch 1.1  - 9-23-2005 - Jakob
+/* Added file as part of patch 1.1
+ * */
+
 using System;
-using System.Net.Mail;
-using System.Text.RegularExpressions;
+using System.Web.Mail;
 using System.Threading;
 using Server;
 
@@ -26,31 +29,20 @@ namespace Server.Misc
 		public static readonly string CrashAddresses = null;
 		public static readonly string SpeechLogPageAddresses = null;
 
-		private static Regex _pattern = new Regex( @"^[a-z0-9.+_-]+@([a-z0-9-]+.)+[a-z]+$", RegexOptions.IgnoreCase );
-
-		public static bool IsValid( string address )
-		{
-			if ( address == null || address.Length > 320 )
-				return false;
-
-			return _pattern.IsMatch( address );
-		}
-
-		private static SmtpClient _Client;
+		// Ken's email: ken@uorebirth.com
+		// Kinto's email: kinto@uorebirth.com
 
 		public static void Configure()
 		{
 			if ( EmailServer != null )
-				_Client = new SmtpClient( EmailServer );
+				SmtpMail.SmtpServer = EmailServer;
 		}
 
 		public static bool Send( MailMessage message )
 		{
 			try
 			{
-				lock ( _Client ) {
-					_Client.Send( message );
-				}
+				SmtpMail.Send( message );
 			}
 			catch
 			{

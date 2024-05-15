@@ -1,22 +1,20 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Mobiles;
 using Server.Targeting;
 using Server.Network;
-using System.Collections.Generic;
 
-namespace Server.Commands
+namespace Server.Scripts.Commands
 {
 	public class VisibilityList
 	{
 		public static void Initialize()
 		{
 			EventSink.Login += new LoginEventHandler( OnLogin );
-
-			CommandSystem.Register( "Vis", AccessLevel.Counselor, new CommandEventHandler( Vis_OnCommand ) );
-			CommandSystem.Register( "VisList", AccessLevel.Counselor, new CommandEventHandler( VisList_OnCommand ) );
-			CommandSystem.Register( "VisClear", AccessLevel.Counselor, new CommandEventHandler( VisClear_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "Vis", AccessLevel.Counselor, new Server.Commands.CommandEventHandler( Vis_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "VisList", AccessLevel.Counselor, new Server.Commands.CommandEventHandler( VisList_OnCommand ) );
+			Server.Commands.CommandSystem.Register( "VisClear", AccessLevel.Counselor, new Server.Commands.CommandEventHandler( VisClear_OnCommand ) );
 		}
 
 		public static void OnLogin( LoginEventArgs e )
@@ -31,7 +29,7 @@ namespace Server.Commands
 
 		[Usage( "Vis" )]
 		[Description( "Adds or removes a targeted player from your visibility list.  Anyone on your visibility list will be able to see you at all times, even when you're hidden." )]
-		public static void Vis_OnCommand( CommandEventArgs e )
+		public static void Vis_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			if ( e.Mobile is PlayerMobile )
 			{
@@ -42,19 +40,19 @@ namespace Server.Commands
 
 		[Usage( "VisList" )]
 		[Description( "Shows the names of everyone in your visibility list." )]
-		public static void VisList_OnCommand( CommandEventArgs e )
+		public static void VisList_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			if ( e.Mobile is PlayerMobile )
 			{
 				PlayerMobile pm = (PlayerMobile)e.Mobile;
-				List<Mobile> list = pm.VisibilityList;
+				ArrayList list = pm.VisibilityList;
 
 				if ( list.Count > 0 )
 				{
 					pm.SendMessage( "You are visible to {0} mobile{1}:", list.Count, list.Count == 1 ? "" : "s" );
 
 					for ( int i = 0; i < list.Count; ++i )
-						pm.SendMessage( "#{0}: {1}", i+1, list[i].Name );
+						pm.SendMessage( "#{0}: {1}", i+1, ((Mobile)list[i]).Name );
 				}
 				else
 				{
@@ -65,19 +63,19 @@ namespace Server.Commands
 
 		[Usage( "VisClear" )]
 		[Description( "Removes everyone from your visibility list." )]
-		public static void VisClear_OnCommand( CommandEventArgs e )
+		public static void VisClear_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			if ( e.Mobile is PlayerMobile )
 			{
 				PlayerMobile pm = (PlayerMobile)e.Mobile;
-				List<Mobile> list = new List<Mobile>( pm.VisibilityList );
+				ArrayList list = new ArrayList( pm.VisibilityList );
 				
 				pm.VisibilityList.Clear();
 				pm.SendMessage( "Your visibility list has been cleared." );
 
 				for ( int i = 0; i < list.Count; ++i )
 				{
-					Mobile m = list[i];
+					Mobile m = (Mobile)list[i];
 
 					if ( !m.CanSee( pm ) && Utility.InUpdateRange( m, pm ) )
 						m.Send( pm.RemovePacket );
@@ -100,7 +98,7 @@ namespace Server.Commands
 
 					if ( targ.AccessLevel <= from.AccessLevel )
 					{
-						List<Mobile> list = pm.VisibilityList;
+						ArrayList list = pm.VisibilityList;
 
 						if ( list.Contains( targ ) )
 						{
@@ -109,34 +107,27 @@ namespace Server.Commands
 						}
 						else
 						{
-							list.Add( targ );
+							list.Add( targeted );
 							from.SendMessage( "{0} has been added to your visibility list.", targ.Name );
 						}
 
 						if ( Utility.InUpdateRange( targ, from ) )
 						{
-							NetState ns = targ.NetState;
+							if ( targ.CanSee( from ) )
+							{
+								targ.Send( new Network.MobileIncoming( targ, from ) );
 
-							if ( ns != null ) {
-								if ( targ.CanSee( from ) )
+								if ( ObjectPropertyList.Enabled )
 								{
-									if ( ns.StygianAbyss )
-										ns.Send( new MobileIncoming( targ, from ) );
-									else
-										ns.Send( new MobileIncomingOld( targ, from ) );
+									targ.Send( from.OPLPacket );
 
-									if ( ObjectPropertyList.Enabled )
-									{
-										ns.Send( from.OPLPacket );
-
-										foreach ( Item item in from.Items )
-											ns.Send( item.OPLPacket );
-									}
+									foreach ( Item item in from.Items )
+										targ.Send( item.OPLPacket );
 								}
-								else
-								{
-									ns.Send( from.RemovePacket );
-								}
+							}
+							else
+							{
+								targ.Send( from.RemovePacket );
 							}
 						}
 					}

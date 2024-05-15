@@ -2,12 +2,10 @@ using System;
 using Server;
 using Server.Regions;
 using Server.Targeting;
-using Server.Engines.CannedEvil;
-using Server.Network;
 
 namespace Server.Multis
 {
-	public abstract class BaseBoatDeed : Item
+	public abstract class BaseBoatDeed : BaseItem
 	{
 		private int m_MultiID;
 		private Point3D m_Offset;
@@ -25,7 +23,7 @@ namespace Server.Multis
 			if ( !Core.AOS )
 				LootType = LootType.Newbied;
 
-			m_MultiID = id;
+			m_MultiID = id & 0x3FFF;
 			m_Offset = offset;
 		}
 
@@ -70,16 +68,9 @@ namespace Server.Multis
 			{
 				from.SendLocalizedMessage( 1042001 ); // That must be in your pack for you to use it.
 			}
-			else if ( from.AccessLevel < AccessLevel.GameMaster && (from.Map == Map.Ilshenar || from.Map == Map.Malas) )
-			{
-				from.SendLocalizedMessage( 1010567, null, 0x25 ); // You may not place a boat from this location.
-			}
 			else
 			{
-				if ( Core.SE )
-					from.SendLocalizedMessage( 502482 ); // Where do you wish to place the ship?
-				else
-					from.LocalOverheadMessage( MessageType.Regular, 0x3B2, 502482 ); // Where do you wish to place the ship?
+				from.SendLocalizedMessage( 502482 ); // Where do you wish to place the ship?
 
 				from.Target = new InternalTarget( this );
 			}
@@ -107,12 +98,6 @@ namespace Server.Multis
 				if ( from.AccessLevel < AccessLevel.GameMaster && (map == Map.Ilshenar || map == Map.Malas) )
 				{
 					from.SendLocalizedMessage( 1043284 ); // A ship can not be created here.
-					return;
-				}
-
-				if ( from.Region.IsPartOf( typeof( HouseRegion ) ) || BaseBoat.FindBoatAt( from, from.Map ) != null )
-				{
-					from.SendLocalizedMessage( 1010568, null, 0x25 ); // You may not place a ship while on another ship or inside a house.
 					return;
 				}
 
@@ -170,9 +155,9 @@ namespace Server.Multis
 
 					Region region = Region.Find( p, from.Map );
 
-					if ( region.IsPartOf( typeof( DungeonRegion ) ) )
+					if ( region is DungeonRegion )
 						from.SendLocalizedMessage( 502488 ); // You can not place a ship inside a dungeon.
-					else if ( region.IsPartOf( typeof( HouseRegion ) ) || region.IsPartOf( typeof( ChampionSpawnRegion ) ) )
+					else if ( region is HouseRegion )
 						from.SendLocalizedMessage( 1042549 ); // A boat may not be placed in this area.
 					else
 						m_Deed.OnPlacement( from, p );

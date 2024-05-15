@@ -4,17 +4,16 @@ using Server.Network;
 
 namespace Server.Spells.Second
 {
-	public class CureSpell : MagerySpell
+	public class CureSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Cure", "An Nox",
+				SpellCircle.Second,
 				212,
 				9061,
 				Reagent.Garlic,
 				Reagent.Ginseng
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Second; } }
 
 		public CureSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -35,26 +34,19 @@ namespace Server.Spells.Second
 			{
 				SpellHelper.Turn( Caster, m );
 
-				Poison p = m.Poison;
-
-				if ( p != null )
+				if ( m.Poison != null )
 				{
-					int chanceToCure = 10000 + (int)(Caster.Skills[SkillName.Magery].Value * 75) - ((p.Level + 1) * (Core.AOS ? (p.Level < 4 ? 3300 : 3100) : 1750));
-					chanceToCure /= 100;
-
-					if ( chanceToCure > Utility.Random( 100 ) )
+					int chanceToCure = (int)( 10000 + ( Caster.Skills[SkillName.Magery].Value*75 - (m.Poison.Level + 1)*1750 ) ) / 100;
+					if ( chanceToCure > Utility.Random( 100 ) && m.CurePoison( Caster ) )
 					{
-						if ( m.CurePoison( Caster ) )
-						{
-							if ( Caster != m )
-								Caster.SendLocalizedMessage( 1010058 ); // You have cured the target of all poisons!
+						if ( Caster != m )
+							Caster.SendLocalizedMessage( 1010058 ); // You have cured the target of all poisons!
 
-							m.SendLocalizedMessage( 1010059 ); // You have been cured of all poisons.
-						}
+						m.SendLocalizedMessage( 1010059 ); // You have been cured of all poisons.
 					}
 					else
 					{
-						m.SendLocalizedMessage( 1010060 ); // You have failed to cure your target!
+						Caster.SendAsciiMessage( "You failed to cure {0}!", m.Name );
 					}
 				}
 
@@ -69,7 +61,7 @@ namespace Server.Spells.Second
 		{
 			private CureSpell m_Owner;
 
-			public InternalTarget( CureSpell owner ) : base( Core.ML ? 10 : 12, false, TargetFlags.Beneficial )
+			public InternalTarget( CureSpell owner ) : base( 12, false, TargetFlags.Beneficial )
 			{
 				m_Owner = owner;
 			}

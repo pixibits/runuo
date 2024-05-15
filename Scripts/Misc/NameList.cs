@@ -1,8 +1,7 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using System.Xml;
+using System.Collections; using System.Collections.Generic;
 using Server;
 
 namespace Server
@@ -15,37 +14,23 @@ namespace Server
 		public string Type{ get{ return m_Type; } }
 		public string[] List{ get{ return m_List; } }
 
-		public bool ContainsName( string name )
-		{
-			for ( int i = 0; i < m_List.Length; i++ )
-				if ( name == m_List[i] )
-					return true;
-
-			return false;
-		}
-
 		public NameList( string type, XmlElement xml )
 		{
 			m_Type = type;
 			m_List = xml.InnerText.Split( ',' );
-
-			for ( int i = 0; i < m_List.Length; ++i )
-				m_List[i] = Utility.Intern( m_List[i].Trim() );
 		}
 
 		public string GetRandomName()
 		{
 			if ( m_List.Length > 0 )
-				return m_List[Utility.Random( m_List.Length )];
+				return m_List[Utility.Random( m_List.Length )].Trim();
 
 			return "";
 		}
 
 		public static NameList GetNameList( string type )
 		{
-			NameList n = null;
-			m_Table.TryGetValue( type, out n );
-			return n;
+			return (NameList)m_Table[type];
 		}
 
 		public static string RandomName( string type )
@@ -58,11 +43,11 @@ namespace Server
 			return "";
 		}
 
-		private static Dictionary<string, NameList> m_Table;
+		private static Hashtable m_Table;
 
 		static NameList()
 		{
-			m_Table = new Dictionary<string, NameList>( StringComparer.OrdinalIgnoreCase );
+			m_Table = new Hashtable( CaseInsensitiveHashCodeProvider.Default, CaseInsensitiveComparer.Default );
 
 			string filePath = Path.Combine( Core.BaseDirectory, "Data/names.xml" );
 
@@ -91,7 +76,7 @@ namespace Server
 			{
 				string type = element.GetAttribute( "type" );
 
-				if ( String.IsNullOrEmpty( type ) )
+				if ( type == null || type == String.Empty )
 					continue;
 
 				try

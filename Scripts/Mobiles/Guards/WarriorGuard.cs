@@ -1,5 +1,5 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server.Misc;
 using Server.Items;
 using Server.Mobiles;
@@ -7,10 +7,56 @@ using Server.Targeting;
 
 namespace Server.Mobiles
 {
+	public class WeakWarriorGuard : WarriorGuard
+	{
+		[Constructable]
+		public WeakWarriorGuard() : this( null )
+		{
+		}
+
+		public WeakWarriorGuard( Mobile target ) : base( target )
+		{
+			InitStats( 100, 100, 100 );
+		}
+
+		public override void InitWeapon()
+		{
+			Halberd weapon = new Halberd();
+			weapon.Movable = false;
+			weapon.LootType = LootType.Newbied;
+			weapon.Quality = CraftQuality.Exceptional;
+			AddItem( weapon );
+		}
+
+		public WeakWarriorGuard( Serial serial ) : base( serial )
+		{
+		}
+
+		public override void Serialize( GenericWriter writer )
+		{
+			base.Serialize( writer );
+
+			writer.Write( (int) 0 ); // version
+		}
+
+		public override void Deserialize( GenericReader reader )
+		{
+			base.Deserialize( reader );
+
+			int version = reader.ReadInt();
+
+			switch ( version )
+			{
+				case 0:
+					break;
+			}
+		}
+	}
+
 	public class WarriorGuard : BaseGuard
 	{
 		private Timer m_AttackTimer, m_IdleTimer;
-
+		private bool m_IsAutoGuard;
 		private Mobile m_Focus;
 
 		[Constructable]
@@ -20,8 +66,9 @@ namespace Server.Mobiles
 
 		public WarriorGuard( Mobile target ) : base( target )
 		{
-			InitStats( 1000, 1000, 1000 );
-			Title = "the guard";
+			m_IsAutoGuard = target != null;
+			
+			InitStats( 2500, 1000, 1000 );
 
 			SpeechHue = Utility.RandomDyedHue();
 
@@ -54,6 +101,7 @@ namespace Server.Mobiles
 
 				AddItem( new PlateChest() );
 				AddItem( new PlateArms() );
+				AddItem( new PlateGorget() );
 				AddItem( new PlateLegs() );
 
 				switch( Utility.Random( 3 ) )
@@ -63,47 +111,53 @@ namespace Server.Mobiles
 					case 2: AddItem( new BodySash( Utility.RandomNondyedHue() ) ); break;
 				}
 			}
-			Utility.AssignRandomHair( this );
 
-			if( Utility.RandomBool() )
-				Utility.AssignRandomFacialHair( this, HairHue );
+			Item hair = new Item( Utility.RandomList( 0x203B, 0x203C, 0x203D, 0x2044, 0x2045, 0x2047, 0x2049, 0x204A ) );
+			hair.Hue = Utility.RandomHairHue();
+			hair.Layer = Layer.Hair;
+			hair.Movable = false;
+			AddItem( hair );
 
-			Halberd weapon = new Halberd();
+			if( Utility.RandomBool() && !this.Female )
+			{
+				Item beard = new Item( Utility.RandomList( 0x203E, 0x203F, 0x2040, 0x2041, 0x204B, 0x204C, 0x204D ) );
 
-			weapon.Movable = false;
-			weapon.Crafter = this;
-			weapon.Quality = WeaponQuality.Exceptional;
+				beard.Hue = hair.Hue;
+				beard.Layer = Layer.FacialHair;
+				beard.Movable = false;
 
-			AddItem( weapon );
+				AddItem( beard );
+			}
+
+			InitWeapon();
 
 			Container pack = new Backpack();
-
 			pack.Movable = false;
-
-			pack.DropItem( new Gold( 10, 25 ) );
-
+			pack.DropItem( new Gold( 10, 50 ) );
 			AddItem( pack );
 
-			Skills[SkillName.Anatomy].Base = 120.0;
-			Skills[SkillName.Tactics].Base = 120.0;
-			Skills[SkillName.Swords].Base = 120.0;
-			Skills[SkillName.MagicResist].Base = 120.0;
-			Skills[SkillName.DetectHidden].Base = 100.0;
+			Skills[SkillName.Tactics].Base = 100.0;
+			Skills[SkillName.Swords].Base = 100.0;
+			Skills[SkillName.MagicResist].Base = 100.0;
 
-			this.NextCombatTime = DateTime.Now + TimeSpan.FromSeconds( 0.5 );
+			this.NextCombatTime = DateTime.Now + TimeSpan.FromSeconds( 0.25 );
 			this.Focus = target;
+		}
+
+		public virtual void InitWeapon()
+		{
+			Halberd weapon = new Halberd();
+			weapon.Movable = false;
+			weapon.LootType = LootType.Newbied;
+			weapon.Quality = CraftQuality.Exceptional;
+			weapon.MinDamage = 100;
+			weapon.MaxDamage = 500;
+			weapon.Speed = 100;
+			AddItem( weapon );
 		}
 
 		public WarriorGuard( Serial serial ) : base( serial )
 		{
-		}
-
-		public override bool OnBeforeDeath()
-		{
-			if ( m_Focus != null && m_Focus.Alive )
-				new AvengeTimer( m_Focus ).Start(); // If a guard dies, three more guards will spawn
-
-			return base.OnBeforeDeath();
 		}
 
 		[CommandProperty( AccessLevel.GameMaster )]
@@ -127,13 +181,20 @@ namespace Server.Mobiles
 					if ( value != null )
 						this.AggressiveAction( value );
 
-					Combatant = value;
+					FocusMob = Combatant = value;
 
 					if ( oldFocus != null && !oldFocus.Alive )
+					{
 						Say( "Thou hast suffered thy punishment, scoundrel." );
+						this.AIObject.Action = ActionType.Wander;
+					}
 
 					if ( value != null )
+					{
 						Say( 500131 ); // Thou wilt regret thine actions, swine!
+						if ( this.AIObject != null )
+							this.AIObject.Action = ActionType.Combat;
+					}
 
 					if ( m_AttackTimer != null )
 					{
@@ -153,13 +214,13 @@ namespace Server.Mobiles
 						m_AttackTimer.Start();
 						((AttackTimer)m_AttackTimer).DoOnTick();
 					}
-					else
+					else if ( m_IsAutoGuard )
 					{
 						m_IdleTimer = new IdleTimer( this );
 						m_IdleTimer.Start();
 					}
 				}
-				else if ( m_Focus == null && m_IdleTimer == null )
+				else if ( m_Focus == null && m_IdleTimer == null && m_IsAutoGuard )
 				{
 					m_IdleTimer = new IdleTimer( this );
 					m_IdleTimer.Start();
@@ -171,7 +232,9 @@ namespace Server.Mobiles
 		{
 			base.Serialize( writer );
 
-			writer.Write( (int) 0 ); // version
+			writer.Write( (int) 1 ); // version
+			
+			writer.Write( m_IsAutoGuard );
 
 			writer.Write( m_Focus );
 		}
@@ -184,8 +247,15 @@ namespace Server.Mobiles
 
 			switch ( version )
 			{
+				case 1:
+				{
+					m_IsAutoGuard = reader.ReadBool();
+					goto case 0;
+				}	
 				case 0:
 				{
+					if ( version < 1 )
+						m_IsAutoGuard = true;
 					m_Focus = reader.ReadMobile();
 
 					if ( m_Focus != null )
@@ -193,7 +263,7 @@ namespace Server.Mobiles
 						m_AttackTimer = new AttackTimer( this );
 						m_AttackTimer.Start();
 					}
-					else
+					else if ( m_IsAutoGuard )
 					{
 						m_IdleTimer = new IdleTimer( this );
 						m_IdleTimer.Start();
@@ -203,6 +273,20 @@ namespace Server.Mobiles
 				}
 			}
 		}
+
+		protected override bool OnMove( Direction d )
+		{
+			if ( !(Region is Regions.GuardedRegion) )
+			{
+				if ( m_IdleTimer == null )
+					m_IdleTimer = new IdleTimer( this );
+				if ( !m_IdleTimer.Running )
+					m_IdleTimer.Start();
+			}
+
+			return base.OnMove (d);
+		}
+
 
 		public override void OnAfterDelete()
 		{
@@ -221,21 +305,6 @@ namespace Server.Mobiles
 			base.OnAfterDelete();
 		}
 
-		private class AvengeTimer : Timer
-		{
-			private Mobile m_Focus;
-
-			public AvengeTimer( Mobile focus ) : base( TimeSpan.FromSeconds( 2.5 ), TimeSpan.FromSeconds( 1.0 ), 3 )
-			{
-				m_Focus = focus;
-			}
-
-			protected override void OnTick()
-			{
-				BaseGuard.Spawn( m_Focus, m_Focus, 1, true );
-			}
-		}
-
 		private class AttackTimer : Timer
 		{
 			private WarriorGuard m_Owner;
@@ -243,6 +312,7 @@ namespace Server.Mobiles
 			public AttackTimer( WarriorGuard owner ) : base( TimeSpan.FromSeconds( 0.25 ), TimeSpan.FromSeconds( 0.1 ) )
 			{
 				m_Owner = owner;
+				Priority = TimerPriority.FiftyMS;
 			}
 
 			public void DoOnTick()
@@ -264,60 +334,40 @@ namespace Server.Mobiles
 
 				Mobile target = m_Owner.Focus;
 
-				if ( target != null && (target.Deleted || !target.Alive || !m_Owner.CanBeHarmful( target )) )	
+				if ( target == null || target.Deleted || !target.Alive || !m_Owner.CanBeHarmful( target ) )	
 				{
-					m_Owner.Focus = null;
+					if ( target != null && ( !target.Alive || target.Deleted ) )
+					{
+						if ( !target.Player && target.Corpse != null && !target.Corpse.Deleted )
+							target.Corpse.Delete();
+
+						target.RemoveAggressor( m_Owner );
+						target.RemoveAggressed( m_Owner );
+						m_Owner.RemoveAggressor( target );
+						m_Owner.RemoveAggressed( target );
+					}
 					Stop();
-					return;
-				}
-				else if ( m_Owner.Weapon is Fists )
-				{
-					m_Owner.Kill();
-					Stop();
+					m_Owner.Focus = m_Owner.Combatant = null;
+					m_Owner.AIObject.Action = ActionType.Wander;
 					return;
 				}
 
-				if ( target != null && m_Owner.Combatant != target )
+				if ( m_Owner.Combatant != target )
 					m_Owner.Combatant = target;
 
-				if ( target == null )
+				if ( !m_Owner.InRange( target, 30 ) || !m_Owner.CanSee( target ) )
 				{
-					Stop();
+					m_Owner.Focus = m_Owner.Combatant = null;
+					m_Owner.AIObject.Action = ActionType.Wander;
 				}
-				else
-				{// <instakill>
-					TeleportTo( target );
-					target.BoltEffect( 0 );
-
-					if ( target is BaseCreature )
-						((BaseCreature)target).NoKillAwards = true;
-
-					target.Damage( target.HitsMax, m_Owner );
-					target.Kill(); // just in case, maybe Damage is overriden on some shard
-
-					if ( target.Corpse != null && !target.Player )
-						target.Corpse.Delete();
-
-					m_Owner.Focus = null;
-					Stop();
-				}// </instakill>
-				/*else if ( !m_Owner.InRange( target, 20 ) )
-				{
-					m_Owner.Focus = null;
-				}
-				else if ( !m_Owner.InRange( target, 10 ) || !m_Owner.InLOS( target ) )
+				else if ( !m_Owner.InRange( target, 5 ) || !m_Owner.InLOS( target ) )
 				{
 					TeleportTo( target );
 				}
-				else if ( !m_Owner.InRange( target, 1 ) )
+				/*else if ( !m_Owner.InRange( target, 1 ) )
 				{
 					if ( !m_Owner.Move( m_Owner.GetDirectionTo( target ) | Direction.Running ) )
 						TeleportTo( target );
-				}
-				else if ( !m_Owner.CanSee( target ) )
-				{
-					if ( !m_Owner.UseSkill( SkillName.DetectHidden ) && Utility.Random( 50 ) == 0 )
-						m_Owner.Say( "Reveal!" );
 				}*/
 			}
 
@@ -343,20 +393,21 @@ namespace Server.Mobiles
 			public IdleTimer( WarriorGuard owner ) : base( TimeSpan.FromSeconds( 2.0 ), TimeSpan.FromSeconds( 2.5 ) )
 			{
 				m_Owner = owner;
+				Priority = TimerPriority.OneSecond;
 			}
 
 			protected override void OnTick()
 			{
-				if ( m_Owner.Deleted )
+				if ( m_Owner.Deleted || ( m_Owner.m_IsAutoGuard && m_Owner.Region is Regions.GuardedRegion ) )
 				{
 					Stop();
 					return;
 				}
 
-				if ( (m_Stage++ % 4) == 0 || !m_Owner.Move( m_Owner.Direction ) )
-					m_Owner.Direction = (Direction)Utility.Random( 8 );
+				//if ( (m_Stage % 4) == 0 || !m_Owner.Move( m_Owner.Direction ) )
+				//	m_Owner.Direction = (Direction)Utility.Random( 8 );
 
-				if ( m_Stage > 16 )
+				if ( m_Stage++ > 16 )
 				{
 					Effects.SendLocationParticles( EffectItem.Create( m_Owner.Location, m_Owner.Map, EffectItem.DefaultDuration ), 0x3728, 10, 10, 2023 );
 					m_Owner.PlaySound( 0x1FE );
@@ -367,3 +418,4 @@ namespace Server.Mobiles
 		}
 	}
 }
+

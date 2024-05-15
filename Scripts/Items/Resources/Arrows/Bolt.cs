@@ -2,16 +2,8 @@ using System;
 
 namespace Server.Items
 {
-	public class Bolt : Item, ICommodity
+	public class Bolt : BaseItem
 	{
-		int ICommodity.DescriptionNumber { get { return LabelNumber; } }
-		bool ICommodity.IsDeedable { get { return true; } }
-
-		public override double DefaultWeight
-		{
-			get { return 0.1; }
-		}
-
 		[Constructable]
 		public Bolt() : this( 1 )
 		{
@@ -21,6 +13,7 @@ namespace Server.Items
 		public Bolt( int amount ) : base( 0x1BFB )
 		{
 			Stackable = true;
+			Weight = 0.1;
 			Amount = amount;
 		}
 
@@ -28,7 +21,10 @@ namespace Server.Items
 		{
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Bolt( amount ), amount );
+		}
 
 		public override void Serialize( GenericWriter writer )
 		{

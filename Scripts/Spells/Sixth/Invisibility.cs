@@ -1,22 +1,21 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using Server;
 using Server.Targeting;
 using Server.Items;
 
 namespace Server.Spells.Sixth
 {
-	public class InvisibilitySpell : MagerySpell
+	public class InvisibilitySpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Invisibility", "An Lor Xen",
+				SpellCircle.Sixth,
 				206,
 				9002,
 				Reagent.Bloodmoss,
 				Reagent.Nightshade
 			);
-
-		public override SpellCircle Circle { get { return SpellCircle.Sixth; } }
 
 		public InvisibilitySpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
@@ -33,10 +32,6 @@ namespace Server.Spells.Sixth
 			{
 				Caster.SendLocalizedMessage( 500237 ); // Target can not be seen.
 			}
-			else if ( m is Mobiles.BaseVendor || m is Mobiles.PlayerVendor || m is Mobiles.PlayerBarkeeper || m.AccessLevel > Caster.AccessLevel )
-			{
-				Caster.SendLocalizedMessage( 501857 ); // This spell won't work on that!
-			}
 			else if ( CheckBSequence( m ) )
 			{
 				SpellHelper.Turn( Caster, m );
@@ -45,17 +40,12 @@ namespace Server.Spells.Sixth
 				m.PlaySound( 0x3C4 );
 
 				m.Hidden = true;
-				m.Combatant = null;
-				m.Warmode = false;
 
 				RemoveTimer( m );
 
-				TimeSpan duration = TimeSpan.FromSeconds( (( 1.2 * Caster.Skills.Magery.Fixed) / 10 ));
+				TimeSpan duration = TimeSpan.FromSeconds( Caster.Skills[SkillName.Magery].Value * 1.2 ); // 120% of magery
 
 				Timer t = new InternalTimer( m, duration );
-
-				BuffInfo.RemoveBuff( m, BuffIcon.HidingAndOrStealth );
-				BuffInfo.AddBuff( m, new BuffInfo( BuffIcon.Invisibility, 1075825, duration, m ) );	//Invisibility/Invisible
 
 				m_Table[m] = t;
 
@@ -65,12 +55,7 @@ namespace Server.Spells.Sixth
 			FinishSequence();
 		}
 
-		private static Hashtable m_Table = new Hashtable();
-
-		public static bool HasTimer( Mobile m )
-		{
-			return m_Table[m] != null;
-		}
+		public static Hashtable m_Table = new Hashtable();
 
 		public static void RemoveTimer( Mobile m )
 		{
@@ -83,7 +68,7 @@ namespace Server.Spells.Sixth
 			}
 		}
 
-		private class InternalTimer : Timer
+		public class InternalTimer : Timer
 		{
 			private Mobile m_Mobile;
 
@@ -104,7 +89,7 @@ namespace Server.Spells.Sixth
 		{
 			private InvisibilitySpell m_Owner;
 
-			public InternalTarget( InvisibilitySpell owner ) : base( Core.ML ? 10 : 12, false, TargetFlags.Beneficial )
+			public InternalTarget( InvisibilitySpell owner ) : base( 12, false, TargetFlags.Beneficial )
 			{
 				m_Owner = owner;
 			}

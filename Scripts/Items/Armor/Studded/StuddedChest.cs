@@ -21,10 +21,7 @@ namespace Server.Items
 		public override int ArmorBase{ get{ return 16; } }
 
 		public override ArmorMaterialType MaterialType{ get{ return ArmorMaterialType.Studded; } }
-		public override CraftResource DefaultResource{ get{ return CraftResource.RegularLeather; } }
-
-		public override ArmorMeditationAllowance DefMedAllowance{ get{ return ArmorMeditationAllowance.Half; } }
-
+		
 		[Constructable]
 		public StuddedChest() : base( 0x13DB )
 		{

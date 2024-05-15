@@ -1,5 +1,5 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using System.Collections.Generic;
 using Server.Commands;
 using Server.Mobiles;
@@ -10,7 +10,7 @@ namespace Server
 	{
 		public static void Initialize()
 		{
-			CommandSystem.Register( "VendorGen", AccessLevel.Administrator, new CommandEventHandler( VendorGenerator.VendorGen_OnCommand ) );
+			CommandSystem.Register( "VendorGen", AccessLevel.Administrator, new Server.Commands.CommandEventHandler( VendorGenerator.VendorGen_OnCommand ) );
 		}
 
 		private static Rectangle2D[] m_BritRegions = new Rectangle2D[]

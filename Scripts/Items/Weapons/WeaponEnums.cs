@@ -2,13 +2,6 @@ using System;
 
 namespace Server.Items
 {
-	public enum WeaponQuality
-	{
-		Low,
-		Regular,
-		Exceptional
-	}
-
 	public enum WeaponType
 	{
 		Axe,		// Axes, Hatches, etc. These can give concussion blows
@@ -39,16 +32,6 @@ namespace Server.Items
 		Eminently,
 		Exceedingly,
 		Supremely
-	}
-
-	public enum WeaponDurabilityLevel
-	{
-		Regular,
-		Durable,
-		Substantial,
-		Massive,
-		Fortified,
-		Indestructible
 	}
 
 	public enum WeaponAnimation

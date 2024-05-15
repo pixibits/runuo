@@ -1,7 +1,6 @@
 using System;
 using Server;
 using Server.Network;
-using Server.Regions;
 
 namespace Server.Items
 {
@@ -19,7 +18,7 @@ namespace Server.Items
 
 		public override void OnTrigger( Mobile from )
 		{
-			if ( !from.Alive || ItemID != 0x1125 || from.AccessLevel > AccessLevel.Player )
+			if ( !from.Alive || ItemID != 0x1125 )
 				return;
 
 			ItemID = 0x1126;
@@ -32,7 +31,7 @@ namespace Server.Items
 
 		public virtual void OnMushroomReset()
 		{
-			if ( Region.Find( Location, Map ).IsPartOf( typeof( DungeonRegion ) ) )
+			if ( Region.Find( Location, Map ).Name.IndexOf( "dungeon" ) >= 0 )
 				ItemID = 0x1125; // reset
 			else
 				Delete();

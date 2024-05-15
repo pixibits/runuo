@@ -4,7 +4,7 @@ using Server;
 namespace Server.Items
 {
 	[Flipable( 0x105B, 0x105C )]
-	public class Axle : Item
+	public class Axle : BaseItem
 	{
 		[Constructable]
 		public Axle() : this( 1 )
@@ -22,6 +22,12 @@ namespace Server.Items
 		public Axle( Serial serial ) : base( serial )
 		{
 		}
+
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Axle(), amount );
+		}
+
 		public override void Serialize( GenericWriter writer )
 		{
 			base.Serialize( writer );

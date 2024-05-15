@@ -2,11 +2,8 @@ using System;
 
 namespace Server.Items
 {
-	public class Bottle : Item, ICommodity
+	public class Bottle : BaseItem
 	{
-		int ICommodity.DescriptionNumber { get { return LabelNumber; } }
-		bool ICommodity.IsDeedable { get { return (Core.ML); } }
-
 		[Constructable]
 		public Bottle() : this( 1 )
 		{
@@ -24,7 +21,10 @@ namespace Server.Items
 		{
 		}
 
-		
+		public override Item Dupe( int amount )
+		{
+			return base.Dupe( new Bottle( amount ), amount );
+		}
 
 		public override void Serialize( GenericWriter writer )
 		{

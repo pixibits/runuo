@@ -7,8 +7,6 @@ namespace Server.Items
 	[FlipableAttribute( 0x13E4, 0x13E3 )]
 	public class RunicHammer : BaseRunicTool
 	{
-		public override CraftSystem CraftSystem{ get{ return DefBlacksmithy.CraftSystem; } }
-
 		public override int LabelNumber
 		{
 			get
@@ -43,7 +41,7 @@ namespace Server.Items
 		}
 
 		[Constructable]
-		public RunicHammer( CraftResource resource ) : base( resource, 0x13E3 )
+		public RunicHammer( CraftResource resource ) : base( resource, 0x13E4 )
 		{
 			Weight = 8.0;
 			Layer = Layer.OneHanded;
@@ -51,7 +49,7 @@ namespace Server.Items
 		}
 
 		[Constructable]
-		public RunicHammer( CraftResource resource, int uses ) : base( resource, uses, 0x13E3 )
+		public RunicHammer( CraftResource resource, int uses ) : base( resource, uses, 0x13E4 )
 		{
 			Weight = 8.0;
 			Layer = Layer.OneHanded;

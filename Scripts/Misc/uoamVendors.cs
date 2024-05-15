@@ -1,9 +1,8 @@
 using System;
-using System.Collections;
+using System.Collections; using System.Collections.Generic;
 using System.IO;
 using Server.Mobiles;
 using Server.Items;
-using Server.Commands;
 
 // Version 0.8
 
@@ -23,12 +22,12 @@ namespace Server
 
 		public static void Initialize()
 		{
-			CommandSystem.Register( "UOAMVendors", AccessLevel.Administrator, new CommandEventHandler( Generate_OnCommand ) );
+			Commands.CommandSystem.Register( "UOAMVendors", AccessLevel.Administrator, new Server.Commands.CommandEventHandler( Generate_OnCommand ) );
 		}
 
 		[Usage( "UOAMVendors" )]
 		[Description( "Generates vendor spawners from Data/Common.MAP (taken from UOAutoMap)" )]
-		private static void Generate_OnCommand( CommandEventArgs e )
+		private static void Generate_OnCommand( Server.Commands.CommandEventArgs e )
 		{
 			Parse( e.Mobile );
 		}
@@ -41,7 +40,7 @@ namespace Server
 			if ( File.Exists( vendor_path ) )
 			{
 				ArrayList list = new ArrayList();
-				from.SendMessage( "Generating Vendors..." );
+				from.SendAsciiMessage( "Generating Vendors..." );
 
 				using ( StreamReader ip = new StreamReader( vendor_path ) )
 				{
@@ -71,9 +70,6 @@ namespace Server
 								break;
 							case "-baker:":
 								PlaceNPC( split[1], split[2], split[3], "Baker" );
-								break;
-							case "-vet:":
-								PlaceNPC( split[1], split[2], split[3], "Veterinarian" );
 								break;
 							case "-gypsymaiden:":
 								PlaceNPC( split[1], split[2], split[3], "GypsyMaiden" );
@@ -235,11 +231,11 @@ namespace Server
 						}
 					}
 				}
-				from.SendMessage( "Done, added {0} spawners",m_Count );
+				from.SendAsciiMessage( "Done, added {0} spawners",m_Count );
 			}
 			else
 			{
-				from.SendMessage( "{0} not found!", vendor_path );
+				from.SendAsciiMessage( "{0} not found!", vendor_path );
 			}
 		}
 
@@ -280,15 +276,15 @@ namespace Server
 		{
 			int z = map.GetAverageZ( x, y );
 
-			if ( map.CanFit( x, y, z, 16, false, false, true ) )
+			if ( map.CanFit( x, y, z, 16, false, false ) )
 				return z;
 
 			for ( int i = 1; i <= 20; ++i )
 			{
-				if ( map.CanFit( x, y, z + i, 16, false, false, true ) )
+				if ( map.CanFit( x, y, z + i, 16, false, false ) )
 					return z + i;
 
-				if ( map.CanFit( x, y, z - i, 16, false, false, true ) )
+				if ( map.CanFit( x, y, z - i, 16, false, false ) )
 					return z - i;
 			}
 

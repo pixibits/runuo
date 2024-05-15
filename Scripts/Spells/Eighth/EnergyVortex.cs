@@ -5,12 +5,13 @@ using Server.Targeting;
 
 namespace Server.Spells.Eighth
 {
-	public class EnergyVortexSpell : MagerySpell
+	public class EnergyVortexSpell : Spell
 	{
 		private static SpellInfo m_Info = new SpellInfo(
 				"Energy Vortex", "Vas Corp Por",
-				260,
-				9032,
+				SpellCircle.Eighth,
+				230,
+				9022,
 				false,
 				Reagent.Bloodmoss,
 				Reagent.BlackPearl,
@@ -18,24 +19,8 @@ namespace Server.Spells.Eighth
 				Reagent.Nightshade
 			);
 
-		public override SpellCircle Circle { get { return SpellCircle.Eighth; } }
-
 		public EnergyVortexSpell( Mobile caster, Item scroll ) : base( caster, scroll, m_Info )
 		{
-		}
-
-		public override bool CheckCast()
-		{
-			if ( !base.CheckCast() )
-				return false;
-
-			if ( (Caster.Followers + (Core.SE ? 2 : 1)) > Caster.FollowersMax )
-			{
-				Caster.SendLocalizedMessage( 1049645 ); // You have too many followers to summon that creature.
-				return false;
-			}
-
-			return true;
 		}
 
 		public override void OnCast()
@@ -47,22 +32,15 @@ namespace Server.Spells.Eighth
 		{
 			Map map = Caster.Map;
 
-			SpellHelper.GetSurfaceTop( ref p );
+			Point3D pt = SpellHelper.GetSurfaceTop( p );
 
-			if ( map == null || !map.CanSpawnMobile( p.X, p.Y, p.Z ) )
+			if ( !(p is Mobile && ((Mobile)p).Alive) && ( map == null || !map.CanFit( pt, 16 ) ) )
 			{
 				Caster.SendLocalizedMessage( 501942 ); // That location is blocked.
 			}
-			else if ( SpellHelper.CheckTown( p, Caster ) && CheckSequence() )
+			else if ( SpellHelper.CheckTown( pt, Caster ) && CheckSequence() )
 			{
-				TimeSpan duration;
-
-				if ( Core.AOS )
-					duration = TimeSpan.FromSeconds( 90.0 );
-				else
-					duration = TimeSpan.FromSeconds( Utility.Random( 80, 40 ) );
-
-				BaseCreature.Summon( new EnergyVortex(), false, Caster, new Point3D( p ), 0x212, duration );
+				BaseCreature.Summon( new EnergyVortex(), false, Caster, pt, 0x212, TimeSpan.FromSeconds( 90 ) );
 			}
 
 			FinishSequence();
@@ -72,7 +50,7 @@ namespace Server.Spells.Eighth
 		{
 			private EnergyVortexSpell m_Owner;
 
-			public InternalTarget( EnergyVortexSpell owner ) : base( Core.ML ? 10 : 12, true, TargetFlags.None )
+			public InternalTarget( EnergyVortexSpell owner ) : base( 12, true, TargetFlags.None )
 			{
 				m_Owner = owner;
 			}

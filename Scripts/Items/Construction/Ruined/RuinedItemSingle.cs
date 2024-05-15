@@ -4,7 +4,7 @@ using Server.Network;
 namespace Server.Items
 {
 	[FlipableAttribute( 0xC10, 0xC11 )] 
-	public class RuinedFallenChairA : Item
+	public class RuinedFallenChairA : BaseItem
 	{
 		[Constructable]
 		public RuinedFallenChairA() : base( 0xC10 )
@@ -33,7 +33,7 @@ namespace Server.Items
 	}
 
 	[FlipableAttribute( 0xC13, 0xC12 )] 
-	public class RuinedArmoire : Item
+	public class RuinedArmoire : BaseItem
 	{
 		[Constructable]
 		public RuinedArmoire() : base( 0xC13 )
@@ -62,7 +62,7 @@ namespace Server.Items
 	}
 
 	[FlipableAttribute( 0xC14, 0xC15 )] 
-	public class RuinedBookcase : Item
+	public class RuinedBookcase : BaseItem
 	{
 		[Constructable]
 		public RuinedBookcase() : base( 0xC14 )
@@ -90,7 +90,7 @@ namespace Server.Items
 
 	}
 
-	public class RuinedBooks : Item
+	public class RuinedBooks : BaseItem
 	{
 		[Constructable]
 		public RuinedBooks() : base( 0xC16 )
@@ -118,7 +118,7 @@ namespace Server.Items
 	}
 
 	[FlipableAttribute( 0xC17, 0xC18 )] 
-	public class CoveredChair : Item
+	public class CoveredChair : BaseItem
 	{
 		[Constructable]
 		public CoveredChair() : base( 0xC17 )
@@ -147,7 +147,7 @@ namespace Server.Items
 	}
 
 	[FlipableAttribute( 0xC19, 0xC1A )] 
-	public class RuinedFallenChairB : Item
+	public class RuinedFallenChairB : BaseItem
 	{
 		[Constructable]
 		public RuinedFallenChairB() : base( 0xC19 )
@@ -176,7 +176,7 @@ namespace Server.Items
 	}
 
 	[FlipableAttribute( 0xC1B, 0xC1C, 0xC1E, 0xC1D )]
-	public class RuinedChair : Item
+	public class RuinedChair : BaseItem
 	{
 		[Constructable]
 		public RuinedChair() : base( 0xC1B )
@@ -203,7 +203,7 @@ namespace Server.Items
 		}
 	}
 
-	public class RuinedClock : Item
+	public class RuinedClock : BaseItem
 	{
 		[Constructable]
 		public RuinedClock() : base( 0xC1F )
@@ -231,7 +231,7 @@ namespace Server.Items
 	}
 
 	[FlipableAttribute( 0xC24, 0xC25 )]
-	public class RuinedDrawers : Item
+	public class RuinedDrawers : BaseItem
 	{
 		[Constructable]
 		public RuinedDrawers() : base( 0xC24 )
@@ -258,7 +258,7 @@ namespace Server.Items
 		}
 	}
 
-	public class RuinedPainting : Item
+	public class RuinedPainting : BaseItem
 	{
 		[Constructable]
 		public RuinedPainting() : base( 0xC2C )
@@ -286,7 +286,7 @@ namespace Server.Items
 	}
 
 	[FlipableAttribute( 0xC2D, 0xC2F, 0xC2E, 0xC30 )]
-	public class WoodDebris : Item
+	public class WoodDebris : BaseItem
 	{
 		[Constructable]
 		public WoodDebris() : base( 0xC2D )
