@@ -1,0 +1,20 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/Logs/Commands
+/Saves
+/Scripts/.vs
+/Scripts/obj
+/Scripts/Output
+/Scripts/RebirthScripts.csproj.user
+/Scripts/RebirthScripts.suo
+/Server/.vs
+/Server/obj
+/Server/Server.csproj.user
+*.log
+/runuo.exe
+/runuo.pdb
+/Ultima.dll
+/Ultima.pdb
