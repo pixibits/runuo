@@ -146,11 +146,13 @@ namespace Server.Network
 			if ( buffer == null || buffer.Length <= 0 )
 				return true;
 
+			
+
 			lock ( buffer )
 			{
 				int length = buffer.Length;
-
-				if ( !ns.Seeded )
+                //Console.WriteLine("Recv {0}", buffer.ToString() /* string.Join(string.Empty, Array.ConvertAll(data, b => b.ToString("X2"))) */);
+                if ( !ns.Seeded )
 				{
 					if ( buffer.GetPacketID() == 0xEF )
 					{
@@ -264,8 +266,10 @@ namespace Server.Network
 							packetLength = buffer.Dequeue( packetBuffer, 0, packetLength );
 
 							PacketReader r =  new PacketReader( packetBuffer, packetLength, handler.Length != 0 );
-
-							handler.OnReceive( ns, r );
+							
+                            //Console.WriteLine("Recv {0} {1}", packetID.ToString("X"), string.Join(string.Empty, Array.ConvertAll(packetBuffer, b => b.ToString("X2"))));
+                            Console.WriteLine("Recv {0} {1}", packetID.ToString("X"), string.Join(string.Empty, Array.ConvertAll(r.Buffer, b => b.ToString("X"))).TrimEnd('0'));
+                            handler.OnReceive( ns, r );
 							length = buffer.Length;
 
 							if ( BufferSize >= packetLength )

@@ -324,7 +324,7 @@ namespace Server.Mobiles
 		{
 			m_OldWalkReq = Server.Network.PacketHandlers.GetHandler( 0x02 ).OnReceive;
 			
-			Server.Network.PacketHandlers.Register( 0x02,   7,  true, new OnPacketReceive( MovementHandler ) );
+			Server.Network.PacketHandlers.Register( 0x02,   3,  true, new OnPacketReceive( MovementHandler ) );
 
 			Server.Network.PacketHandlers.Register( 0xAD,   0,  true, new OnPacketReceive( UnicodeSpeech ) );
 			
@@ -796,8 +796,8 @@ namespace Server.Mobiles
 			}*/
 
 			TimeSpan speed = ComputeMovementSpeed( d );
-
-			if ( !base.Move( d ) )
+            Console.WriteLine("Script moving {0}", d);
+            if ( !base.Move( d ) )
 				return false;
 
 			m_NextMovementTime = DateTime.Now + speed;
@@ -881,8 +881,8 @@ namespace Server.Mobiles
 			{
 				Direction dir = (Direction)pvSrc.ReadByte();
 				byte seq = pvSrc.ReadByte();
-
-				MovementController.Enqueue( pm, dir, seq );
+                Console.WriteLine("Script Got dir {0} and seq {1}", dir.ToString(), seq.ToString());
+                MovementController.Enqueue( pm, dir, seq );
 			}
 		}
 		

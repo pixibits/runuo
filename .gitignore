@@ -3,7 +3,7 @@
 ################################################################################
 
 /.vs
-/Logs/Commands
+/Logs
 /Scripts/.vs
 /Scripts/obj
 /Scripts/Output
@@ -15,9 +15,6 @@
 *.log
 /runuo.exe
 /runuo.pdb
-/Ultima.dll
-/Ultima.pdb
 /Backups
 /Saves
-/Saves/Guilds/Guilds.bin
-/Saves/Items/Items.bin
+/Scratch

@@ -39,9 +39,10 @@ namespace Server.Network
 			m_Length = length;
 			m_Ingame = ingame;
 			m_OnReceive = onReceive;
-		}
+            
+        }
 
-		public int PacketID
+        public int PacketID
 		{
 			get
 			{

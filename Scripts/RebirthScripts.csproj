@@ -348,6 +348,16 @@
     <Compile Include="Engines\Craft\Tinkering.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Engines\Encryption\OldGameEncryption.cs" />
+    <Compile Include="Engines\Encryption\Configuration.cs" />
+    <Compile Include="Engines\Encryption\Encryption12OCT2009.cs" />
+    <Compile Include="Engines\Encryption\GameEncryption.cs" />
+    <Compile Include="Engines\Encryption\IClientEncryption.cs" />
+    <Compile Include="Engines\Encryption\LoginEncryption.cs" />
+    <Compile Include="Engines\Encryption\LoginKey.cs" />
+    <Compile Include="Engines\Encryption\NoEncryption.cs" />
+    <Compile Include="Engines\Encryption\TwofishBase.cs" />
+    <Compile Include="Engines\Encryption\TwofishEncryption.cs" />
     <Compile Include="Engines\Harvest\Core\HarvestBank.cs">
       <SubType>Code</SubType>
     </Compile>

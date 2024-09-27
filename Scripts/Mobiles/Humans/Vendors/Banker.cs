@@ -198,13 +198,14 @@ namespace Server.Mobiles
 
 		public override void OnSpeech( SpeechEventArgs e )
 		{
+			Console.WriteLine("in banker onspeech keycount: {0}", e.Keywords.Length);
 			if ( !e.Handled && e.Mobile.InRange( this.Location, 12 ) )
 			{
 				for ( int i = 0; i < e.Keywords.Length; ++i )
 				{
 					int keyword = e.Keywords[i];
-
-					switch ( keyword )
+                    Console.WriteLine("in banker onspeech keyword: {0}", keyword.ToString("X"));
+                    switch ( keyword )
 					{
 						case 0x0000: // *withdraw*
 						{

@@ -35,6 +35,8 @@ using Server.Prompts;
 using Server.HuePickers;
 using Server.ContextMenus;
 using Server.Diagnostics;
+using System.Reflection;
+using System.Linq;
 
 namespace Server.Network
 {
@@ -1961,14 +1963,16 @@ namespace Server.Network
 	{
 		public SkillUpdate( Skills skills ) : base( 0x3A )
 		{
-			this.EnsureCapacity( 6 + (skills.Length * 9) );
+			this.EnsureCapacity( 6 + ((skills.Length - 12) * 4) );
 
-			m_Stream.Write( (byte) 0x02 ); // type: absolute, capped
+			m_Stream.Write( (byte) 0x00 ); // type: absolute, capped
 
 			for ( int i = 0; i < skills.Length; ++i )
 			{
 				Skill s = skills[i];
-
+				if (new[] { "Meditation", "Stealth", "Remove Trap", "Necromancy", "Focus", "Chivalry", "Ninjitsu", "Spellweaving", "Mysticism", "Imbuing", "Throwing", "Bushido" }.Contains(s.Name))
+					continue;
+				
 				double v = s.NonRacialValue;
 				int uv = (int)(v * 10);
 
@@ -1976,15 +1980,18 @@ namespace Server.Network
 					uv = 0;
 				else if ( uv >= 0x10000 )
 					uv = 0xFFFF;
-
-				m_Stream.Write( (ushort) (s.Info.SkillID + 1) );
-				m_Stream.Write( (ushort) uv );
-				m_Stream.Write( (ushort) s.BaseFixedPoint );
-				m_Stream.Write( (byte) s.Lock );
-				m_Stream.Write( (ushort) s.CapFixedPoint );
-			}
+                
+                Console.WriteLine("{0} {1} {2}", s.Name, s.Info.SkillID, uv);
+                m_Stream.Write( (ushort) (s.Info.SkillID + 1) );
+                //m_Stream.Write((ushort)s.BaseFixedPoint);
+                m_Stream.Write( (ushort) uv );
+                //m_Stream.Write((ushort)s.CapFixedPoint);
+                //m_Stream.Write( (byte) s.Lock );
+                //
+            }
 
 			m_Stream.Write( (short) 0 ); // terminate
+			Console.WriteLine("stream {0}", string.Join(string.Empty, Array.ConvertAll(m_Stream.ToArray(), b => b.ToString("X"))));
 		}
 	}
 
@@ -2000,7 +2007,7 @@ namespace Server.Network
 	{
 		public SkillChange( Skill skill ) : base( 0x3A )
 		{
-			this.EnsureCapacity( 13 );
+			this.EnsureCapacity( 8 );
 
 			double v = skill.NonRacialValue;
 			int uv = (int)(v * 10);
@@ -2010,12 +2017,12 @@ namespace Server.Network
 			else if ( uv >= 0x10000 )
 				uv = 0xFFFF;
 
-			m_Stream.Write( (byte) 0xDF ); // type: delta, capped
+			m_Stream.Write( (byte) 0xFF ); // type: delta, capped
 			m_Stream.Write( (ushort) skill.Info.SkillID );
 			m_Stream.Write( (ushort) uv );
-			m_Stream.Write( (ushort) skill.BaseFixedPoint );
-			m_Stream.Write( (byte) skill.Lock );
-			m_Stream.Write( (ushort) skill.CapFixedPoint );
+			//m_Stream.Write( (ushort) skill.BaseFixedPoint );
+			//m_Stream.Write( (byte) skill.Lock );
+			//m_Stream.Write( (ushort) skill.CapFixedPoint );
 
 			/*m_Stream.Write( (short) skill.Info.SkillID );
 			m_Stream.Write( (short) (skill.Value * 10.0) );
@@ -3526,12 +3533,13 @@ namespace Server.Network
 				m_Cache[noto][seq] = p = new MovementAck( seq, noto );
 				p.SetStatic();
 			}
-
+			
 			return p;
 		}
 
 		private MovementAck( int seq, int noto ) : base( 0x22, 3 )
 		{
+			Console.WriteLine("send mov ack in packets {0} {1} {2}", PacketID.ToString("X"), seq, noto);
 			m_Stream.Write( (byte) seq );
 			m_Stream.Write( (byte) noto );
 		}

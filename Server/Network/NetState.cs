@@ -187,6 +187,7 @@ namespace Server.Network {
 			}
 		}
 
+		private static ClientVersion m_Version12535 = new ClientVersion( "1.25.35" );
 		private static ClientVersion m_Version400a	= new ClientVersion( "4.0.0a" );
 		private static ClientVersion m_Version407a	= new ClientVersion( "4.0.7a" );
 		private static ClientVersion m_Version500a	= new ClientVersion( "5.0.0a" );
@@ -571,36 +572,47 @@ namespace Server.Network {
 		}
 
 		public virtual void Send( Packet p ) {
-			if ( m_Socket == null || m_BlockAllPackets ) {
+            if (p.PacketID != null && p.UnderlyingStream != null)
+            {
+                WriteConsole("zSend {0} {1}", p.PacketID.ToString("X2"), string.Join(string.Empty, Array.ConvertAll(p.UnderlyingStream.ToArray(), b => b.ToString("X2"))));
+            }
+            //Console.WriteLine("in send 0 pid {0}", p.PacketID.ToString("X"));
+            if ( m_Socket == null || m_BlockAllPackets || p.PacketID == 0xBF || p.PacketID == 0xB9 || p.PacketID == 0xBC || /* p.PacketID == 0x7C || */ p.PacketID == 0xC0) {
+				Console.WriteLine("in send 1");
 				p.OnSend();
 				return;
 			}
 
-			PacketSendProfile prof = PacketSendProfile.Acquire( p.GetType() );
+            PacketSendProfile prof = PacketSendProfile.Acquire( p.GetType() );
 
 			int length;
 			byte[] buffer = p.Compile( m_CompressionEnabled, out length );
-
+			
 			if ( buffer != null ) {
-				if ( buffer.Length <= 0 || length <= 0 ) {
-					p.OnSend();
+                //Console.WriteLine("in send 2");
+                if ( buffer.Length <= 0 || length <= 0 ) {
+                    Console.WriteLine("in send 3");
+                    p.OnSend();
 					return;
 				}
 
-				if ( prof != null ) {
+                
+
+                if ( prof != null ) {
 					prof.Start();
 				}
 
 				if ( m_Encoder != null ) {
 					m_Encoder.EncodeOutgoingPacket( this, ref buffer, ref length );
 				}
-
+				
 				try {
 					SendQueue.Gram gram;
 
 					lock ( m_SendQueue ) {
 						gram = m_SendQueue.Enqueue( buffer, length );
-					}
+                        //Console.WriteLine("in send 4");
+                    }
 
 					if ( gram != null ) {
 #if Framework_4_0
@@ -609,7 +621,8 @@ namespace Server.Network {
 #else
 						try {
 							m_Socket.BeginSend( gram.Buffer, 0, gram.Length, SocketFlags.None, m_OnSend, m_Socket );
-						} catch ( Exception ex ) {
+                            Console.WriteLine("in send 5");
+                        } catch ( Exception ex ) {
 							TraceException( ex );
 							Dispose( false );
 						}

@@ -35,7 +35,9 @@ namespace Server.Network
 			m_Data = data;
 			m_Size = size;
 			m_Index = fixedSize ? 1 : 3;
-		}
+            //Console.WriteLine("Recv {0}", string.Join(string.Empty, Array.ConvertAll(data, b => b.ToString("X2"))));
+
+        }
 
 		public byte[] Buffer
 		{

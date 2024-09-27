@@ -747,6 +747,7 @@ namespace Server
 			m_Type = type;
 			m_Hue = hue;
 			m_Keywords = keywords;
+			
 		}
 	}
 

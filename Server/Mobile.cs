@@ -3084,6 +3084,7 @@ namespace Server
 
 		public virtual bool Move( Direction d )
 		{
+			
 			if( m_Deleted )
 				return false;
 
@@ -3094,8 +3095,8 @@ namespace Server
 
 			Point3D newLocation = m_Location;
 			Point3D oldLocation = newLocation;
-
-			if( (m_Direction & Direction.Mask) == (d & Direction.Mask) )
+            
+            if ( (m_Direction & Direction.Mask) == (d & Direction.Mask) )
 			{
 				// We are actually moving (not just a direction change)
 
@@ -3278,9 +3279,11 @@ namespace Server
 				DisruptiveAction();
 			}
 
-			if( m_NetState != null )
-				m_NetState.Send( MovementAck.Instantiate( m_NetState.Sequence, this ) );//new MovementAck( m_NetState.Sequence, this ) );
-
+			if (m_NetState != null)
+			{
+				Console.WriteLine("sending move ack");
+				m_NetState.Send(MovementAck.Instantiate(m_NetState.Sequence, this));//new MovementAck( m_NetState.Sequence, this ) );
+			}
 			SetLocation( newLocation, false );
 			SetDirection( d );
 
