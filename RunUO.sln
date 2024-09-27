@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.8.34525.116
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.34902.97
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data", "Data", "{1B394627-C6BF-447D-8CBD-4A3B5262C5B4}"
 	ProjectSection(SolutionItems) = preProject
@@ -80,6 +80,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Decoration", "Decoration", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Britannia", "Britannia", "{D4052FE1-A0C6-486C-B972-348945894772}"
 	ProjectSection(SolutionItems) = preProject
+		Data\Decoration\Britannia\_covetous.cfg = Data\Decoration\Britannia\_covetous.cfg
+		Data\Decoration\Britannia\_deceit.cfg = Data\Decoration\Britannia\_deceit.cfg
+		Data\Decoration\Britannia\_despise.cfg = Data\Decoration\Britannia\_despise.cfg
+		Data\Decoration\Britannia\_destard.cfg = Data\Decoration\Britannia\_destard.cfg
+		Data\Decoration\Britannia\_fire.cfg = Data\Decoration\Britannia\_fire.cfg
+		Data\Decoration\Britannia\_hedgemaze.cfg = Data\Decoration\Britannia\_hedgemaze.cfg
+		Data\Decoration\Britannia\_hythloth.cfg = Data\Decoration\Britannia\_hythloth.cfg
+		Data\Decoration\Britannia\_ice.cfg = Data\Decoration\Britannia\_ice.cfg
+		Data\Decoration\Britannia\_orccave.cfg = Data\Decoration\Britannia\_orccave.cfg
+		Data\Decoration\Britannia\_shame.cfg = Data\Decoration\Britannia\_shame.cfg
+		Data\Decoration\Britannia\_terathankeep.cfg = Data\Decoration\Britannia\_terathankeep.cfg
+		Data\Decoration\Britannia\_wrong.cfg = Data\Decoration\Britannia\_wrong.cfg
 		Data\Decoration\Britannia\britain.cfg = Data\Decoration\Britannia\britain.cfg
 		Data\Decoration\Britannia\bucs.cfg = Data\Decoration\Britannia\bucs.cfg
 		Data\Decoration\Britannia\bucsportal.cfg = Data\Decoration\Britannia\bucsportal.cfg
@@ -107,34 +119,33 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Britannia", "Britannia", "{
 		Data\Decoration\Britannia\wind.cfg = Data\Decoration\Britannia\wind.cfg
 		Data\Decoration\Britannia\witch apprentice quest.cfg = Data\Decoration\Britannia\witch apprentice quest.cfg
 		Data\Decoration\Britannia\yew.cfg = Data\Decoration\Britannia\yew.cfg
-		Data\Decoration\Britannia\_covetous.cfg = Data\Decoration\Britannia\_covetous.cfg
-		Data\Decoration\Britannia\_deceit.cfg = Data\Decoration\Britannia\_deceit.cfg
-		Data\Decoration\Britannia\_despise.cfg = Data\Decoration\Britannia\_despise.cfg
-		Data\Decoration\Britannia\_destard.cfg = Data\Decoration\Britannia\_destard.cfg
-		Data\Decoration\Britannia\_fire.cfg = Data\Decoration\Britannia\_fire.cfg
-		Data\Decoration\Britannia\_hedgemaze.cfg = Data\Decoration\Britannia\_hedgemaze.cfg
-		Data\Decoration\Britannia\_hythloth.cfg = Data\Decoration\Britannia\_hythloth.cfg
-		Data\Decoration\Britannia\_ice.cfg = Data\Decoration\Britannia\_ice.cfg
-		Data\Decoration\Britannia\_orccave.cfg = Data\Decoration\Britannia\_orccave.cfg
-		Data\Decoration\Britannia\_shame.cfg = Data\Decoration\Britannia\_shame.cfg
-		Data\Decoration\Britannia\_terathankeep.cfg = Data\Decoration\Britannia\_terathankeep.cfg
-		Data\Decoration\Britannia\_wrong.cfg = Data\Decoration\Britannia\_wrong.cfg
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Felucca", "Felucca", "{C5F8ACCC-B741-4398-8F1B-9425F7F4659A}"
 	ProjectSection(SolutionItems) = preProject
+		Data\Decoration\Felucca\_champion teleporters.cfg = Data\Decoration\Felucca\_champion teleporters.cfg
+		Data\Decoration\Felucca\_star room.cfg = Data\Decoration\Felucca\_star room.cfg
 		Data\Decoration\Felucca\ambitious solen queen quest.cfg = Data\Decoration\Felucca\ambitious solen queen quest.cfg
 		Data\Decoration\Felucca\khaldun entrance.cfg = Data\Decoration\Felucca\khaldun entrance.cfg
 		Data\Decoration\Felucca\khaldun.cfg = Data\Decoration\Felucca\khaldun.cfg
 		Data\Decoration\Felucca\ocllo.cfg = Data\Decoration\Felucca\ocllo.cfg
 		Data\Decoration\Felucca\solen matriarch quest.cfg = Data\Decoration\Felucca\solen matriarch quest.cfg
 		Data\Decoration\Felucca\yew.cfg = Data\Decoration\Felucca\yew.cfg
-		Data\Decoration\Felucca\_champion teleporters.cfg = Data\Decoration\Felucca\_champion teleporters.cfg
-		Data\Decoration\Felucca\_star room.cfg = Data\Decoration\Felucca\_star room.cfg
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Ilshenar", "Ilshenar", "{1AE5E70F-6607-4C60-82BF-764F7BD89138}"
 	ProjectSection(SolutionItems) = preProject
+		Data\Decoration\Ilshenar\_blood.cfg = Data\Decoration\Ilshenar\_blood.cfg
+		Data\Decoration\Ilshenar\_central.cfg = Data\Decoration\Ilshenar\_central.cfg
+		Data\Decoration\Ilshenar\_exodus.cfg = Data\Decoration\Ilshenar\_exodus.cfg
+		Data\Decoration\Ilshenar\_gwenno.cfg = Data\Decoration\Ilshenar\_gwenno.cfg
+		Data\Decoration\Ilshenar\_ratcave.cfg = Data\Decoration\Ilshenar\_ratcave.cfg
+		Data\Decoration\Ilshenar\_regvolom.cfg = Data\Decoration\Ilshenar\_regvolom.cfg
+		Data\Decoration\Ilshenar\_serpentine.cfg = Data\Decoration\Ilshenar\_serpentine.cfg
+		Data\Decoration\Ilshenar\_sheepfarm.cfg = Data\Decoration\Ilshenar\_sheepfarm.cfg
+		Data\Decoration\Ilshenar\_sorcerers.cfg = Data\Decoration\Ilshenar\_sorcerers.cfg
+		Data\Decoration\Ilshenar\_terortskitas.cfg = Data\Decoration\Ilshenar\_terortskitas.cfg
+		Data\Decoration\Ilshenar\_twinoaks.cfg = Data\Decoration\Ilshenar\_twinoaks.cfg
 		Data\Decoration\Ilshenar\camp.cfg = Data\Decoration\Ilshenar\camp.cfg
 		Data\Decoration\Ilshenar\camp2.cfg = Data\Decoration\Ilshenar\camp2.cfg
 		Data\Decoration\Ilshenar\enslavedgargs.cfg = Data\Decoration\Ilshenar\enslavedgargs.cfg
@@ -150,21 +161,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Ilshenar", "Ilshenar", "{1A
 		Data\Decoration\Ilshenar\shrines.cfg = Data\Decoration\Ilshenar\shrines.cfg
 		Data\Decoration\Ilshenar\vinculuminn.cfg = Data\Decoration\Ilshenar\vinculuminn.cfg
 		Data\Decoration\Ilshenar\wispdungeon.cfg = Data\Decoration\Ilshenar\wispdungeon.cfg
-		Data\Decoration\Ilshenar\_blood.cfg = Data\Decoration\Ilshenar\_blood.cfg
-		Data\Decoration\Ilshenar\_central.cfg = Data\Decoration\Ilshenar\_central.cfg
-		Data\Decoration\Ilshenar\_exodus.cfg = Data\Decoration\Ilshenar\_exodus.cfg
-		Data\Decoration\Ilshenar\_gwenno.cfg = Data\Decoration\Ilshenar\_gwenno.cfg
-		Data\Decoration\Ilshenar\_ratcave.cfg = Data\Decoration\Ilshenar\_ratcave.cfg
-		Data\Decoration\Ilshenar\_regvolom.cfg = Data\Decoration\Ilshenar\_regvolom.cfg
-		Data\Decoration\Ilshenar\_serpentine.cfg = Data\Decoration\Ilshenar\_serpentine.cfg
-		Data\Decoration\Ilshenar\_sheepfarm.cfg = Data\Decoration\Ilshenar\_sheepfarm.cfg
-		Data\Decoration\Ilshenar\_sorcerers.cfg = Data\Decoration\Ilshenar\_sorcerers.cfg
-		Data\Decoration\Ilshenar\_terortskitas.cfg = Data\Decoration\Ilshenar\_terortskitas.cfg
-		Data\Decoration\Ilshenar\_twinoaks.cfg = Data\Decoration\Ilshenar\_twinoaks.cfg
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Malas", "Malas", "{BCB51DFB-3AD2-44C5-8531-51D43C34CF44}"
 	ProjectSection(SolutionItems) = preProject
+		Data\Decoration\Malas\_luna.cfg = Data\Decoration\Malas\_luna.cfg
+		Data\Decoration\Malas\_umbra.cfg = Data\Decoration\Malas\_umbra.cfg
 		Data\Decoration\Malas\dark tides quest.cfg = Data\Decoration\Malas\dark tides quest.cfg
 		Data\Decoration\Malas\doom.cfg = Data\Decoration\Malas\doom.cfg
 		Data\Decoration\Malas\emino's undertaking quest.cfg = Data\Decoration\Malas\emino's undertaking quest.cfg
@@ -172,8 +174,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Malas", "Malas", "{BCB51DFB
 		Data\Decoration\Malas\luna.cfg = Data\Decoration\Malas\luna.cfg
 		Data\Decoration\Malas\markcontainers.cfg = Data\Decoration\Malas\markcontainers.cfg
 		Data\Decoration\Malas\summoning quest.cfg = Data\Decoration\Malas\summoning quest.cfg
-		Data\Decoration\Malas\_luna.cfg = Data\Decoration\Malas\_luna.cfg
-		Data\Decoration\Malas\_umbra.cfg = Data\Decoration\Malas\_umbra.cfg
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RuinedMaginciaFel", "RuinedMaginciaFel", "{8DD3A1F1-EBD8-4DC2-A7D7-0127929726E0}"
@@ -195,6 +195,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tokuno", "Tokuno", "{A42F99
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Trammel", "Trammel", "{452A8873-A7C2-4FD8-A940-8AFDEACB9702}"
 	ProjectSection(SolutionItems) = preProject
+		Data\Decoration\Trammel\_haven additions.cfg = Data\Decoration\Trammel\_haven additions.cfg
+		Data\Decoration\Trammel\_minoc camp.cfg = Data\Decoration\Trammel\_minoc camp.cfg
 		Data\Decoration\Trammel\ambitious solen queen quest.cfg = Data\Decoration\Trammel\ambitious solen queen quest.cfg
 		Data\Decoration\Trammel\collector quest.cfg = Data\Decoration\Trammel\collector quest.cfg
 		Data\Decoration\Trammel\haven.cfg = Data\Decoration\Trammel\haven.cfg
@@ -202,8 +204,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Trammel", "Trammel", "{452A
 		Data\Decoration\Trammel\solen matriarch quest.cfg = Data\Decoration\Trammel\solen matriarch quest.cfg
 		Data\Decoration\Trammel\uzeraan turmoil quest.cfg = Data\Decoration\Trammel\uzeraan turmoil quest.cfg
 		Data\Decoration\Trammel\yew.cfg = Data\Decoration\Trammel\yew.cfg
-		Data\Decoration\Trammel\_haven additions.cfg = Data\Decoration\Trammel\_haven additions.cfg
-		Data\Decoration\Trammel\_minoc camp.cfg = Data\Decoration\Trammel\_minoc camp.cfg
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Locations", "Locations", "{70B04D45-39DD-422D-B95F-99ED9FC3DAC1}"
@@ -218,6 +218,19 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csproj", "{6646D76C-031F-4241-9906-6E54F382B656}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RebirthScripts", "Scripts\RebirthScripts.csproj", "{F0271B3D-C776-4981-919D-06FEA403A21A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{15138A5C-1623-415C-8425-3692401A42C7}"
+	ProjectSection(SolutionItems) = preProject
+		todo.txt = todo.txt
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UOPlugin v42", "UOPlugin v42", "{E77F3C17-48F2-47DD-866C-6DD16F7133D2}"
+	ProjectSection(SolutionItems) = preProject
+		UOPlugin v42\Help.txt = UOPlugin v42\Help.txt
+		UOPlugin v42\UoDll.dll = UOPlugin v42\UoDll.dll
+		UOPlugin v42\UoPlugIn.cfg = UOPlugin v42\UoPlugIn.cfg
+		UOPlugin v42\UoPlugIn.exe = UOPlugin v42\UoPlugIn.exe
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

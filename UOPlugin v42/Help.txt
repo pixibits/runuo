@@ -1,0 +1,212 @@
+UoPlugIn Version 4 Help File
+(c) 1998 by Ashran and Beosil
+
+http://www.uoplugin.mcb.at
+uoplugin@mcb.at
+
+
+Installation
+
+1. Create an empty directory and name it 'UoPlugIn'.
+2. Extract all files ( UoPlugIn.exe UoDll.dll Help.txt UoPlugIn.cfg ) to this directory.
+Notes:	1)	No files of the UO installation are modified/deleted.
+			UoPlugIn will patch your client in memory at runtime.
+		2)	You need msvcrt.dll and mfc42.dll to run UoPlugIn.
+			Most likely you have them already installed in your system-			directory.
+
+Startup / Shutdown
+
+Always run UoPlugIn first, the UO-client will then be started automatically.
+Do NOT quit UoPlugIn while playing UO ! You wont be able to change any options.
+Close the UO-client to quit both the UO-client and UoPlugIn.
+
+
+Common Dialog
+
+Log in with a character and the dialog will be enabled.
+
+Show Hitpoints: 
+Whenether this option is enabled and somebody on the screen gets an health update (damaged/heal)
+it will show the current hitpoints as %.
+
+Auto Spell Disarm:
+When you cast a spell this option will auto disarm you before casting.
+(Note: if you have 2 weapons equipped you need to set the delay timer 
+on the cofig page.
+
+Autocancel Menu:
+This is great if you macro things like tracking. It will echo back a menu cancel and you wont get a 
+select window but you will gain skill.
+
+Show Incoming:
+Human:
+Will show the name of everything that gets loaded with a male or female body.
+Animal / Monster:
+Everything with a body other than human will be autonamed.
+Corpses:
+All incoming corpses get named.
+
+
+Show Deeds:
+Instead of a house you will see a deed which replaces the house item.
+Only switch it on if you are sure that there is ->NO<- player house near or it 
+will cause a crash. when its on there is no problem when a house gets loaded.
+(The client cant remove the buildings which are allready displayed)
+
+Fast Loot:
+Loot faster than everyone else.
+It will search for a bag (if there is no bag for gold) in any opened corpse.
+The delay depends on the disarm delay.
+IE: if you get a must wait to perform you will have to set a higher delay.
+if not you can lower it (play with it.)
+
+Fast Walk:
+You can run like there is virtually no lag. (The Client receives a walk okay when it requests it.)
+
+Resnoop on failing:
+It will resend the last doubleclick when you get a "you failed to snoop into the cont" sys msg.
+
+Filter Weather:
+You wont get rain or snow displays.
+
+Filter Light:
+And Jesus said it will be light (or something like this :)
+The Client receives a light level change (highest).
+
+Filter Horse Sound:
+Thats options filters the damn horse sounds.
+
+Filter Spirit Speak:
+Filters spirit speak sounds.
+
+Filter Pack :
+Filters pack (drag & drop) sounds.
+
+Filter Bard Sounds:
+You wont hear any of thoose anoying bard sounds again.
+
+Arm / Disarm Hotkeys:
+If this option is enabled you can arm (page up) and disarm (page down).
+Press it twice to arm/disarm booth hands (you must wait between 2 arm/disarm actions)
+
+Last Target Hotkey:
+With the delete-key you can target you last target.
+If you press the shift-key when you target the target cursor will reapear.
+
+Multi Last Target Hotkey:
+When you press the control-key when you target you will repeat the targeting.
+Please align the Multi count variable on the arm / config page.
+(lets say you enter 50. you will steal 50 items from someone if you use this (random steal))
+NOTE: Use this wisely many got banned for using this option and many of the targetable skills 
+got fixed so Multitarget doesnt work with them anymore.
+
+Target Self Hotkey:
+Use the insert-key to target yourself.
+
+Arm / Config dialog box
+
+Arm / Disarm:
+On startup it looks like this. (If you have weapons equipped they would be showed instead of empty)
+	  1 box       SET      X  2 box
+1.Hand: | empty | |-> set ->| |X empty|
+2.Hand: | empty | |-> set ->| |X empty|
+
+1 box : There you will see your current equipped weapon.
+SET   : There you can set the current equipped weapon as standart equip weapon
+X     : Lock the standart equipped weapon 
+2 box : The name of the standart weapon
+
+Clicked:
+The clicked field shows you the name of the last item you clicked on.
+With this item you could do:
+----Equip (You must set a layer. layer 1= right 2= left hand)
+----Make Ghost: With make ghost you can ghost a full container. Like a rune collection or other things.
+                You can move the bag drag and drop it everywhere (not on the ground). UoPlugIn will 
+	 	handle all events which are done with the bag. You cant place items in the ghost cont.
+		If you place the container on the ground it will vanish. If you open the real container
+		the items in your ghost container will vanish. You must reopen the bag (note then all
+		items in the org bag will vanish because the client can only display 1 item with the same id)
+		Nobody can steal or see the ghost container. If you use this action the container will be
+		moved into your bag (to get all infos) and will make a copy of it. Then you can place the 
+		org. container in your bank (or where ever you want; should be near like your bank)
+		As i know you cant use keys and other things anymore. But you can use runes!!!
+		BTW.: This feature was included in some old releases too but as hidden feature (command line).
+----Pick Up: With this you can pick up items on the screen (if the server lets you). So there are no client
+	     sided barriers.
+----Remove:     Anything that you dont wanna see? Click on it and remove it. (only client sided)
+----Unequip: It will unequip the item on the layer X. You must enter a layer. The Clicked item doesnt matter.
+    
+Multi Count:
+Enter a value vor Multi Last Target.
+
+Auto Delay:
+The delay between 2 actions (like for autoloot, autodisarm, resnoop)
+I have heard that for autoloot is 0 enough (for autodisarm too if you have only 1 weapon equipped)
+
+Flags: Still not implemented :)
+
+Enable Position Tracking:
+This is a new feature. Some new/or hidden features will/does using it.
+It will display the X-Y-Z coordinates (the Z-Coords only tracked if you get a x-y-z update)
+But the X-Y coords are tracked with each step you do.
+The display will be updated about every 500 milisecs.
+
+Counting Dialog
+
+Here you can count your rescources. It displays the result during counting.
+So if not all bags are digged trough it will display less regs than you have, 
+but when the search is finished the update will be correct.
+
+
+About the hidden commands:
+YES there are hidden commands. Only about 5 people know them and I'll kill them 
+if they say any word :).
+Check the webpage everyday for updates. I'll post some of them. But check it out everyday
+so you can use them b4 everyone else and b4 osi is fixing them (they are faster since uop is out *g*)
+
+Please dont send me mails with topics like:
+Can you tell me the secret commands?
+Can you say me why last doesnt work... etc
+
+Any ideas are welcome (realistic ideas)
+
+Unrealistic ideas:
+Casting without regs/mana
+Gm command clearance
+armageddon hotkey etc.
+:)
+
+Fake / Polymorph Dialog
+
+Open Ghost:
+Here you can load Ghost files (from anyone on your shard).
+
+Save Ghost:
+Save your Ghost Files.
+
+Rename Ghost:
+Rename your Ghost Container.
+Note: Max 30 chars, everything after a space wont be showed after saveing & reloading.
+
+Make ghost from:
+Here you can make a Ghost Container. Click on a container. Uoplugin will move it and after 2 secs Uop will open the container to record the items in the bag.
+Please wait with your actions till the bag is open ( then Uop has finished recording the ghost stuff ).
+
+The Tree View Window:
+Are you a hardcore roleplayer?
+Here you can polymorph into any creature (client sided).
+You can make fancy screenshots, roleplay or simply change the boring human outfit.
+
+Bug reports / email / homepage
+
+Any bug-reports ( UoPlugIn related or OSI related :) ) are always welcome.
+If you have problems, ideas, opinions, ..., don't hasitate to mail us:
+
+mailto:uoplugin@mcb.at
+
+
+And check out the official homepage of UoPlugIn:
+
+http://www.uoplugin.mcb.at
+
+
