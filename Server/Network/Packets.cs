@@ -357,7 +357,7 @@ namespace Server.Network
 
 			Container BuyPack = vendor.FindItemOnLayer( Layer.ShopBuy ) as Container;
 			m_Stream.Write( (int)(BuyPack == null ? Serial.MinusOne : BuyPack.Serial) );
-
+			
 			m_Stream.Write( (byte)list.Count );
 
 			for ( int i = 0; i < list.Count; ++i )
@@ -367,6 +367,9 @@ namespace Server.Network
 				m_Stream.Write( (int) bis.Price );
 
 				string desc = bis.Description;
+				int cliloc;
+				if (int.TryParse(desc, out cliloc))
+					desc = Core.CliLoc.SplitFormat(cliloc, "");
 
 				if ( desc == null )
 					desc = "";

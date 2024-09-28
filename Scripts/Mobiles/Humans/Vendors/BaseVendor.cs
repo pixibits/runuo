@@ -556,7 +556,7 @@ namespace Server.Mobiles
                     from.Send(new DisplayBuyList(this));
 
                 from.Send(new MobileStatusExtended(from));//make sure their gold amount is sent
-
+				/*
 				foreach ( BuyItemState bis in list )
 				{
 					int loc;
@@ -568,7 +568,7 @@ namespace Server.Mobiles
 					else
 						from.Send( new FakeOPL( bis.MySerial, bis.Description ) );
 				}
-
+				*/
 				SayTo( from, true, "Greetings.  Have a look around." );
 			}
 		}
