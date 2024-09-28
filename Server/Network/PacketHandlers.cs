@@ -84,7 +84,7 @@ namespace Server.Network
 			m_EncodedHandlersLow = new EncodedPacketHandler[0x100];
 			m_EncodedHandlersHigh = new Dictionary<int, EncodedPacketHandler>();
 
-			Register( 0x00, 104, false, new OnPacketReceive( CreateCharacter ) );
+			Register( 0x00, 100, false, new OnPacketReceive( CreateCharacter ) );
 			Register( 0x01,   5, false, new OnPacketReceive( Disconnect ) );
 			Register( 0x02,   3,  true, new OnPacketReceive( MovementReq_1_25_35 ) );
 			Register( 0x03,   0,  true, new OnPacketReceive( AsciiSpeech ) );
@@ -511,7 +511,13 @@ namespace Server.Network
 
 		public static void DeathStatusResponse( NetState state, PacketReader pvSrc )
 		{
-			// Ignored
+			/*
+			Mobile from = state.Mobile;
+			
+			int action = pvSrc.ReadByte();
+			if (action == 1)
+				from.Resurrect();
+			*/
 		}
 
 		public static void ObjectHelpRequest( NetState state, PacketReader pvSrc )
@@ -3444,22 +3450,39 @@ namespace Server.Network
 			int intl= pvSrc.ReadByte();
 			Console.WriteLine("Int: {0} - (0x{0:X})", intl);
 			int is1 = pvSrc.ReadByte();
+			Console.WriteLine("is1: (0x{0:X})", is1);
 			int vs1 = pvSrc.ReadByte();
+			Console.WriteLine("vs1: (0x{0:X})", vs1);
 			int is2 = pvSrc.ReadByte();
+			Console.WriteLine("is2: (0x{0:X})", is2);
 			int vs2 = pvSrc.ReadByte();
+			Console.WriteLine("vs2: (0x{0:X})", vs2);
 			int is3 = pvSrc.ReadByte();
+			Console.WriteLine("is3: (0x{0:X})", is3);
 			int vs3 = pvSrc.ReadByte();
+			Console.WriteLine("vs3: (0x{0:X})", vs3);
 			int hue = pvSrc.ReadUInt16();
+			Console.WriteLine("hue: (0x{0:X})", hue);
 			int hairVal = pvSrc.ReadInt16();
+			Console.WriteLine("hairVal: (0x{0:X})", hairVal);
 			int hairHue = pvSrc.ReadInt16();
+			Console.WriteLine("hairHue: (0x{0:X})", hairHue);
 			int hairValf= pvSrc.ReadInt16();
+			Console.WriteLine("hairValf: (0x{0:X})", hairValf);
 			int hairHuef= pvSrc.ReadInt16();
-			pvSrc.ReadByte();
+			Console.WriteLine("hairHuef: (0x{0:X})", hairHuef);
+			int foo = pvSrc.ReadByte();
+			Console.WriteLine("foo: (0x{0:X})", foo);
 			int cityIndex = pvSrc.ReadByte();
+			Console.WriteLine("cityIndex: (0x{0:X})", cityIndex);
 			int charSlot = pvSrc.ReadInt32();
-			int clientIP = pvSrc.ReadInt32();
+			Console.WriteLine("charSlot: (0x{0:X})", charSlot);
+			//int clientIP = pvSrc.ReadInt32();
+			//Console.WriteLine("clientIP: (0x{0:X})", clientIP);
 			int shirtHue = pvSrc.ReadInt16();
+			Console.WriteLine("shirtHue: (0x{0:X})", shirtHue);
 			int pantsHue = pvSrc.ReadInt16();
+			Console.WriteLine("pantsHue: (0x{0:X})", pantsHue);
 
 			/*
 			Pre-7.0.0.0:

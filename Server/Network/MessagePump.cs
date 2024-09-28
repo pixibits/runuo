@@ -200,6 +200,7 @@ namespace Server.Network
 					if ( handler == null )
 					{
 						byte[] data = new byte[length];
+						Console.WriteLine("hRecv {0}", string.Join(string.Empty, Array.ConvertAll(data, b => b.ToString("X"))).TrimEnd('0'));
 						length = buffer.Dequeue( data, 0, length );
 
 						new PacketReader( data, length, false ).Trace( ns );
