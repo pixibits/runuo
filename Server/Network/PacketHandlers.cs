@@ -1475,19 +1475,19 @@ namespace Server.Network
 				keyList.Add(0x0044);
 			if (text.Contains("forward"))
 				keyList.Add(0x0045);
-			if (text.Contains("back"))
+			if (text.Equals("back"))
 				keyList.Add(0x0046);
-			if (text.Contains("backward"))
+			if (text.Equals("backward"))
 				keyList.Add(0x0046);
 			if (text.Contains("backwards"))
 				keyList.Add(0x0046);
 			if (text.Contains("drift left"))
 				keyList.Add(0x0047);
-			if (text.Contains("left"))
+			if (text.Equals("left"))
 				keyList.Add(0x0047);
 			if (text.Contains("drift right"))
 				keyList.Add(0x0048);
-			if (text.Contains("right"))
+			if (text.Equals("right"))
 				keyList.Add(0x0048);
 			if (text.Contains("starboard"))
 				keyList.Add(0x0049);
@@ -3419,24 +3419,30 @@ namespace Server.Network
 
 		public static void CreateCharacter( NetState state, PacketReader pvSrc )
 		{
+			Console.WriteLine("New Char Creation");
 			int unk1 = pvSrc.ReadInt32();
 			int unk2 = pvSrc.ReadInt32();
 			int unk3 = pvSrc.ReadByte();
 			string name = pvSrc.ReadString( 30 );
-
+			Console.WriteLine("Name: {0}", name);
 			pvSrc.Seek( 2, SeekOrigin.Current );
 			int flags = pvSrc.ReadInt32();
+			Console.WriteLine("Client Flag: (0x{0:X})", flags);
 			pvSrc.Seek( 8, SeekOrigin.Current );
 			int prof = pvSrc.ReadByte();
+			Console.WriteLine("Prof: (0x{0:X})", prof);
 			pvSrc.Seek( 15, SeekOrigin.Current );
 
 			//bool female = pvSrc.ReadBoolean();
 
 			int genderRace = pvSrc.ReadByte();
-
+			Console.WriteLine("Sex: (0x{0:X})", genderRace);
 			int str = pvSrc.ReadByte();
+			Console.WriteLine("Str: {0} - (0x{0:X})", str);
 			int dex = pvSrc.ReadByte();
+			Console.WriteLine("Dex: {0} - (0x{0:X})", dex);
 			int intl= pvSrc.ReadByte();
+			Console.WriteLine("Int: {0} - (0x{0:X})", intl);
 			int is1 = pvSrc.ReadByte();
 			int vs1 = pvSrc.ReadByte();
 			int is2 = pvSrc.ReadByte();

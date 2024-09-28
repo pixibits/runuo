@@ -283,15 +283,17 @@ namespace Server.Misc
 
 		private static void SetStats( Mobile m, int str, int dex, int intel )
 		{
-			FixStats( ref str, ref dex, ref intel );
+			
+			//FixStats( ref str, ref dex, ref intel );
 
-			if ( str < 10 || str > 60 || dex < 10 || dex > 60 || intel < 10 || intel > 60 || (str + dex + intel) != 80 )
+			if ( str < 10 || str > 45 || dex < 10 || dex > 45 || intel < 10 || intel > 45 || (str + dex + intel) != 65 )
 			{
 				str = 10;
 				dex = 10;
 				intel = 10;
 			}
 
+			/*
 			// scale them down 25% for pret2a (where the max you could have was 45, total of 65)
 			// if 2 of the stats you picked were 13, its possible to have 66 instead of 65 stats, but who cares?
 			if ( str > 13 )
@@ -300,7 +302,7 @@ namespace Server.Misc
 				dex = (int)(dex * 0.75);
 			if ( intel > 13 )
 				intel = (int)(intel * 0.75);
-
+			*/
 			m.InitStats( str, dex, intel );
 		}
 
