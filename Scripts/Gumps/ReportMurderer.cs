@@ -35,8 +35,8 @@ namespace Server.Gumps
 			if ( list == null || list.Count <= 0 )
 			{
 				m_Killers.Remove( to.Serial );
-				if ( to is PlayerMobile && !((PlayerMobile)to).AssumePlayAsGhost )
-					new ResNowOption( to ).SendTo( to.NetState );
+				//if ( to is PlayerMobile && !((PlayerMobile)to).AssumePlayAsGhost )
+				//	new ResNowOption( to ).SendTo( to.NetState );
 				return;
 			}
 

@@ -99,7 +99,7 @@ namespace Server.Network
 			Register( 0x13,  10,  true, new OnPacketReceive( EquipReq ) );
 			Register( 0x14,   6,  true, new OnPacketReceive( ChangeZ ) );
 			Register( 0x22,   3,  true, new OnPacketReceive( Resynchronize ) );
-			Register( 0x2C,   2,  true, new OnPacketReceive( DeathStatusResponse ) );
+			//Register( 0x2C,   2,  true, new OnPacketReceive( DeathStatusResponse ) );
 			Register( 0x34,  10,  true, new OnPacketReceive( MobileQuery ) );
 			Register( 0x3A,   0,  true, new OnPacketReceive( ChangeSkillLock ) );
 			Register( 0x3B,   0,  true, new OnPacketReceive( VendorBuyReply ) );

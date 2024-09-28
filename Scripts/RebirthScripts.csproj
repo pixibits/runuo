@@ -499,6 +499,7 @@
     <Compile Include="Gumps\CategorizedAddGump.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Gumps\OldResurrectGump.cs" />
     <Compile Include="Gumps\ClientGump.cs">
       <SubType>Code</SubType>
     </Compile>
