@@ -406,6 +406,10 @@ namespace Server.Network
 				if ( name == null )
 					name = "";
 
+				int cliloc;
+				if (int.TryParse(name, out cliloc))
+					name = Core.CliLoc.SplitFormat(cliloc, "");
+
 				m_Stream.Write( (ushort) (name.Length) );
 				m_Stream.WriteAsciiFixed( name, (ushort) (name.Length) );
 			}

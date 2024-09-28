@@ -721,7 +721,7 @@ namespace Server.Mobiles
 					SendPacksTo( from );
 
                     from.Send(new VendorSellList(this, table));
-
+					/*
 					foreach ( SellItemState sis in table.Values )
 					{
 						int loc;
@@ -733,6 +733,7 @@ namespace Server.Mobiles
 						else
 							from.Send( new FakeOPL( sis.Item.Serial, sis.Name ) );
 					}
+					*/
 				}
 				else
 				{
