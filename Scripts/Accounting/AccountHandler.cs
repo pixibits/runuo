@@ -36,7 +36,7 @@ namespace Server.Misc
 				new CityInfo( "Jhelom",		"The Mercenary Inn",		1374,	3826,	0  ),
 				new CityInfo( "Skara Brae",	"The Falconer's Inn",		618,	2234,	0  ),
 				new CityInfo( "Vesper",		"The Ironwood Inn",			2771,	976,	0  ),
-				new CityInfo( "Haven",		"Buckler's Hideaway",		3667,	2625,	0  )
+				//new CityInfo( "Haven",		"Buckler's Hideaway",		3667,	2625,	0  )
 			};
 
 		private static bool PasswordCommandEnabled = false;

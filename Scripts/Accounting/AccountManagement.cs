@@ -17,7 +17,7 @@ namespace Server.Accounting
 
 		public static void Initialize()
 		{
-			EventSink.Login += new LoginEventHandler( Event_Login );
+			//EventSink.Login += new LoginEventHandler( Event_Login );
 
 			Server.Commands.CommandSystem.Register( "Account", AccessLevel.Player, new Server.Commands.CommandEventHandler( Command_Account ) );
 			Server.Commands.CommandSystem.Register( "Auth", AccessLevel.Player, new Server.Commands.CommandEventHandler( Command_Register ) );

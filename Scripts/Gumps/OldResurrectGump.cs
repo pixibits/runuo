@@ -74,7 +74,10 @@ namespace Server.Gumps
 				pm.Hits = pm.HitsMax / 2;
 				pm.Mana = pm.ManaMax / 5;
 
-				//from.Send(new ResChoice());
+				from.Send(new MobileStatusExtended(from, ns));
+				from.Send(new MobileHits(from));
+				from.Send(new MobileMana(from));
+				from.Send(new MobileStam(from));
 			}
 			
 		}

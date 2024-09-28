@@ -13,7 +13,7 @@ namespace Server.Misc
 
 		private static string[] m_Messages = new string[]
 		{ 
-			"Welcome to UO Gamers: The Rebirth of Ultima Online....",
+			"Welcome to Ultima Online",
 		};
 
 		public WelcomeTimer( Mobile m ) : this( m, m_Messages.Length )

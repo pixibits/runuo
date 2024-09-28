@@ -39,7 +39,7 @@ namespace Server.Misc
 		 */
 
 		public static readonly string Address = "108.3.222.55";
-		public static readonly string ServerName = "Rebirth";
+		public static readonly string ServerName = "Sonoma";
 
 		public static readonly bool AutoDetect = true;
 
