@@ -227,6 +227,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UOPlugin v42", "UOPlugin v42", "{E77F3C17-48F2-47DD-866C-6DD16F7133D2}"
 	ProjectSection(SolutionItems) = preProject
 		UOPlugin v42\Help.txt = UOPlugin v42\Help.txt
+		UOPlugin v42\uo_loop.exe = UOPlugin v42\uo_loop.exe
 		UOPlugin v42\UoDll.dll = UOPlugin v42\UoDll.dll
 		UOPlugin v42\UoPlugIn.cfg = UOPlugin v42\UoPlugIn.cfg
 		UOPlugin v42\UoPlugIn.exe = UOPlugin v42\UoPlugIn.exe
