@@ -4400,6 +4400,8 @@ namespace Server
 
 							reject = LRReason.Inspecific;
 							rejected = false;
+
+							from.Send(new RemoveItem(item));
 						}
 					}
 				}
@@ -4599,8 +4601,12 @@ namespace Server
 
 			item.ClearBounce();
 
-			if( !bounced )
-				SendDropEffect( item );
+			if (!bounced)
+			{
+				SendDropEffect(item);
+				from.Send(new RemoveItem(item));
+			}
+			
 
 			return !bounced;
 		}

@@ -3411,6 +3411,7 @@ namespace Server.Network
 				state.Send( new MobileStatus( m, m ) );
 				state.Send( Server.Network.SetWarMode.Instantiate( m.Warmode ) );
 				state.Send( new MobileIncomingOld( m, m ) );
+				state.Send(Unpause.Instantiate(0));
 			}
 
 			state.Send( LoginComplete.Instance );
