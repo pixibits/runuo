@@ -4418,9 +4418,15 @@ namespace Server
 
 			if( rejected && state != null )
 			{
-				state.Send( new LiftRej( reject ) );
 
-				if( item.Parent is Item ) {
+				state.Send(new LiftRej(reject));
+
+				if (reject == LRReason.Inspecific)
+				{
+					state.Send(new MessageLocalized(Serial.MinusOne, -1, MessageType.Regular, 0x3B2, 3, 500119, "System", ""));
+				}
+				
+				if ( item.Parent is Item ) {
 					if ( state.ContainerGridLines )
 						state.Send( new ContainerContentUpdate6017( item ) );
 					else
